@@ -1,2 +1,11 @@
 User-agent: *
-Disallow:
+Disallow: /manager
+Disallow: /rider
+Disallow: /login
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order/
+Disallow: /invoice/
+Disallow: /track
+
+Sitemap: https://www.drezwell.com/sitemap.xml

@@ -23,16 +23,20 @@
 @php
     $user = auth()->user();
     $isRider = $user && $user->isRider();
+    $newMessages = $user && $user->isManager() ? \App\Models\ContactMessage::where('status', 'new')->count() : 0;
     $lowStock = $user && $user->isManager() ? \App\Models\Product::needingStock()->count() : 0;
     $managerNav = [
         ['manager.dashboard', 'Dashboard', 'manager.dashboard', 'fa-gauge-high'],
+        ['manager.pos', 'Point of sale', 'manager.pos', 'fa-cash-register'],
         ['manager.deliveries.index', 'Deliveries', 'manager.deliveries.*', 'fa-truck-fast'],
         ['manager.riders.index', 'Riders', 'manager.riders.*', 'fa-motorcycle'],
         ['manager.products.index', 'Products & stock', 'manager.products.*', 'fa-boxes-stacked'],
         ['manager.customers.index', 'Customers', 'manager.customers.*', 'fa-users'],
         ['manager.debtors', 'Debtors', 'manager.debtors', 'fa-hand-holding-dollar'],
-        ['manager.remittances', 'Rider cash & items', 'manager.remittances*', 'fa-cash-register'],
+        ['manager.remittances', 'Rider cash & items', 'manager.remittances*', 'fa-wallet'],
+        ['manager.messages', 'Messages', 'manager.messages*', 'fa-inbox'],
         ['manager.reports', 'Reports', 'manager.reports*', 'fa-chart-pie'],
+        ['manager.settings', 'Settings', 'manager.settings', 'fa-gear'],
         ['manager.sms', 'SMS log', 'manager.sms', 'fa-comment-sms'],
     ];
     $riderNav = [
@@ -62,6 +66,7 @@
                 @foreach($managerNav as [$route, $label, $pattern, $icon])
                     <a href="{{ route($route) }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition {{ request()->routeIs($pattern) ? 'bg-[#42a5dc] text-white font-semibold shadow' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
                         <i class="fas {{ $icon }} w-5 text-center {{ request()->routeIs($pattern) ? '' : 'text-slate-400' }}"></i>{{ $label }}
+                        @if($route === 'manager.messages' && $newMessages > 0)<span class="ml-auto rounded-full bg-[#f5922f] px-2 py-0.5 text-[11px] font-bold text-white" title="New messages">{{ $newMessages }}</span>@endif
                         @if($route === 'manager.products.index' && $lowStock > 0)<span class="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white" title="Products low or out of stock">{{ $lowStock }}</span>@endif</a>
                 @endforeach
                 <form method="POST" action="{{ route('logout') }}" class="pt-3 mt-3 border-t border-white/10">@csrf

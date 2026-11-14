@@ -9,9 +9,11 @@
     <x-slot:chips>
         <span><i class="fas fa-cubes"></i> {{ $product->stock_qty }} in stock</span>
         <span><i class="fas fa-bell"></i> alert at {{ $product->reorder_level }}</span>
+        <span><i class="fas fa-store"></i> {{ $product->show_in_store ? 'On the online store' : 'Not on the store' }}</span>
         @unless($product->is_active)<span><i class="fas fa-eye-slash"></i> Hidden</span>@endunless
     </x-slot:chips>
     <a href="{{ route('manager.products.index') }}"><i class="fas fa-arrow-left"></i> Products</a>
+    @if($product->show_in_store && $product->is_active)<a href="{{ route('shop.product', $product->slug) }}" target="_blank"><i class="fas fa-up-right-from-square"></i> View in store</a>@endif
     <a href="{{ route('manager.products.edit', $product) }}" class="primary"><i class="fas fa-pen"></i> Edit</a>
 </x-dashboard-hero>
 
@@ -22,11 +24,44 @@
     <x-stat-tile color="green" icon="fa-chart-line" title="Profit" :value="$m($sold['profit'])" sub="Revenue minus cost" />
 </div>
 
+@if($product->images->count())
+    <section class="bg-white rounded-xl p-4 mb-5">
+        <div class="flex flex-wrap gap-4">
+            @foreach($product->images as $img)
+                <div class="w-32">
+                    <img src="{{ $img->url }}" alt="" class="h-32 w-32 rounded-lg object-cover border {{ $loop->first ? 'ring-2 ring-[#42a5dc]' : '' }}">
+                    <div class="mt-1 flex items-center justify-between text-xs">
+                        @if($loop->first)<span class="text-[#2c8fc6] font-semibold">Main</span>@else
+                            <form method="POST" action="{{ route('manager.products.image.main', $img) }}">@csrf<button class="text-slate-500 hover:text-slate-900">Make main</button></form>@endif
+                        <form method="POST" action="{{ route('manager.products.image.delete', $img) }}" onsubmit="return confirm('Remove this photo?')">@csrf @method('DELETE')<button class="text-red-500" title="Remove"><i class="fas fa-trash"></i></button></form>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </section>
+@endif
+
+<section class="bg-white rounded-xl overflow-hidden mb-5">
+    <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#8cc152] font-semibold text-sm">Sizes &amp; colours</div>
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Variant</th><th>SKU</th><th class="text-right">Price</th><th class="text-right">In stock</th><th class="p-3">Status</th></tr></thead>
+        @foreach($product->variants as $var)
+            <tr class="border-t border-slate-100 {{ $var->is_active ? '' : 'opacity-50' }}">
+                <td class="p-3 font-medium">{{ $var->label }}</td><td class="text-slate-500">{{ $var->sku ?: '—' }}</td>
+                <td class="text-right">{{ number_format($var->price ?? $product->selling_price, 2) }}</td>
+                <td class="text-right font-bold {{ $var->stock_qty <= 0 ? 'text-red-600' : '' }}">{{ $var->stock_qty }}</td>
+                <td class="p-3">{{ $var->stock_qty <= 0 ? 'Sold out' : ($var->is_active ? 'On sale' : 'Hidden') }}</td>
+            </tr>
+        @endforeach
+    </table></div>
+</section>
+
 <div class="grid lg:grid-cols-3 gap-5">
     <section class="bg-white rounded-xl p-5 border-l-4 border-l-[#8cc152] lg:col-span-1 h-fit">
         <h2 class="font-semibold mb-3"><i class="fas fa-boxes-stacked text-[#74a83b]"></i> Update stock</h2>
-        <form method="POST" action="{{ route('manager.products.adjust', $product) }}" class="space-y-2" x-data>@csrf
-            <select name="action" id="act" class="{{ $input }} w-full" onchange="document.getElementById('costRow').style.display = this.value==='purchase' ? '' : 'none'">
+        <form method="POST" action="{{ route('manager.products.adjust', $product) }}" class="space-y-2">@csrf
+            <select name="variant_id" class="{{ $input }} w-full">@foreach($product->variants as $var)<option value="{{ $var->id }}">{{ $var->label }} ({{ $var->stock_qty }} now)</option>@endforeach</select>
+            <select name="action" class="{{ $input }} w-full" onchange="document.getElementById('costRow').style.display = this.value==='purchase' ? '' : 'none'">
                 @foreach($actions as $k => [$label])<option value="{{ $k }}">{{ $label }}</option>@endforeach
             </select>
             <input type="number" name="qty" min="1" required placeholder="Quantity" class="{{ $input }} w-full">
@@ -42,15 +77,16 @@
     <section class="bg-white rounded-xl overflow-hidden lg:col-span-2">
         <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#42a5dc] font-semibold text-sm">Stock history</div>
         <div class="overflow-x-auto"><table class="w-full text-sm">
-            <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">When</th><th>Type</th><th class="text-right">Change</th><th class="text-right">Balance</th><th>Order</th><th>By</th><th class="p-3">Note</th></tr></thead>
+            <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">When</th><th>Variant</th><th>Type</th><th class="text-right">Change</th><th class="text-right">Balance</th><th>Order</th><th class="p-3">Note</th></tr></thead>
             @forelse($movements as $mv)
                 <tr class="border-t border-slate-100 hover:bg-sky-50/50">
                     <td class="p-3 whitespace-nowrap">{{ $mv->created_at->format('d M, g:ia') }}</td>
+                    <td class="text-slate-600">{{ $mv->variant?->label ?? '—' }}</td>
                     <td>{{ \App\Models\StockMovement::TYPES[$mv->type] ?? $mv->type }}</td>
                     <td class="text-right font-semibold {{ $mv->qty > 0 ? 'text-green-600' : 'text-red-600' }}">{{ $mv->qty > 0 ? '+' : '' }}{{ $mv->qty }}</td>
                     <td class="text-right">{{ $mv->balance_after }}</td>
                     <td>@if($mv->delivery)<a class="text-[#2c8fc6] hover:underline" href="{{ route('manager.deliveries.show', $mv->delivery) }}">{{ $mv->delivery->reference }}</a>@else — @endif</td>
-                    <td>{{ $mv->user?->name }}</td><td class="p-3 text-slate-500">{{ $mv->note }}</td>
+                    <td class="p-3 text-slate-500">{{ $mv->note }}</td>
                 </tr>
             @empty <tr><td colspan="7" class="p-8 text-center text-slate-400">No stock movements yet.</td></tr> @endforelse
         </table></div>

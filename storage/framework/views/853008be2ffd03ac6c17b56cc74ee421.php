@@ -22,6 +22,7 @@
         <span><i class="fas fa-user"></i> <?php echo e($delivery->rider?->name ?? 'No rider yet'); ?></span>
      <?php $__env->endSlot(); ?>
     <a href="<?php echo e(route('manager.deliveries.index')); ?>"><i class="fas fa-arrow-left"></i> Deliveries</a>
+    <a href="<?php echo e(route('manager.deliveries.invoice', $delivery)); ?>" target="_blank"><i class="fas fa-print"></i> Invoice</a>
     <?php if(! in_array($delivery->status, ['delivered', 'cancelled'])): ?>
         <a href="<?php echo e(route('manager.deliveries.edit', $delivery)); ?>" class="primary"><i class="fas fa-pen"></i> Edit</a>
     <?php endif; ?>

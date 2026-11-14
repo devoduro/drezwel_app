@@ -14,6 +14,11 @@ class DeliveryItem extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class);
+    }
+
     public function delivery(): BelongsTo
     {
         return $this->belongsTo(Delivery::class);

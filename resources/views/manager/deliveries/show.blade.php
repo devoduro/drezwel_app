@@ -13,6 +13,7 @@
         <span><i class="fas fa-user"></i> {{ $delivery->rider?->name ?? 'No rider yet' }}</span>
     </x-slot:chips>
     <a href="{{ route('manager.deliveries.index') }}"><i class="fas fa-arrow-left"></i> Deliveries</a>
+    <a href="{{ route('manager.deliveries.invoice', $delivery) }}" target="_blank"><i class="fas fa-print"></i> Invoice</a>
     @if(! in_array($delivery->status, ['delivered', 'cancelled']))
         <a href="{{ route('manager.deliveries.edit', $delivery) }}" class="primary"><i class="fas fa-pen"></i> Edit</a>
     @endif

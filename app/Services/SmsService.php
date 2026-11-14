@@ -46,7 +46,7 @@ class SmsService
             'phone' => $phone,
             'purpose' => $purpose,
             // The one-time code itself is never stored.
-            'message' => $purpose === 'delivery_code' ? '[delivery code]' : $message,
+            'message' => in_array($purpose, ['delivery_code', 'customer_login', 'password_reset'], true) ? '[one-time code]' : $message,
             'success' => $result['success'],
             'response' => mb_substr((string) $result['message'], 0, 250),
         ]);

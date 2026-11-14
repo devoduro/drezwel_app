@@ -26,6 +26,11 @@ class StockMovement extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

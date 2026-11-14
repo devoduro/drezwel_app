@@ -22,7 +22,10 @@ class StockTest extends TestCase
 
     private function product(array $over = []): Product
     {
-        return Product::create($over + ['name' => 'Baggy jeans', 'cost_price' => 100, 'selling_price' => 200, 'stock_qty' => 10, 'reorder_level' => 3]);
+        $p = Product::create($over + ['name' => 'Baggy jeans', 'cost_price' => 100, 'selling_price' => 200, 'stock_qty' => 10, 'reorder_level' => 3]);
+        $p->variants()->create(['stock_qty' => $p->stock_qty]); // the plain variant that carries the stock
+
+        return $p;
     }
 
     private function order(User $m, array $items, array $over = [])
@@ -39,7 +42,7 @@ class StockTest extends TestCase
         $m = $this->manager();
         $p = $this->product();
 
-        $this->order($m, [['product_id' => $p->id, 'qty' => 4, 'price' => 200]], ['total_amount' => 800])->assertSessionHasNoErrors();
+        $this->order($m, [['variant_id' => $p->variants()->first()->id, 'qty' => 4, 'price' => 200]], ['total_amount' => 800])->assertSessionHasNoErrors();
         $d = Delivery::first();
         $this->assertSame(6, $p->fresh()->stock_qty);
         $this->assertSame(4, $d->items_sent);
@@ -57,7 +60,7 @@ class StockTest extends TestCase
         $m = $this->manager();
         $p = $this->product(['stock_qty' => 2]);
 
-        $this->order($m, [['product_id' => $p->id, 'qty' => 5, 'price' => 200]], ['total_amount' => 1000])->assertSessionHasErrors('qty');
+        $this->order($m, [['variant_id' => $p->variants()->first()->id, 'qty' => 5, 'price' => 200]], ['total_amount' => 1000])->assertSessionHasErrors('qty');
         $this->assertSame(0, Delivery::count());
         $this->assertSame(2, $p->fresh()->stock_qty);
     }
@@ -67,12 +70,12 @@ class StockTest extends TestCase
         Http::fake();
         $m = $this->manager();
         $p = $this->product();
-        $this->order($m, [['product_id' => $p->id, 'qty' => 4, 'price' => 200]], ['total_amount' => 800]);
+        $this->order($m, [['variant_id' => $p->variants()->first()->id, 'qty' => 4, 'price' => 200]], ['total_amount' => 800]);
         $d = Delivery::first();
 
         $this->actingAs($m)->put(route('manager.deliveries.update', $d), [
             'customer_name' => 'Bello', 'customer_phone' => '0241266765', 'location' => 'Newtown', 'delivery_mode' => 'rider', 'order_type' => 'standard',
-            'delivery_date' => today()->toDateString(), 'total_amount' => 400, 'items' => [['product_id' => $p->id, 'qty' => 2, 'price' => 200]],
+            'delivery_date' => today()->toDateString(), 'total_amount' => 400, 'items' => [['variant_id' => $p->variants()->first()->id, 'qty' => 2, 'price' => 200]],
         ])->assertSessionHasNoErrors();
         $this->assertSame(8, $p->fresh()->stock_qty);
     }
@@ -84,15 +87,15 @@ class StockTest extends TestCase
         $m = $this->manager(['phone' => '0241112222']);
         $p = $this->product(['stock_qty' => 5, 'reorder_level' => 3]);
 
-        $this->order($m, [['product_id' => $p->id, 'qty' => 2, 'price' => 200]], ['total_amount' => 400]); // 5 -> 3: at the level
+        $this->order($m, [['variant_id' => $p->variants()->first()->id, 'qty' => 2, 'price' => 200]], ['total_amount' => 400]); // 5 -> 3: at the level
         $this->assertSame(1, SmsLog::where('purpose', 'stock_alert')->count());
-        $this->order($m, [['product_id' => $p->id, 'qty' => 1, 'price' => 200]], ['total_amount' => 200, 'customer_phone' => '0200000001']); // 3 -> 2: no second text
+        $this->order($m, [['variant_id' => $p->variants()->first()->id, 'qty' => 1, 'price' => 200]], ['total_amount' => 200, 'customer_phone' => '0200000001']); // 3 -> 2: no second text
         $this->assertSame(1, SmsLog::where('purpose', 'stock_alert')->count());
 
-        $this->actingAs($m)->post(route('manager.products.adjust', $p), ['action' => 'purchase', 'qty' => 20, 'unit_cost' => 110])->assertSessionHasNoErrors();
+        $this->actingAs($m)->post(route('manager.products.adjust', $p), ['variant_id' => $p->variants()->first()->id, 'action' => 'purchase', 'qty' => 20, 'unit_cost' => 110])->assertSessionHasNoErrors();
         $this->assertNull($p->fresh()->low_alerted_at);
         $this->assertEquals(110, $p->fresh()->cost_price);
-        $this->order($m, [['product_id' => $p->id, 'qty' => 19, 'price' => 200]], ['total_amount' => 3800, 'customer_phone' => '0200000002']); // dips again
+        $this->order($m, [['variant_id' => $p->variants()->first()->id, 'qty' => 19, 'price' => 200]], ['total_amount' => 3800, 'customer_phone' => '0200000002']); // dips again
         $this->assertSame(2, SmsLog::where('purpose', 'stock_alert')->count());
     }
 
@@ -100,7 +103,7 @@ class StockTest extends TestCase
     {
         $m = $this->manager();
         $p = $this->product(['stock_qty' => 2]);
-        $this->actingAs($m)->post(route('manager.products.adjust', $p), ['action' => 'damage', 'qty' => 5])->assertSessionHasErrors('qty');
+        $this->actingAs($m)->post(route('manager.products.adjust', $p), ['variant_id' => $p->variants()->first()->id, 'action' => 'damage', 'qty' => 5])->assertSessionHasErrors('qty');
         $this->assertSame(2, $p->fresh()->stock_qty);
     }
 
@@ -125,7 +128,7 @@ class StockTest extends TestCase
         Http::fake();
         $m = $this->manager();
         $p = $this->product();
-        $this->order($m, [['product_id' => $p->id, 'qty' => 3, 'price' => 200]], ['total_amount' => 600]);
+        $this->order($m, [['variant_id' => $p->variants()->first()->id, 'qty' => 3, 'price' => 200]], ['total_amount' => 600]);
 
         $res = $this->actingAs($m)->get(route('manager.reports', ['period' => 'all']))->assertOk();
         $res->assertSee('GH₵ 600.00');          // revenue and product sales

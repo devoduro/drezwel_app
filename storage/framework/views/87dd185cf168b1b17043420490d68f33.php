@@ -1,103 +1,121 @@
-
-<?php $__env->startSection('title', 'Track your delivery · Drezwel Go'); ?>
+<?php $__env->startSection('title', ($customer ? 'My orders' : 'Track your order') . ' · ' . \App\Models\Setting::get('business_name')); ?>
+<?php
+    $m = fn ($v) => 'GH₵ ' . number_format((float) $v, 2);
+    $field = 'h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-[15px] focus:border-jm-orange focus:outline-none focus:ring-1 focus:ring-jm-orange';
+    $btn = 'h-11 w-full rounded-lg bg-jm-orange text-[14px] font-bold uppercase tracking-wide text-white shadow transition hover:bg-[#e07b10]';
+    $tel = \App\Models\Setting::phoneLink();
+    $ongoing = ['pending', 'assigned', 'out_for_delivery', 'undelivered'];
+    $tab = request('tab', 'ongoing');
+    $statusClass = fn ($s) => match ($s) { 'delivered' => 'text-green-700', 'cancelled', 'undelivered' => 'text-jm-red', default => 'text-jm-orange' };
+    $statusText = fn ($s) => match ($s) { 'pending' => 'Order placed', 'assigned' => 'Rider assigned', 'out_for_delivery' => 'Out for delivery', 'delivered' => 'Delivered', 'undelivered' => 'Delivery attempt failed', 'cancelled' => 'Cancelled', default => $s };
+?>
 <?php $__env->startSection('content'); ?>
-<div class="text-center mb-5 mt-2">
-    <img src="<?php echo e(asset('images/logo.png')); ?>" alt="Drezwel Go" class="mx-auto h-14 w-auto">
-    <h1 class="mt-3 text-xl font-bold">Track your delivery</h1>
-    <p class="text-sm text-slate-500">Use the reference from your SMS and the phone number you ordered with.</p>
-</div>
+<div class="max-w-[1180px] mx-auto px-3 sm:px-4 py-3 space-y-3">
 
-<form method="GET" action="<?php echo e(route('track')); ?>" class="bg-white rounded-2xl shadow p-5 space-y-3">
-    <input name="ref" value="<?php echo e(request('ref')); ?>" placeholder="Reference e.g. DEL-261114-7163" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 uppercase">
-    <input name="phone" value="<?php echo e(request('phone')); ?>" placeholder="Phone number e.g. 0241234567" inputmode="tel" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5">
-    <button class="w-full rounded-lg bg-gradient-to-br from-slate-900 to-slate-700 text-white py-2.5 font-semibold shadow">Track</button>
-</form>
-
-<?php if($searched && ! $delivery): ?>
-    <div class="mt-4 rounded-lg bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm">We could not find a delivery with those details. Check the reference and phone number.</div>
-<?php endif; ?>
-
-<?php if($delivery): ?>
+<?php if($customer): ?>
+    
     <?php
-        $steps = ['pending' => 'Order received', 'assigned' => 'Rider assigned', 'out_for_delivery' => 'Out for delivery', 'delivered' => 'Delivered'];
-        $order = array_keys($steps);
-        $current = array_search($delivery->status, $order);
+        $counts = ['ongoing' => $orders->whereIn('status', $ongoing)->count(), 'delivered' => $orders->where('status', 'delivered')->count(), 'cancelled' => $orders->where('status', 'cancelled')->count()];
+        $shown = $orders->filter(fn ($o) => match ($tab) { 'delivered' => $o->status === 'delivered', 'cancelled' => $o->status === 'cancelled', default => in_array($o->status, $ongoing) });
     ?>
-    <div class="mt-5 bg-white rounded-2xl shadow p-5">
-        <div class="flex items-start justify-between gap-3">
-            <div>
-                <div class="text-xs text-slate-500">Reference</div>
-                <div class="font-bold"><?php echo e($delivery->reference); ?></div>
-            </div>
-            <?php if (isset($component)) { $__componentOriginal2ddbc40e602c342e508ac696e52f8719 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal2ddbc40e602c342e508ac696e52f8719 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.badge','data' => ['status' => $delivery->status]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('badge'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['status' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($delivery->status)]); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal2ddbc40e602c342e508ac696e52f8719)): ?>
-<?php $attributes = $__attributesOriginal2ddbc40e602c342e508ac696e52f8719; ?>
-<?php unset($__attributesOriginal2ddbc40e602c342e508ac696e52f8719); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal2ddbc40e602c342e508ac696e52f8719)): ?>
-<?php $component = $__componentOriginal2ddbc40e602c342e508ac696e52f8719; ?>
-<?php unset($__componentOriginal2ddbc40e602c342e508ac696e52f8719); ?>
-<?php endif; ?>
-        </div>
-        <div class="mt-3 text-sm text-slate-600"><?php echo e($delivery->package_description); ?> · <?php echo e($delivery->location); ?></div>
+    <div class="grid items-start gap-3 lg:grid-cols-[240px_1fr]">
+        <aside class="overflow-hidden rounded-xl bg-white text-[15px]">
+            <div class="border-b border-slate-200 p-4"><div class="truncate font-bold"><?php echo e($customer->name); ?></div><div class="text-sm text-jm-grey"><?php echo e($customer->phone); ?></div></div>
+            <nav class="py-1">
+                <a href="<?php echo e(route('track')); ?>" class="flex items-center gap-3 bg-[#fdecd5]/50 px-4 py-2.5 font-medium text-jm-orange"><i class="fas fa-box w-5 text-center"></i>Orders</a>
+                <a href="<?php echo e(route('shop.index')); ?>" class="flex items-center gap-3 px-4 py-2.5 hover:bg-jm-bg"><i class="fas fa-bag-shopping w-5 text-center text-jm-grey"></i>Keep shopping</a>
+                <a href="<?php echo e(route('site.contact')); ?>" class="flex items-center gap-3 px-4 py-2.5 hover:bg-jm-bg"><i class="fas fa-headset w-5 text-center text-jm-grey"></i>Contact us</a>
+            </nav>
+            <form method="POST" action="<?php echo e(route('track.logout')); ?>" class="border-t border-slate-200 p-3"><?php echo csrf_field(); ?><button class="h-10 w-full rounded-lg border border-jm-orange text-sm font-bold uppercase text-jm-orange transition hover:bg-[#fdecd5]/60">Sign out</button></form>
+        </aside>
 
-        <?php if(in_array($delivery->status, ['undelivered', 'cancelled'])): ?>
-            <div class="mt-4 rounded-lg bg-slate-100 px-4 py-3 text-sm">
-                <?php echo e($delivery->status === 'cancelled' ? 'This order was cancelled.' : 'We could not complete this delivery. We will contact you to reschedule.'); ?>
-
-            </div>
+        <div class="min-w-0 space-y-3">
+        <?php if($delivery): ?>
+            <a href="<?php echo e(route('track', ['tab' => $tab])); ?>" class="inline-block text-sm font-bold uppercase text-jm-orange hover:underline"><i class="fas fa-chevron-left text-[10px]"></i> Back to orders</a>
+            <?php echo $__env->make('track._detail', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         <?php else: ?>
-            <ol class="mt-5 space-y-4">
-                <?php $__currentLoopData = $steps; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <?php $i = array_search($key, $order); $done = $current !== false && $i <= $current; ?>
-                    <li class="flex items-center gap-3">
-                        <span class="w-6 h-6 rounded-full grid place-items-center text-xs <?php echo e($done ? 'bg-green-500 text-white' : 'bg-slate-200 text-slate-500'); ?>"><?php echo e($done ? '✓' : $i + 1); ?></span>
-                        <span class="<?php echo e($done ? 'font-medium' : 'text-slate-400'); ?>"><?php echo e($label); ?></span>
-                    </li>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </ol>
+            <?php if($searched): ?><div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">That order is not on your account.</div><?php endif; ?>
+            <section class="overflow-hidden rounded-xl bg-white">
+                <div class="border-b border-slate-200 px-4 pt-3">
+                    <h1 class="pb-2 text-[17px] font-bold">Orders (<?php echo e($orders->count()); ?>)</h1>
+                    <div class="flex gap-5 text-[14px] font-medium">
+                        <?php $__currentLoopData = ['ongoing' => 'Ongoing', 'delivered' => 'Delivered', 'cancelled' => 'Cancelled']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $l): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <a href="<?php echo e(route('track', ['tab' => $k])); ?>" class="-mb-px border-b-2 pb-2.5 <?php echo e($tab === $k ? 'border-jm-orange text-jm-orange' : 'border-transparent text-jm-grey hover:text-jm-dark'); ?>"><?php echo e($l); ?> (<?php echo e($counts[$k]); ?>)</a>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </div>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    <?php $__empty_1 = true; $__currentLoopData = $shown; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $o): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <?php $first = $o->items->first(); ?>
+                        <div class="flex gap-3 p-4 sm:gap-4">
+                            <div class="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                                <?php if($first?->product?->primary_image_url): ?><img src="<?php echo e($first->product->primary_image_url); ?>" alt="" class="h-full w-full object-cover"><?php else: ?><span class="grid h-full place-items-center text-2xl text-slate-300"><i class="fas fa-shirt"></i></span><?php endif; ?>
+                            </div>
+                            <div class="min-w-0 flex-1 text-sm">
+                                <div class="line-clamp-2 text-[15px] leading-snug"><?php echo e($o->package_description); ?></div>
+                                <div class="mt-0.5 text-jm-grey">Order <?php echo e($o->reference); ?></div>
+                                <span class="mt-1 inline-block rounded px-2 py-0.5 text-[12px] font-bold uppercase <?php echo e($o->status === 'delivered' ? 'bg-green-100 text-green-700' : (in_array($o->status, ['cancelled', 'undelivered']) ? 'bg-red-100 text-jm-red' : 'bg-[#fdecd5] text-jm-orange')); ?>"><?php echo e($statusText($o->status)); ?></span>
+                                <div class="mt-1 text-jm-grey">Placed on <?php echo e($o->created_at->format('d-m-Y')); ?> · <?php echo e($m($o->amount_due)); ?></div>
+                            </div>
+                            <a href="<?php echo e(route('track', ['ref' => $o->reference, 'tab' => $tab])); ?>" class="self-center shrink-0 text-[13px] font-bold uppercase text-jm-orange hover:underline">See details</a>
+                        </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                        <div class="p-12 text-center text-jm-grey"><span class="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full bg-jm-bg text-2xl text-slate-300"><i class="fas fa-box-open"></i></span>
+                            You have no <?php echo e($tab); ?> orders.<div class="mt-4"><a href="<?php echo e(route('shop.index')); ?>" class="inline-block rounded-lg bg-jm-orange px-6 py-2.5 text-sm font-bold uppercase text-white">Start shopping</a></div></div>
+                    <?php endif; ?>
+                </div>
+            </section>
         <?php endif; ?>
+        </div>
+    </div>
 
-        <?php if($delivery->rider && in_array($delivery->status, ['assigned', 'out_for_delivery'])): ?>
-            <div class="mt-5 rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-sm">
-                Your rider: <strong><?php echo e($delivery->rider->name); ?></strong>
-                <?php if($delivery->rider->phone): ?> · <a class="text-brand-accent" href="tel:<?php echo e($delivery->rider->phone); ?>"><?php echo e($delivery->rider->phone); ?></a><?php endif; ?>
-            </div>
-        <?php endif; ?>
-        <?php if($delivery->status === 'out_for_delivery'): ?>
-            <div class="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm">
-                We texted you a <strong>4-digit code</strong>. Give it to the rider <strong>only when you have received your order</strong>.
-            </div>
-        <?php endif; ?>
+<?php else: ?>
+    
+    <div class="mx-auto max-w-4xl">
+        <h1 class="mb-3 text-xl font-bold">Track your order</h1>
+        <div class="grid items-start gap-3 md:grid-cols-2">
+            <section class="overflow-hidden rounded-xl bg-white">
+                <div class="border-b border-slate-200 px-4 py-3 text-[15px] font-bold uppercase tracking-wide">Track an order</div>
+                <form method="GET" action="<?php echo e(route('track')); ?>" class="space-y-3 p-4">
+                    <p class="text-sm text-jm-grey">Enter the order number from your SMS and the phone number you ordered with.</p>
+                    <label class="block text-sm font-medium">Order number<input name="ref" value="<?php echo e(request('ref')); ?>" placeholder="e.g. DEL-261114-7163" required class="<?php echo e($field); ?> mt-1 uppercase"></label>
+                    <label class="block text-sm font-medium">Phone number<input name="phone" value="<?php echo e(request('phone')); ?>" placeholder="0241234567" inputmode="tel" required class="<?php echo e($field); ?> mt-1"></label>
+                    <button class="<?php echo e($btn); ?>">Track order</button>
+                </form>
+            </section>
 
-        <?php if($delivery->balance > 0 && $delivery->status !== 'cancelled'): ?>
-            <div class="mt-3 text-sm">Balance to pay: <strong>GH₵ <?php echo e(number_format($delivery->balance, 2)); ?></strong></div>
-        <?php endif; ?>
+            <section class="overflow-hidden rounded-xl bg-white">
+                <div class="border-b border-slate-200 px-4 py-3 text-[15px] font-bold uppercase tracking-wide">Sign in to see all your orders</div>
+                <div class="p-4">
+                    <?php if($otpPhone): ?>
+                        <p class="mb-3 text-sm text-jm-grey">Enter the 6-digit code we texted to <strong class="text-jm-dark"><?php echo e($otpPhone); ?></strong>.</p>
+                        <form method="POST" action="<?php echo e(route('track.verify')); ?>" class="space-y-3"><?php echo csrf_field(); ?>
+                            <input name="code" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="one-time-code" required autofocus placeholder="• • • • • •" class="<?php echo e($field); ?> text-center text-2xl font-bold tracking-[0.4em]">
+                            <button class="<?php echo e($btn); ?>">Sign in</button>
+                        </form>
+                        <div class="mt-3 flex justify-between text-sm">
+                            <form method="POST" action="<?php echo e(route('track.code')); ?>"><?php echo csrf_field(); ?><input type="hidden" name="phone" value="<?php echo e($otpPhone); ?>"><button class="font-medium text-jm-orange hover:underline">Resend code</button></form>
+                            <form method="POST" action="<?php echo e(route('track.number')); ?>"><?php echo csrf_field(); ?><button class="text-jm-grey hover:underline">Use a different number</button></form>
+                        </div>
+                    <?php else: ?>
+                        <p class="mb-3 text-sm text-jm-grey">Use the phone number you ordered with. We will text you a code, with no password needed.</p>
+                        <form method="POST" action="<?php echo e(route('track.code')); ?>" class="space-y-3"><?php echo csrf_field(); ?>
+                            <label class="block text-sm font-medium">Phone number<input name="phone" value="<?php echo e(old('phone')); ?>" inputmode="tel" required placeholder="0241234567" class="<?php echo e($field); ?> mt-1"></label>
+                            <button class="<?php echo e($btn); ?>">Send me a code</button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </section>
+        </div>
 
-        <h2 class="mt-6 text-sm font-semibold text-slate-500 uppercase tracking-wide">Updates</h2>
-        <ul class="mt-2 space-y-2 text-sm">
-            <?php $__currentLoopData = $delivery->events->whereIn('type', ['created', 'assigned', 'started', 'delivered', 'undelivered', 'reopened', 'cancelled'])->reverse(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $e): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <li class="flex justify-between gap-3 border-b border-slate-100 pb-2">
-                    <span><?php echo e(match($e->type) {
-                        'created' => 'Order received', 'assigned' => 'Rider assigned', 'started' => 'Rider is on the way',
-                        'delivered' => 'Delivered', 'undelivered' => 'Delivery attempt failed', 'reopened' => 'Rescheduled', 'cancelled' => 'Cancelled', default => $e->type }); ?></span>
-                    <span class="text-slate-400 whitespace-nowrap"><?php echo e($e->created_at->format('d M, g:ia')); ?></span>
-                </li>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-        </ul>
+        <?php if($searched && ! $delivery): ?>
+            <div class="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">We could not find an order with those details. Check the order number and phone number.</div>
+        <?php endif; ?>
+        <?php if($delivery): ?><div class="mt-3"><?php echo $__env->make('track._detail', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></div><?php endif; ?>
+        <?php if($tel): ?><p class="mt-4 text-center text-sm text-jm-grey">Need help with an order? Call <a class="font-bold text-jm-orange" href="tel:<?php echo e($tel); ?>"><?php echo e(\App\Models\Setting::get('phone')); ?></a></p><?php endif; ?>
     </div>
 <?php endif; ?>
+</div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\drezwel_app\resources\views/track.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.shop', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\drezwel_app\resources\views/track.blade.php ENDPATH**/ ?>

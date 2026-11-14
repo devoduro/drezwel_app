@@ -23,16 +23,20 @@
 <?php
     $user = auth()->user();
     $isRider = $user && $user->isRider();
+    $newMessages = $user && $user->isManager() ? \App\Models\ContactMessage::where('status', 'new')->count() : 0;
     $lowStock = $user && $user->isManager() ? \App\Models\Product::needingStock()->count() : 0;
     $managerNav = [
         ['manager.dashboard', 'Dashboard', 'manager.dashboard', 'fa-gauge-high'],
+        ['manager.pos', 'Point of sale', 'manager.pos', 'fa-cash-register'],
         ['manager.deliveries.index', 'Deliveries', 'manager.deliveries.*', 'fa-truck-fast'],
         ['manager.riders.index', 'Riders', 'manager.riders.*', 'fa-motorcycle'],
         ['manager.products.index', 'Products & stock', 'manager.products.*', 'fa-boxes-stacked'],
         ['manager.customers.index', 'Customers', 'manager.customers.*', 'fa-users'],
         ['manager.debtors', 'Debtors', 'manager.debtors', 'fa-hand-holding-dollar'],
-        ['manager.remittances', 'Rider cash & items', 'manager.remittances*', 'fa-cash-register'],
+        ['manager.remittances', 'Rider cash & items', 'manager.remittances*', 'fa-wallet'],
+        ['manager.messages', 'Messages', 'manager.messages*', 'fa-inbox'],
         ['manager.reports', 'Reports', 'manager.reports*', 'fa-chart-pie'],
+        ['manager.settings', 'Settings', 'manager.settings', 'fa-gear'],
         ['manager.sms', 'SMS log', 'manager.sms', 'fa-comment-sms'],
     ];
     $riderNav = [
@@ -63,6 +67,7 @@
                     <a href="<?php echo e(route($route)); ?>" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition <?php echo e(request()->routeIs($pattern) ? 'bg-[#42a5dc] text-white font-semibold shadow' : 'text-slate-300 hover:bg-white/10 hover:text-white'); ?>">
                         <i class="fas <?php echo e($icon); ?> w-5 text-center <?php echo e(request()->routeIs($pattern) ? '' : 'text-slate-400'); ?>"></i><?php echo e($label); ?>
 
+                        <?php if($route === 'manager.messages' && $newMessages > 0): ?><span class="ml-auto rounded-full bg-[#f5922f] px-2 py-0.5 text-[11px] font-bold text-white" title="New messages"><?php echo e($newMessages); ?></span><?php endif; ?>
                         <?php if($route === 'manager.products.index' && $lowStock > 0): ?><span class="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white" title="Products low or out of stock"><?php echo e($lowStock); ?></span><?php endif; ?></a>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 <form method="POST" action="<?php echo e(route('logout')); ?>" class="pt-3 mt-3 border-t border-white/10"><?php echo csrf_field(); ?>

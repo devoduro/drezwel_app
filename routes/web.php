@@ -1,32 +1,83 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Manager;
 use App\Http\Controllers\Rider\RiderAppController;
 use App\Http\Controllers\TrackingController;
 use Illuminate\Support\Facades\Route;
 
+// Public website: the home page for visitors; staff who open the site go straight to their own screen.
 Route::get('/', function () {
     $u = auth()->user();
-    if (! $u) {
-        return redirect()->route('track');
+    if ($u) {
+        return redirect()->route($u->isManager() ? 'manager.dashboard' : 'rider.mine');
     }
 
-    return redirect()->route($u->isManager() ? 'manager.dashboard' : 'rider.mine');
-});
+    return app(SiteController::class)->home();
+})->name('home');
+Route::get('/about', [SiteController::class, 'about'])->name('site.about');
+Route::get('/contact', [SiteController::class, 'contact'])->name('site.contact');
+Route::get('/wholesale', [SiteController::class, 'wholesale'])->name('site.wholesale');
+Route::post('/contact', [SiteController::class, 'send'])->middleware('throttle:5,1')->name('site.send');
+Route::get('/{slug}', [SiteController::class, 'page'])->where('slug', 'delivery-info|return-policy|terms|privacy-policy')->name('site.page');
+
+// Addresses from the old website keep working, so existing links and search results are not lost.
+Route::permanentRedirect('/categories', '/shop');
+Route::permanentRedirect('/flash-deals', '/shop');
+Route::permanentRedirect('/todays-deal', '/shop');
+Route::permanentRedirect('/wholesale-order', '/wholesale');
+Route::permanentRedirect('/track-your-order', '/track');
+Route::permanentRedirect('/support-policy', '/delivery-info');
+Route::permanentRedirect('/users/login', '/login');
+Route::get('/category/{slug}', fn (string $slug) => redirect('/shop?q=' . urlencode(str_replace('-', ' ', $slug)), 301));
+Route::get('/sitemap.xml', [SiteController::class, 'sitemap'])->name('sitemap');
+
+// Online store (public)
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::redirect('/store', '/shop');
+Route::get('/shop/{slug}', [ShopController::class, 'product'])->name('shop.product');
+Route::get('/cart', [ShopController::class, 'cart'])->name('shop.cart');
+Route::post('/cart/add', [ShopController::class, 'add'])->middleware('throttle:60,1')->name('shop.cart.add');
+Route::post('/cart/update', [ShopController::class, 'update'])->middleware('throttle:60,1')->name('shop.cart.update');
+Route::get('/checkout', [ShopController::class, 'checkout'])->name('shop.checkout');
+Route::post('/checkout', [ShopController::class, 'placeOrder'])->middleware('throttle:6,1')->name('shop.checkout.place');
+Route::get('/order/{reference}', [ShopController::class, 'order'])->middleware('signed')->name('shop.order');
+Route::get('/invoice/{reference}', [InvoiceController::class, 'publicShow'])->middleware('signed')->name('invoice.public');
 
 // Customers: follow a delivery (no account needed)
 Route::get('/track', [TrackingController::class, 'show'])->middleware('throttle:30,1')->name('track');
+Route::post('/track/code', [TrackingController::class, 'sendCode'])->middleware('throttle:10,1')->name('track.code');
+Route::post('/track/verify', [TrackingController::class, 'verify'])->middleware('throttle:15,1')->name('track.verify');
+Route::post('/track/logout', [TrackingController::class, 'logout'])->name('track.logout');
+Route::post('/track/number', [TrackingController::class, 'changeNumber'])->name('track.number');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+
+    // Password reset by SMS code
+    Route::get('/forgot-password', [PasswordResetController::class, 'showForgot'])->name('password.forgot');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])->middleware('throttle:10,1')->name('password.send');
+    Route::get('/reset-password', [PasswordResetController::class, 'showReset'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:15,1')->name('password.update');
 });
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 // Manager
 Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
     Route::get('/', [Manager\DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('pos', [Manager\PosController::class, 'index'])->name('pos');
+    Route::post('pos', [Manager\PosController::class, 'store'])->name('pos.store');
+    Route::get('messages', [Manager\MessageController::class, 'index'])->name('messages');
+    Route::post('messages/{message}/toggle', [Manager\MessageController::class, 'toggle'])->name('messages.toggle');
+    Route::get('settings', [Manager\SettingController::class, 'edit'])->name('settings');
+    Route::put('settings', [Manager\SettingController::class, 'update'])->name('settings.update');
+    Route::get('deliveries/{delivery}/invoice', [InvoiceController::class, 'manager'])->name('deliveries.invoice');
 
     Route::resource('deliveries', Manager\DeliveryController::class)->except('destroy');
     Route::controller(Manager\DeliveryController::class)->prefix('deliveries/{delivery}')->name('deliveries.')->group(function () {
@@ -57,6 +108,8 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::get('products/{product}/edit', [Manager\ProductController::class, 'edit'])->name('products.edit');
     Route::put('products/{product}', [Manager\ProductController::class, 'update'])->name('products.update');
     Route::post('products/{product}/stock', [Manager\ProductController::class, 'adjust'])->name('products.adjust');
+    Route::delete('product-images/{image}', [Manager\ProductController::class, 'deleteImage'])->name('products.image.delete');
+    Route::post('product-images/{image}/main', [Manager\ProductController::class, 'mainImage'])->name('products.image.main');
     Route::post('products/{product}/toggle', [Manager\ProductController::class, 'toggle'])->name('products.toggle');
     Route::put('alert-phone', [Manager\ProductController::class, 'alertPhone'])->name('alert-phone');
 

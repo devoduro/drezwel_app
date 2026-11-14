@@ -38,7 +38,8 @@
         <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Reference</th><th>Date</th><th>Customer</th><th>Location</th><th>Rider</th><th class="text-right">Total</th><th class="text-right">Balance</th><th class="p-3">Status</th></tr></thead>
         @forelse($deliveries as $d)
             <tr class="border-t border-slate-100 hover:bg-sky-50/50">
-                <td class="p-3"><a class="text-[#2c8fc6] font-semibold hover:underline" href="{{ route('manager.deliveries.show', $d) }}">{{ $d->reference }}</a></td>
+                <td class="p-3"><a class="text-[#2c8fc6] font-semibold hover:underline" href="{{ route('manager.deliveries.show', $d) }}">{{ $d->reference }}</a>
+                    @if($d->source === 'online')<span class="ml-1 rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700">WEB</span>@elseif($d->source === 'pos')<span class="ml-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">POS</span>@elseif($d->source === 'phone')<span class="ml-1 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700">PHONE</span>@endif</td>
                 <td class="whitespace-nowrap text-slate-600">{{ $d->delivery_date->format('d M') }}</td>
                 <td><div class="font-medium">{{ $d->customer->name }}</div><div class="text-xs text-slate-400">{{ $d->customer->phone }}</div></td>
                 <td class="text-slate-600">{{ $d->location }}</td>

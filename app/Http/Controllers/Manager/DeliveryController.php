@@ -80,7 +80,7 @@ class DeliveryController extends Controller
 
     public function edit(Delivery $delivery)
     {
-        return view('manager.deliveries.form', ['delivery' => $delivery->load(['customer', 'items']), 'riders' => $this->activeRiders(), 'products' => $this->products()]);
+        return view('manager.deliveries.form', ['delivery' => $delivery->load(['customer', 'items.variant']), 'riders' => $this->activeRiders(), 'products' => $this->products()]);
     }
 
     public function update(Request $request, Delivery $delivery)
@@ -154,9 +154,12 @@ class DeliveryController extends Controller
 
     // ----------------------------------------------------------------------------------------
 
+    /** Every size/colour that can be ordered, for the product lines on the order form. */
     private function products()
     {
-        return \App\Models\Product::active()->orderBy('name')->get(['id', 'name', 'sku', 'selling_price', 'stock_qty']);
+        return \App\Models\ProductVariant::with('product')->where('is_active', true)
+            ->whereHas('product', fn ($q) => $q->where('is_active', true))->get()
+            ->sortBy(fn ($v) => $v->product->name . $v->label)->values();
     }
 
     private function activeRiders()
@@ -170,7 +173,7 @@ class DeliveryController extends Controller
 
         $data = $request->validate([
             'items' => 'nullable|array|max:30',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.variant_id' => 'required|exists:product_variants,id',
             'items.*.qty' => 'required|integer|min:1|max:999',
             'items.*.price' => 'required|numeric|min:0',
             'customer_name' => 'required|string|max:120',
@@ -191,8 +194,8 @@ class DeliveryController extends Controller
         // With product lines, the package text and item count come from the lines.
         $data['items'] = array_values($data['items'] ?? []);
         if ($data['items']) {
-            $names = \App\Models\Product::whereIn('id', array_column($data['items'], 'product_id'))->pluck('name', 'id');
-            $data['package_description'] ??= collect($data['items'])->map(fn ($l) => $names[$l['product_id']] . ' x' . $l['qty'])->implode(', ');
+            $names = \App\Models\ProductVariant::with('product')->whereIn('id', array_column($data['items'], 'variant_id'))->get()->keyBy('id');
+            $data['package_description'] ??= collect($data['items'])->map(fn ($l) => $names[$l['variant_id']]->product->name . ($names[$l['variant_id']]->is_plain ? '' : ' (' . $names[$l['variant_id']]->label . ')') . ' x' . $l['qty'])->implode(', ');
             $data['items_sent'] = array_sum(array_column($data['items'], 'qty'));
         }
 

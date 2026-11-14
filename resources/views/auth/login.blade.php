@@ -18,7 +18,10 @@
                 <label class="text-sm font-medium">Password</label>
                 <input type="password" name="password" required class="mt-1 w-full rounded-lg border-slate-300 border px-3 py-2.5">
             </div>
-            <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="remember" value="1"> Keep me signed in</label>
+            <div class="flex items-center justify-between text-sm">
+                <label class="flex items-center gap-2"><input type="checkbox" name="remember" value="1"> Keep me signed in</label>
+                <a class="text-brand-accent font-medium" href="{{ route('password.forgot') }}">Forgot password?</a>
+            </div>
             <button class="w-full rounded-lg bg-gradient-to-br from-slate-900 to-slate-700 text-white py-2.5 font-semibold shadow hover:shadow-md transition">Sign in</button>
         </form>
         <p class="mt-5 text-center text-sm text-slate-500">Waiting for an order? <a class="text-brand-accent font-medium" href="{{ route('track') }}">Track your delivery</a></p>

@@ -1,3 +1,4 @@
+
 <?php $__env->startSection('title', 'Products & stock · Drezwel Go'); ?>
 <?php
     $m = fn ($v) => 'GH₵ ' . number_format((float) $v, 2);
@@ -149,7 +150,10 @@
         <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Product</th><th>Category</th><th class="text-right">In stock</th><th class="text-right">Reorder at</th><th class="text-right">Cost</th><th class="text-right">Price</th><th class="text-right">Value</th><th class="p-3">Level</th></tr></thead>
         <?php $__empty_1 = true; $__currentLoopData = $products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <tr class="border-t border-slate-100 hover:bg-sky-50/50 <?php echo e($p->is_active ? '' : 'opacity-50'); ?>">
-                <td class="p-3"><a class="font-semibold text-[#2c8fc6] hover:underline" href="<?php echo e(route('manager.products.show', $p)); ?>"><?php echo e($p->name); ?></a><div class="text-xs text-slate-400"><?php echo e($p->sku ?: 'No SKU'); ?></div></td>
+                <td class="p-3"><div class="flex items-center gap-3">
+                    <?php if($p->primary_image_url): ?><img src="<?php echo e($p->primary_image_url); ?>" alt="" class="h-11 w-11 rounded-lg object-cover border shrink-0"><?php else: ?><span class="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-300"><i class="fas fa-shirt"></i></span><?php endif; ?>
+                    <div><a class="font-semibold text-[#2c8fc6] hover:underline" href="<?php echo e(route('manager.products.show', $p)); ?>"><?php echo e($p->name); ?></a>
+                    <div class="text-xs text-slate-400"><?php echo e($p->sku ?: 'No SKU'); ?><?php if($p->variants->count() > 1 || $p->has_options): ?> · <?php echo e($p->variants->count()); ?> variants <?php endif; ?> <?php if($p->show_in_store): ?>· <i class="fas fa-store" title="On the online store"></i><?php endif; ?></div></div></div></td>
                 <td class="text-slate-600"><?php echo e($p->category ?: '—'); ?></td>
                 <td class="text-right font-bold <?php echo e($p->level === 'out' ? 'text-red-600' : ($p->level === 'low' ? 'text-[#de7a14]' : '')); ?>"><?php echo e($p->stock_qty); ?></td>
                 <td class="text-right text-slate-500"><?php echo e($p->reorder_level); ?></td>

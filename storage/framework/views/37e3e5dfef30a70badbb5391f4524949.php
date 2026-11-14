@@ -43,12 +43,12 @@
         <label class="text-sm font-medium">Assign a rider now (optional)<select name="rider_id" class="<?php echo e($input); ?> bg-white"><option value="">Leave open for riders to pick</option><?php $__currentLoopData = $riders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option value="<?php echo e($r->id); ?>" <?php if($v('rider_id') == $r->id): echo 'selected'; endif; ?>><?php echo e($r->name); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></select></label>
     <?php endif; ?>
     <?php
-        $lineRows = old('items', isset($delivery) && $delivery->exists ? $delivery->items->map(fn ($i) => ['product_id' => $i->product_id, 'qty' => $i->qty, 'price' => (float) $i->unit_price])->all() : []);
-        $catalog = ($products ?? collect())->map(fn ($p) => ['id' => $p->id, 'name' => $p->name . ($p->sku ? " ({$p->sku})" : ''), 'price' => (float) $p->selling_price, 'stock' => $p->stock_qty])->values();
+        $lineRows = old('items', isset($delivery) && $delivery->exists ? $delivery->items->map(fn ($i) => ['variant_id' => $i->variant_id, 'qty' => $i->qty, 'price' => (float) $i->unit_price])->all() : []);
+        $catalog = ($products ?? collect())->map(fn ($v) => ['id' => $v->id, 'name' => $v->product->name . ($v->is_plain ? '' : ' - ' . $v->label), 'price' => $v->selling_price, 'stock' => $v->stock_qty])->values();
     ?>
     <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50/60 p-4" id="lines" data-catalog='<?php echo json_encode($catalog, 15, 512) ?>' data-rows='<?php echo json_encode($lineRows, 15, 512) ?>'>
         <div class="flex items-center justify-between mb-2">
-            <div class="text-sm font-semibold"><i class="fas fa-shirt text-[#42a5dc]"></i> Products on this order <span class="font-normal text-slate-500">(optional - takes them off stock)</span></div>
+            <div class="text-sm font-semibold"><i class="fas fa-shirt text-[#42a5dc]"></i> Products on this order (pick size / colour) <span class="font-normal text-slate-500">(optional - takes them off stock)</span></div>
             <button type="button" id="addLine" class="rounded-lg bg-[#42a5dc] hover:bg-[#2c8fc6] text-white px-3 py-1.5 text-sm font-semibold transition"><i class="fas fa-plus"></i> Add product</button>
         </div>
         <div id="lineRows" class="space-y-2"></div>
@@ -72,8 +72,8 @@
         }
         function addRow(r) {
             const i = n++, d = document.createElement('div'); d.dataset.line = 1; d.className = 'flex flex-wrap gap-2 items-center';
-            d.innerHTML = `<select name="items[${i}][product_id]" class="${cls} flex-1 min-w-40 sel" required><option value="">Choose product…</option>` +
-                catalog.map(c => `<option value="${c.id}" data-price="${c.price}" ${r && r.product_id == c.id ? 'selected' : ''}>${c.name} - ${c.stock} in stock</option>`).join('') + `</select>` +
+            d.innerHTML = `<select name="items[${i}][variant_id]" class="${cls} flex-1 min-w-40 sel" required><option value="">Choose product…</option>` +
+                catalog.map(c => `<option value="${c.id}" data-price="${c.price}" ${r && r.variant_id == c.id ? 'selected' : ''}>${c.name} - ${c.stock} in stock</option>`).join('') + `</select>` +
                 `<input type="number" min="1" name="items[${i}][qty]" value="${r ? r.qty : 1}" class="${cls} w-20 q" title="Quantity" required>` +
                 `<input type="number" step="0.01" min="0" name="items[${i}][price]" value="${r ? r.price : ''}" class="${cls} w-28 p" title="Price each" required>` +
                 `<button type="button" class="text-red-500 px-2" title="Remove"><i class="fas fa-trash"></i></button>`;
