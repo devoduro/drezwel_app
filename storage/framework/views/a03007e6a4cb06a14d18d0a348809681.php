@@ -1,3 +1,4 @@
+
 <?php $__env->startSection('title', 'Debtors · Drezwel Go'); ?>
 <?php $m = fn ($v) => 'GH₵ ' . number_format((float) $v, 2); ?>
 <?php $__env->startSection('content'); ?>
@@ -111,9 +112,9 @@
 
 <div class="space-y-4">
     <?php $__empty_1 = true; $__currentLoopData = $debtors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-        <section class="bg-white rounded-xl overflow-hidden border-l-4 <?php echo e($d->age > 7 ? 'border-l-red-500' : 'border-l-[#f5922f]'); ?>">
+        <section class="bg-white rounded-xl overflow-hidden border-l-4 <?php echo e($d->age > 7 ? 'border-l-red-500' : 'border-l-[#1c3041]'); ?>">
             <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-slate-50 border-b border-slate-100">
-                <a class="inline-flex items-center gap-2 font-semibold text-[#2c8fc6]" href="<?php echo e(route('manager.customers.show', $d->customer)); ?>">
+                <a class="inline-flex items-center gap-2 font-semibold text-[#1c3041]" href="<?php echo e(route('manager.customers.show', $d->customer)); ?>">
                     <span class="grid h-8 w-8 place-items-center rounded-full bg-slate-200 text-xs text-slate-600"><?php echo e(mb_strtoupper(mb_substr($d->customer->name, 0, 1))); ?></span>
                     <?php echo e($d->customer->name); ?> <span class="text-slate-400 text-sm font-normal"><?php echo e($d->customer->phone); ?></span></a>
                 <div class="text-right"><strong class="text-red-600"><?php echo e($m($d->balance)); ?></strong> <span class="text-xs rounded-full px-2 py-0.5 <?php echo e($d->age > 7 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'); ?>"><?php echo e($d->age); ?> day(s)</span></div>

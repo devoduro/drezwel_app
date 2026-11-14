@@ -1,3 +1,4 @@
+
 <?php $__env->startSection('title', 'My Deliveries · Drezwel Go'); ?>
 <?php $__env->startSection('content'); ?>
 <?php if (isset($component)) { $__componentOriginalb08eb6e359b0cda244088e0d0db6136c = $component; } ?>
@@ -48,7 +49,7 @@
 <?php endif; ?>
 <div class="space-y-3">
     <?php $__empty_1 = true; $__currentLoopData = $deliveries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?> <?php echo $__env->make('rider._card', ['d' => $d], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?> <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-        <div class="bg-white rounded-xl p-8 text-center text-slate-500"><i class="fas fa-mug-hot text-3xl mb-2 block text-slate-300"></i>Nothing assigned yet.<br><a class="text-[#2c8fc6] font-semibold" href="<?php echo e(route('rider.available')); ?>">Pick an order →</a></div>
+        <div class="bg-white rounded-xl p-8 text-center text-slate-500"><i class="fas fa-mug-hot text-3xl mb-2 block text-slate-300"></i>Nothing assigned yet.<br><a class="text-[#1c3041] font-semibold" href="<?php echo e(route('rider.available')); ?>">Pick an order →</a></div>
     <?php endif; ?>
 </div>
 <?php $__env->stopSection(); ?>

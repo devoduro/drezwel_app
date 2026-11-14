@@ -7,6 +7,8 @@
     $tel = \App\Models\Setting::phoneLink();
     $wa = preg_replace('/\D/', '', (string) $S('whatsapp'));
     $cartCount = array_sum((array) session('cart', []));
+    $staff = auth()->user();
+    $staffHome = $staff ? route($staff->isManager() ? 'manager.dashboard' : 'rider.mine') : null;
     $pageTitle = trim($__env->yieldContent('title')) ?: $biz . ' | ' . $S('tagline');
     $pageDesc = trim($__env->yieldContent('description')) ?: $S('tagline') . '. Shop clothing, jeans, shirts, sneakers and accessories online and pay on delivery.';
     $ogImage = trim($__env->yieldContent('og_image')) ?: asset('images/logo.png');
@@ -20,7 +22,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#f68b1e">
+    <meta name="theme-color" content="#1c3041">
     <title>{{ $pageTitle }}</title>
     <meta name="description" content="{{ $pageDesc }}">
     <link rel="canonical" href="{{ url()->current() }}">
@@ -33,7 +35,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap">
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-    <script>tailwind.config = {theme: {extend: {colors: {brand: {DEFAULT: '#313133', accent: '#f68b1e'}, jm: {orange: '#f68b1e', dark: '#313133', grey: '#75757a', bg: '#f1f1f2', red: '#be1d3e'}}}}}</script>
+    <script>tailwind.config = {theme: {extend: {colors: {brand: {DEFAULT: '#1c3041', accent: '#1c3041'}, jm: {primary: '#1c3041', dark: '#1c3041', light: '#8fb8d8', grey: '#75757a', bg: '#f1f1f2', red: '#be1d3e'}}}}}</script>
     <style>
         body{font-family:Ubuntu,-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif}
         .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -58,13 +60,26 @@
                 <div class="relative flex-1">
                     <i class="fas fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-jm-grey"></i>
                     <input name="q" value="{{ request('q') }}" placeholder="Search products, categories and brands" autocomplete="off"
-                           class="h-11 w-full rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 pl-10 pr-3 text-[15px] focus:border-jm-orange focus:bg-white focus:outline-none">
+                           class="h-11 w-full rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 pl-10 pr-3 text-[15px] focus:border-jm-primary focus:bg-white focus:outline-none">
                 </div>
-                <button class="h-11 rounded-r-lg bg-jm-orange px-6 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#e07b10]">Search</button>
+                <button class="h-11 rounded-r-lg bg-jm-primary px-6 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#14212d]">Search</button>
             </form>
 
             <nav class="ml-auto flex items-center gap-1 sm:gap-2 text-[15px] font-medium">
-                <a href="{{ route('track') }}" class="hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-2 hover:bg-jm-bg"><i class="far fa-user text-lg"></i> Account</a>
+                <div class="relative group hidden sm:block">
+                    <a href="{{ $staff ? $staffHome : route('login') }}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 hover:bg-jm-bg"><i class="far fa-user text-lg"></i> {{ $staff ? \Illuminate\Support\Str::before($staff->name, ' ') : 'Login' }} <i class="fas fa-chevron-down text-[10px]"></i></a>
+                    <div class="invisible absolute right-0 top-full w-56 rounded-lg bg-white py-2 text-sm opacity-0 shadow-xl ring-1 ring-black/5 transition group-hover:visible group-hover:opacity-100">
+                        @if($staff)
+                            <a class="block px-4 py-2 font-bold text-jm-primary hover:bg-jm-bg" href="{{ $staffHome }}"><i class="fas fa-gauge-high w-5"></i> My dashboard</a>
+                            <form method="POST" action="{{ route('logout') }}">@csrf<button class="block w-full px-4 py-2 text-left hover:bg-jm-bg"><i class="fas fa-right-from-bracket w-5"></i> Log out</button></form>
+                        @else
+                            <a class="block px-4 py-2 font-bold text-jm-primary hover:bg-jm-bg" href="{{ route('login') }}"><i class="fas fa-right-to-bracket w-5"></i> Login <span class="font-normal text-jm-grey">(staff &amp; riders)</span></a>
+                        @endif
+                        <a class="block px-4 py-2 hover:bg-jm-bg" href="{{ route('track') }}"><i class="fas fa-box w-5"></i> My orders</a>
+                    </div>
+                </div>
+                {{-- phone: a user icon straight to login --}}
+                <a href="{{ $staff ? $staffHome : route('login') }}" class="sm:hidden inline-flex items-center rounded-lg px-2.5 py-2 hover:bg-jm-bg" aria-label="{{ $staff ? 'My dashboard' : 'Login' }}"><i class="far fa-user text-xl"></i></a>
                 <div class="relative group hidden sm:block">
                     <a href="{{ route('site.page', 'delivery-info') }}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 hover:bg-jm-bg"><i class="far fa-circle-question text-lg"></i> Help <i class="fas fa-chevron-down text-[10px]"></i></a>
                     <div class="invisible absolute right-0 top-full w-60 rounded-lg bg-white py-2 text-sm opacity-0 shadow-xl ring-1 ring-black/5 transition group-hover:visible group-hover:opacity-100">
@@ -72,12 +87,12 @@
                         <a class="block px-4 py-2 hover:bg-jm-bg" href="{{ route('track') }}">Track your order</a>
                         <a class="block px-4 py-2 hover:bg-jm-bg" href="{{ route('site.page', 'return-policy') }}">Returns policy</a>
                         <a class="block px-4 py-2 hover:bg-jm-bg" href="{{ route('site.contact') }}">Contact us</a>
-                        @if($tel)<a class="block px-4 py-2 font-semibold text-jm-orange hover:bg-jm-bg" href="tel:{{ $tel }}"><i class="fas fa-phone"></i> Call to order</a>@endif
+                        @if($tel)<a class="block px-4 py-2 font-semibold text-jm-primary hover:bg-jm-bg" href="tel:{{ $tel }}"><i class="fas fa-phone"></i> Call to order</a>@endif
                     </div>
                 </div>
                 <a href="{{ route('shop.cart') }}" class="relative inline-flex items-center gap-1.5 rounded-lg px-3 py-2 hover:bg-jm-bg">
                     <i class="fas fa-cart-shopping text-lg"></i> <span class="hidden sm:inline">Cart</span>
-                    @if($cartCount)<span class="absolute -top-0.5 left-6 grid h-5 min-w-5 place-items-center rounded-full bg-jm-orange px-1 text-[11px] font-bold text-white">{{ $cartCount }}</span>@endif
+                    @if($cartCount)<span class="absolute -top-0.5 left-6 grid h-5 min-w-5 place-items-center rounded-full bg-jm-primary px-1 text-[11px] font-bold text-white">{{ $cartCount }}</span>@endif
                 </a>
             </nav>
         </div>
@@ -85,26 +100,32 @@
         <form method="GET" action="{{ route('shop.index') }}" class="md:hidden px-3 pb-2.5">
             <div class="relative">
                 <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-jm-grey"></i>
-                <input name="q" value="{{ request('q') }}" placeholder="Search products, categories and brands" class="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 pl-9 pr-3 text-sm focus:border-jm-orange focus:bg-white focus:outline-none">
+                <input name="q" value="{{ request('q') }}" placeholder="Search products, categories and brands" class="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 pl-9 pr-3 text-sm focus:border-jm-primary focus:bg-white focus:outline-none">
             </div>
         </form>
 
         {{-- Category menu row --}}
         <div class="border-t bg-white">
             <nav class="no-scrollbar max-w-[1180px] mx-auto px-3 sm:px-4 flex items-center gap-1 overflow-x-auto text-[14px] font-medium whitespace-nowrap">
-                <a href="{{ route('shop.index') }}" class="py-2.5 px-3 hover:text-jm-orange {{ request()->routeIs('shop.index') && ! request('category') ? 'text-jm-orange' : '' }}"><i class="fas fa-border-all mr-1"></i> All products</a>
+                <a href="{{ route('shop.index') }}" class="py-2.5 px-3 hover:text-jm-primary {{ request()->routeIs('shop.index') && ! request('category') ? 'text-jm-primary' : '' }}"><i class="fas fa-border-all mr-1"></i> All products</a>
                 @if($hasDeals)<a href="{{ route('shop.index', ['deals' => 1]) }}" class="py-2.5 px-3 font-bold text-jm-red hover:underline"><i class="fas fa-bolt"></i> Today's deals</a>@endif
-                @foreach($menuCats as $c)<a href="{{ route('shop.index', ['category' => $c]) }}" class="py-2.5 px-3 hover:text-jm-orange {{ request('category') === $c ? 'text-jm-orange' : '' }}">{{ $c }}</a>@endforeach
-                <a href="{{ route('site.wholesale') }}" class="py-2.5 px-3 hover:text-jm-orange">Wholesale</a>
-                <a href="{{ route('site.about') }}" class="py-2.5 px-3 hover:text-jm-orange">About</a>
-                <a href="{{ route('site.contact') }}" class="py-2.5 px-3 hover:text-jm-orange">Contact</a>
+                @foreach($menuCats as $c)<a href="{{ route('shop.index', ['category' => $c]) }}" class="py-2.5 px-3 hover:text-jm-primary {{ request('category') === $c ? 'text-jm-primary' : '' }}">{{ $c }}</a>@endforeach
+                <a href="{{ route('site.wholesale') }}" class="py-2.5 px-3 hover:text-jm-primary">Wholesale</a>
+                <a href="{{ route('site.about') }}" class="py-2.5 px-3 hover:text-jm-primary">About</a>
+                <a href="{{ route('site.contact') }}" class="py-2.5 px-3 hover:text-jm-primary">Contact</a>
+                <a href="{{ $staff ? $staffHome : route('login') }}" class="ml-auto py-2.5 px-3 font-bold text-jm-primary hover:underline"><i class="fas fa-right-to-bracket mr-1"></i>{{ $staff ? 'My dashboard' : 'Login' }}</a>
             </nav>
         </div>
         {{-- phone menu --}}
         <nav id="mobileNav" class="hidden lg:hidden border-t bg-white px-4 py-1 text-[15px]">
-            @foreach([['home', 'Home', 'fa-house'], ['shop.index', 'Shop', 'fa-bag-shopping'], ['site.wholesale', 'Wholesale', 'fa-boxes-stacked'], ['site.about', 'About us', 'fa-circle-info'], ['site.contact', 'Contact', 'fa-envelope'], ['track', 'Track order / Account', 'fa-user']] as [$r, $l, $i])
-                <a href="{{ route($r) }}" class="flex items-center gap-3 py-3 border-b border-slate-100 last:border-0"><i class="fas {{ $i }} w-5 text-jm-orange"></i>{{ $l }}</a>
+            @foreach([['home', 'Home', 'fa-house'], ['shop.index', 'Shop', 'fa-bag-shopping'], ['site.wholesale', 'Wholesale', 'fa-boxes-stacked'], ['site.about', 'About us', 'fa-circle-info'], ['site.contact', 'Contact', 'fa-envelope'], ['track', 'Track order / My orders', 'fa-box']] as [$r, $l, $i])
+                <a href="{{ route($r) }}" class="flex items-center gap-3 py-3 border-b border-slate-100 last:border-0"><i class="fas {{ $i }} w-5 text-jm-primary"></i>{{ $l }}</a>
             @endforeach
+            @if($staff)
+                <a href="{{ $staffHome }}" class="flex items-center gap-3 py-3 border-b border-slate-100 font-bold text-jm-primary"><i class="fas fa-gauge-high w-5"></i>My dashboard</a>
+            @else
+                <a href="{{ route('login') }}" class="flex items-center gap-3 py-3 font-bold text-jm-primary"><i class="fas fa-right-to-bracket w-5"></i>Login</a>
+            @endif
         </nav>
     </header>
 
@@ -115,9 +136,9 @@
 
     {{-- Footer --}}
     <footer class="mt-10 bg-jm-dark text-slate-300">
-        <div class="bg-[#2a2a2c]"><div class="max-w-[1180px] mx-auto px-4 py-5 grid gap-4 sm:grid-cols-3 text-sm">
+        <div class="bg-[#16232f]"><div class="max-w-[1180px] mx-auto px-4 py-5 grid gap-4 sm:grid-cols-3 text-sm">
             @foreach([['fa-truck-fast', 'Delivered to your door', 'In Accra by rider, other regions by station bus'], ['fa-hand-holding-dollar', 'Pay on delivery', 'Cash or MoMo when it arrives'], ['fa-headset', 'We are here to help', $phones ? 'Call ' . $phones[0][0] : 'Contact us anytime']] as [$ic, $t, $d])
-                <div class="flex items-center gap-3"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-jm-orange/15 text-lg text-jm-orange"><i class="fas {{ $ic }}"></i></span><div><div class="font-semibold text-white">{{ $t }}</div><div class="text-slate-400">{{ $d }}</div></div></div>
+                <div class="flex items-center gap-3"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/10 text-lg text-jm-light"><i class="fas {{ $ic }}"></i></span><div><div class="font-semibold text-white">{{ $t }}</div><div class="text-slate-400">{{ $d }}</div></div></div>
             @endforeach
         </div></div>
         <div class="max-w-[1180px] mx-auto px-4 py-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 text-sm">
@@ -142,13 +163,13 @@
             </div>
             <div class="space-y-2">
                 <div class="font-bold uppercase tracking-wide text-white">Contact</div>
-                @foreach($phones as [$disp, $digits])<a class="block hover:text-white" href="tel:{{ $digits }}"><i class="fas fa-phone w-5 text-jm-orange"></i>{{ $disp }}</a>@endforeach
+                @foreach($phones as [$disp, $digits])<a class="block hover:text-white" href="tel:{{ $digits }}"><i class="fas fa-phone w-5 text-jm-light"></i>{{ $disp }}</a>@endforeach
                 @if($wa)<a class="block hover:text-white" href="https://wa.me/{{ $wa }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp w-5 text-green-400"></i>WhatsApp us</a>@endif
-                @if($S('whatsapp_channel'))<a class="block hover:text-white" href="{{ $S('whatsapp_channel') }}" target="_blank" rel="noopener"><i class="fas fa-bullhorn w-5 text-jm-orange"></i>Follow our WhatsApp channel</a>@endif
-                @if($S('email'))<a class="block hover:text-white" href="mailto:{{ $S('email') }}"><i class="fas fa-envelope w-5 text-jm-orange"></i>{{ $S('email') }}</a>@endif
-                @if($S('address'))<div><i class="fas fa-location-dot w-5 text-jm-orange"></i>{{ $S('address') }}</div>@endif
-                @if($S('hours'))<div><i class="fas fa-clock w-5 text-jm-orange"></i>{{ $S('hours') }}</div>@endif
-                @if($socials)<div class="flex gap-2 pt-2">@foreach($socials as [$icon, $name, $url])<a href="{{ $url }}" target="_blank" rel="noopener" aria-label="{{ $name }}" class="grid h-9 w-9 place-items-center rounded-full bg-white/10 transition hover:bg-jm-orange hover:text-white"><i class="{{ $icon }}"></i></a>@endforeach</div>@endif
+                @if($S('whatsapp_channel'))<a class="block hover:text-white" href="{{ $S('whatsapp_channel') }}" target="_blank" rel="noopener"><i class="fas fa-bullhorn w-5 text-jm-light"></i>Follow our WhatsApp channel</a>@endif
+                @if($S('email'))<a class="block hover:text-white" href="mailto:{{ $S('email') }}"><i class="fas fa-envelope w-5 text-jm-light"></i>{{ $S('email') }}</a>@endif
+                @if($S('address'))<div><i class="fas fa-location-dot w-5 text-jm-light"></i>{{ $S('address') }}</div>@endif
+                @if($S('hours'))<div><i class="fas fa-clock w-5 text-jm-light"></i>{{ $S('hours') }}</div>@endif
+                @if($socials)<div class="flex gap-2 pt-2">@foreach($socials as [$icon, $name, $url])<a href="{{ $url }}" target="_blank" rel="noopener" aria-label="{{ $name }}" class="grid h-9 w-9 place-items-center rounded-full bg-white/10 transition hover:bg-jm-light hover:text-jm-dark"><i class="{{ $icon }}"></i></a>@endforeach</div>@endif
             </div>
         </div>
         <div class="border-t border-white/10">

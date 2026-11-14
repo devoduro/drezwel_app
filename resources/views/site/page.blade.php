@@ -18,7 +18,7 @@
     </article>
     <div class="mt-6 flex flex-wrap gap-3 text-sm font-semibold">
         <a href="{{ route('site.contact') }}" class="rounded-xl bg-white px-5 py-2.5">Questions? Contact us</a>
-        <a href="{{ route('shop.index') }}" class="rounded-xl bg-jm-orange text-white px-5 py-2.5">Back to shop</a>
+        <a href="{{ route('shop.index') }}" class="rounded-xl bg-jm-primary text-white px-5 py-2.5">Back to shop</a>
     </div>
 </div>
 @endsection

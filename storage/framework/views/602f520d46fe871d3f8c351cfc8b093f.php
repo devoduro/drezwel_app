@@ -6,7 +6,7 @@
     $range = ($from || $to) ? ($from?->format('d M Y') ?? '…') . ' – ' . ($to?->format('d M Y') ?? '…') : 'All records';
     $qs = request()->only(['period', 'from', 'to']);
     $th = 'text-left text-slate-500 text-xs';
-    $head = 'px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#42a5dc] font-semibold text-sm text-slate-800';
+    $head = 'px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm text-slate-800';
 ?>
 <?php $__env->startSection('content'); ?>
 <?php if (isset($component)) { $__componentOriginalb08eb6e359b0cda244088e0d0db6136c = $component; } ?>
@@ -48,13 +48,13 @@
 
 <div class="no-print mb-6 flex flex-wrap gap-2 text-sm">
     <span class="text-slate-500 self-center">Download CSV:</span>
-    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#42a5dc]" href="<?php echo e(route('manager.reports.export', ['type' => 'orders'] + $qs)); ?>"><i class="fas fa-file-csv text-[#74a83b]"></i> Orders</a>
-    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#42a5dc]" href="<?php echo e(route('manager.reports.export', ['type' => 'sales'] + $qs)); ?>"><i class="fas fa-file-csv text-[#74a83b]"></i> Sales by product</a>
-    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#42a5dc]" href="<?php echo e(route('manager.reports.export', ['type' => 'stock'])); ?>"><i class="fas fa-file-csv text-[#74a83b]"></i> Current stock</a>
+    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="<?php echo e(route('manager.reports.export', ['type' => 'orders'] + $qs)); ?>"><i class="fas fa-file-csv text-[#74a83b]"></i> Orders</a>
+    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="<?php echo e(route('manager.reports.export', ['type' => 'sales'] + $qs)); ?>"><i class="fas fa-file-csv text-[#74a83b]"></i> Sales by product</a>
+    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="<?php echo e(route('manager.reports.export', ['type' => 'stock'])); ?>"><i class="fas fa-file-csv text-[#74a83b]"></i> Current stock</a>
 </div>
 
 
-<h2 class="text-lg font-bold mb-3"><i class="fas fa-sack-dollar text-[#42a5dc]"></i> Finances</h2>
+<h2 class="text-lg font-bold mb-3"><i class="fas fa-sack-dollar text-[#1c3041]"></i> Finances</h2>
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
@@ -195,7 +195,7 @@
 </div>
 
 
-<h2 class="text-lg font-bold mb-3 print-break"><i class="fas fa-truck-fast text-[#42a5dc]"></i> Orders</h2>
+<h2 class="text-lg font-bold mb-3 print-break"><i class="fas fa-truck-fast text-[#1c3041]"></i> Orders</h2>
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
@@ -340,7 +340,7 @@
 </div>
 
 
-<h2 class="text-lg font-bold mb-3 mt-8 print-break"><i class="fas fa-boxes-stacked text-[#42a5dc]"></i> Stock</h2>
+<h2 class="text-lg font-bold mb-3 mt-8 print-break"><i class="fas fa-boxes-stacked text-[#1c3041]"></i> Stock</h2>
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
@@ -430,7 +430,7 @@
         <table class="w-full text-sm">
             <thead class="<?php echo e($th); ?>"><tr><th class="px-4 py-2">Product</th><th class="text-right">In stock</th><th class="text-right">Reorder at</th><th class="px-4">Level</th></tr></thead>
             <?php $__empty_1 = true; $__currentLoopData = $needing; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                <tr class="border-t border-slate-100"><td class="px-4 py-2"><a class="text-[#2c8fc6] hover:underline" href="<?php echo e(route('manager.products.show', $p)); ?>"><?php echo e($p->name); ?></a></td><td class="text-right font-bold <?php echo e($p->level === 'out' ? 'text-red-600' : 'text-[#de7a14]'); ?>"><?php echo e($p->stock_qty); ?></td><td class="text-right"><?php echo e($p->reorder_level); ?></td><td class="px-4"><?php echo $__env->make('manager.products._level', ['p' => $p], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></td></tr>
+                <tr class="border-t border-slate-100"><td class="px-4 py-2"><a class="text-[#1c3041] hover:underline" href="<?php echo e(route('manager.products.show', $p)); ?>"><?php echo e($p->name); ?></a></td><td class="text-right font-bold <?php echo e($p->level === 'out' ? 'text-red-600' : 'text-amber-600'); ?>"><?php echo e($p->stock_qty); ?></td><td class="text-right"><?php echo e($p->reorder_level); ?></td><td class="px-4"><?php echo $__env->make('manager.products._level', ['p' => $p], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></td></tr>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="4" class="p-6 text-center text-slate-400"><i class="fas fa-circle-check text-green-500"></i> Everything is above its reorder level.</td></tr> <?php endif; ?>
         </table>
     </section>

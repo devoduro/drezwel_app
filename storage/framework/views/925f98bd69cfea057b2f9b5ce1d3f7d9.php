@@ -1,3 +1,4 @@
+
 <?php $__env->startSection('title', 'Messages · Drezwel Go'); ?>
 <?php $__env->startSection('content'); ?>
 <?php if (isset($component)) { $__componentOriginalb08eb6e359b0cda244088e0d0db6136c = $component; } ?>
@@ -32,26 +33,26 @@
     <select name="type" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
         <option value="">All types</option><option value="contact" <?php if(request('type') === 'contact'): echo 'selected'; endif; ?>>Contact</option><option value="wholesale" <?php if(request('type') === 'wholesale'): echo 'selected'; endif; ?>>Wholesale</option>
     </select>
-    <button class="rounded-lg bg-[#42a5dc] hover:bg-[#2c8fc6] text-white px-4 py-2 font-semibold transition"><i class="fas fa-filter"></i> Filter</button>
+    <button class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-4 py-2 font-semibold transition"><i class="fas fa-filter"></i> Filter</button>
 </form>
 
 <div class="space-y-3">
     <?php $__empty_1 = true; $__currentLoopData = $messages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $m): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-        <section class="bg-white rounded-xl p-4 border-l-4 <?php echo e($m->status === 'new' ? 'border-l-[#f5922f]' : 'border-l-[#8cc152] opacity-80'); ?>">
+        <section class="bg-white rounded-xl p-4 border-l-4 <?php echo e($m->status === 'new' ? 'border-l-[#1c3041]' : 'border-l-[#8cc152] opacity-80'); ?>">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <div class="font-semibold"><?php echo e($m->name); ?>
 
                         <span class="ml-1 rounded-full px-2 py-0.5 text-xs <?php echo e($m->type === 'wholesale' ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700'); ?>"><?php echo e($m->type === 'wholesale' ? 'Wholesale' : 'Contact'); ?></span></div>
                     <div class="text-sm text-slate-500">
-                        <a class="text-[#2c8fc6] hover:underline" href="tel:<?php echo e($m->phone); ?>"><i class="fas fa-phone"></i> <?php echo e($m->phone); ?></a>
+                        <a class="text-[#1c3041] hover:underline" href="tel:<?php echo e($m->phone); ?>"><i class="fas fa-phone"></i> <?php echo e($m->phone); ?></a>
                         <?php if($m->email): ?> · <a class="hover:underline" href="mailto:<?php echo e($m->email); ?>"><?php echo e($m->email); ?></a><?php endif; ?>
                         · <?php echo e($m->created_at->format('d M Y, g:ia')); ?>
 
                     </div>
                 </div>
                 <form method="POST" action="<?php echo e(route('manager.messages.toggle', $m)); ?>"><?php echo csrf_field(); ?>
-                    <button class="rounded-lg border px-3 py-1.5 text-sm font-semibold hover:border-[#42a5dc]"><?php echo e($m->status === 'new' ? 'Mark handled' : 'Reopen'); ?></button>
+                    <button class="rounded-lg border px-3 py-1.5 text-sm font-semibold hover:border-[#1c3041]"><?php echo e($m->status === 'new' ? 'Mark handled' : 'Reopen'); ?></button>
                 </form>
             </div>
             <?php if($m->subject): ?><div class="mt-2 font-medium"><?php echo e($m->subject); ?></div><?php endif; ?>

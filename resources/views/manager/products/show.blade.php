@@ -2,7 +2,7 @@
 @section('title', $product->name . ' · Drezwel Go')
 @php
     $m = fn ($v) => 'GH₵ ' . number_format((float) $v, 2);
-    $input = 'rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#42a5dc]';
+    $input = 'rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1c3041]';
 @endphp
 @section('content')
 <x-dashboard-hero class="mb-6" eyebrow="{{ $product->category ?: 'Product' }}{{ $product->sku ? ' · ' . $product->sku : '' }}" :title="$product->name" :subtitle="'Selling ' . $m($product->selling_price) . ' · cost ' . $m($product->cost_price) . ' · margin ' . $m($product->margin)">
@@ -29,9 +29,9 @@
         <div class="flex flex-wrap gap-4">
             @foreach($product->images as $img)
                 <div class="w-32">
-                    <img src="{{ $img->url }}" alt="" class="h-32 w-32 rounded-lg object-cover border {{ $loop->first ? 'ring-2 ring-[#42a5dc]' : '' }}">
+                    <img src="{{ $img->url }}" alt="" class="h-32 w-32 rounded-lg object-cover border {{ $loop->first ? 'ring-2 ring-[#1c3041]' : '' }}">
                     <div class="mt-1 flex items-center justify-between text-xs">
-                        @if($loop->first)<span class="text-[#2c8fc6] font-semibold">Main</span>@else
+                        @if($loop->first)<span class="text-[#1c3041] font-semibold">Main</span>@else
                             <form method="POST" action="{{ route('manager.products.image.main', $img) }}">@csrf<button class="text-slate-500 hover:text-slate-900">Make main</button></form>@endif
                         <form method="POST" action="{{ route('manager.products.image.delete', $img) }}" onsubmit="return confirm('Remove this photo?')">@csrf @method('DELETE')<button class="text-red-500" title="Remove"><i class="fas fa-trash"></i></button></form>
                     </div>
@@ -75,7 +75,7 @@
     </section>
 
     <section class="bg-white rounded-xl overflow-hidden lg:col-span-2">
-        <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#42a5dc] font-semibold text-sm">Stock history</div>
+        <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm">Stock history</div>
         <div class="overflow-x-auto"><table class="w-full text-sm">
             <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">When</th><th>Variant</th><th>Type</th><th class="text-right">Change</th><th class="text-right">Balance</th><th>Order</th><th class="p-3">Note</th></tr></thead>
             @forelse($movements as $mv)
@@ -85,7 +85,7 @@
                     <td>{{ \App\Models\StockMovement::TYPES[$mv->type] ?? $mv->type }}</td>
                     <td class="text-right font-semibold {{ $mv->qty > 0 ? 'text-green-600' : 'text-red-600' }}">{{ $mv->qty > 0 ? '+' : '' }}{{ $mv->qty }}</td>
                     <td class="text-right">{{ $mv->balance_after }}</td>
-                    <td>@if($mv->delivery)<a class="text-[#2c8fc6] hover:underline" href="{{ route('manager.deliveries.show', $mv->delivery) }}">{{ $mv->delivery->reference }}</a>@else — @endif</td>
+                    <td>@if($mv->delivery)<a class="text-[#1c3041] hover:underline" href="{{ route('manager.deliveries.show', $mv->delivery) }}">{{ $mv->delivery->reference }}</a>@else — @endif</td>
                     <td class="p-3 text-slate-500">{{ $mv->note }}</td>
                 </tr>
             @empty <tr><td colspan="7" class="p-8 text-center text-slate-400">No stock movements yet.</td></tr> @endforelse

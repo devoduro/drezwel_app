@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Remittance;
 use App\Models\SmsLog;
 use App\Models\User;
+use App\Services\SmsService;
+use App\Support\Phone;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -83,6 +85,24 @@ class RemittanceController extends Controller
         return view('manager.sms', [
             'logs' => SmsLog::latest()->paginate(40),
             'stats' => ['total' => SmsLog::count(), 'sent' => SmsLog::where('success', true)->count(), 'failed' => SmsLog::where('success', false)->count()],
+            // Shown so a missing key is obvious. The key itself is never displayed.
+            'config' => ['has_key' => (string) config('services.speso_sms.api_key') !== '', 'sender' => (string) config('services.speso_sms.sender_id')],
         ]);
+    }
+
+    /** Sends one real SMS so the manager can check the Speso key, sender ID and balance. */
+    public function testSms(Request $request, SmsService $sms)
+    {
+        $request->merge(['phone' => Phone::clean($request->input('phone'))]);
+        $data = $request->validate([
+            'phone' => ['required', 'regex:/^0\d{9}$/'],
+            'message' => 'nullable|string|max:300',
+        ], ['phone.regex' => 'Enter a 10-digit phone number, e.g. 0241234567.']);
+
+        $result = $sms->send($data['phone'], ($data['message'] ?? null) ?: 'Drezwel Go: this is a test message. Your SMS is working.', null, 'test');
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['success']
+            ? "Test SMS accepted by Speso for {$data['phone']}. Check that phone."
+            : 'The test SMS did not send: ' . $result['message']);
     }
 }

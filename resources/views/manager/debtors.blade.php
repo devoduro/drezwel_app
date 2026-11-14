@@ -18,9 +18,9 @@
 
 <div class="space-y-4">
     @forelse($debtors as $d)
-        <section class="bg-white rounded-xl overflow-hidden border-l-4 {{ $d->age > 7 ? 'border-l-red-500' : 'border-l-[#f5922f]' }}">
+        <section class="bg-white rounded-xl overflow-hidden border-l-4 {{ $d->age > 7 ? 'border-l-red-500' : 'border-l-[#1c3041]' }}">
             <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-slate-50 border-b border-slate-100">
-                <a class="inline-flex items-center gap-2 font-semibold text-[#2c8fc6]" href="{{ route('manager.customers.show', $d->customer) }}">
+                <a class="inline-flex items-center gap-2 font-semibold text-[#1c3041]" href="{{ route('manager.customers.show', $d->customer) }}">
                     <span class="grid h-8 w-8 place-items-center rounded-full bg-slate-200 text-xs text-slate-600">{{ mb_strtoupper(mb_substr($d->customer->name, 0, 1)) }}</span>
                     {{ $d->customer->name }} <span class="text-slate-400 text-sm font-normal">{{ $d->customer->phone }}</span></a>
                 <div class="text-right"><strong class="text-red-600">{{ $m($d->balance) }}</strong> <span class="text-xs rounded-full px-2 py-0.5 {{ $d->age > 7 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800' }}">{{ $d->age }} day(s)</span></div>

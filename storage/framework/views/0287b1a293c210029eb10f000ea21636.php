@@ -1,7 +1,8 @@
+
 <?php $__env->startSection('title', $product->name . ' · Drezwel Go'); ?>
 <?php
     $m = fn ($v) => 'GH₵ ' . number_format((float) $v, 2);
-    $input = 'rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#42a5dc]';
+    $input = 'rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1c3041]';
 ?>
 <?php $__env->startSection('content'); ?>
 <?php if (isset($component)) { $__componentOriginalb08eb6e359b0cda244088e0d0db6136c = $component; } ?>
@@ -122,9 +123,9 @@
         <div class="flex flex-wrap gap-4">
             <?php $__currentLoopData = $product->images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $img): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="w-32">
-                    <img src="<?php echo e($img->url); ?>" alt="" class="h-32 w-32 rounded-lg object-cover border <?php echo e($loop->first ? 'ring-2 ring-[#42a5dc]' : ''); ?>">
+                    <img src="<?php echo e($img->url); ?>" alt="" class="h-32 w-32 rounded-lg object-cover border <?php echo e($loop->first ? 'ring-2 ring-[#1c3041]' : ''); ?>">
                     <div class="mt-1 flex items-center justify-between text-xs">
-                        <?php if($loop->first): ?><span class="text-[#2c8fc6] font-semibold">Main</span><?php else: ?>
+                        <?php if($loop->first): ?><span class="text-[#1c3041] font-semibold">Main</span><?php else: ?>
                             <form method="POST" action="<?php echo e(route('manager.products.image.main', $img)); ?>"><?php echo csrf_field(); ?><button class="text-slate-500 hover:text-slate-900">Make main</button></form><?php endif; ?>
                         <form method="POST" action="<?php echo e(route('manager.products.image.delete', $img)); ?>" onsubmit="return confirm('Remove this photo?')"><?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?><button class="text-red-500" title="Remove"><i class="fas fa-trash"></i></button></form>
                     </div>
@@ -168,7 +169,7 @@
     </section>
 
     <section class="bg-white rounded-xl overflow-hidden lg:col-span-2">
-        <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#42a5dc] font-semibold text-sm">Stock history</div>
+        <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm">Stock history</div>
         <div class="overflow-x-auto"><table class="w-full text-sm">
             <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">When</th><th>Variant</th><th>Type</th><th class="text-right">Change</th><th class="text-right">Balance</th><th>Order</th><th class="p-3">Note</th></tr></thead>
             <?php $__empty_1 = true; $__currentLoopData = $movements; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $mv): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
@@ -178,7 +179,7 @@
                     <td><?php echo e(\App\Models\StockMovement::TYPES[$mv->type] ?? $mv->type); ?></td>
                     <td class="text-right font-semibold <?php echo e($mv->qty > 0 ? 'text-green-600' : 'text-red-600'); ?>"><?php echo e($mv->qty > 0 ? '+' : ''); ?><?php echo e($mv->qty); ?></td>
                     <td class="text-right"><?php echo e($mv->balance_after); ?></td>
-                    <td><?php if($mv->delivery): ?><a class="text-[#2c8fc6] hover:underline" href="<?php echo e(route('manager.deliveries.show', $mv->delivery)); ?>"><?php echo e($mv->delivery->reference); ?></a><?php else: ?> — <?php endif; ?></td>
+                    <td><?php if($mv->delivery): ?><a class="text-[#1c3041] hover:underline" href="<?php echo e(route('manager.deliveries.show', $mv->delivery)); ?>"><?php echo e($mv->delivery->reference); ?></a><?php else: ?> — <?php endif; ?></td>
                     <td class="p-3 text-slate-500"><?php echo e($mv->note); ?></td>
                 </tr>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="7" class="p-8 text-center text-slate-400">No stock movements yet.</td></tr> <?php endif; ?>

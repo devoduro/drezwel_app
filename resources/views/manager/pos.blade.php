@@ -1,10 +1,10 @@
 @extends('layouts.app')
 @section('title', 'POS · Drezwel Go')
-@php $field = 'w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#42a5dc]'; @endphp
+@php $field = 'w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1c3041]'; @endphp
 @section('content')
 <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
     <div><h1 class="text-xl font-bold">Point of sale</h1><p class="text-sm text-slate-500">Sell to a customer in the shop, or take an order over the phone.</p></div>
-    <a href="{{ route('manager.products.index') }}" class="text-sm text-[#2c8fc6] font-semibold"><i class="fas fa-boxes-stacked"></i> Products</a>
+    <a href="{{ route('manager.products.index') }}" class="text-sm text-[#1c3041] font-semibold"><i class="fas fa-boxes-stacked"></i> Products</a>
 </div>
 
 <div class="grid gap-4 xl:grid-cols-3" id="pos">
@@ -76,10 +76,10 @@
         catalog.filter(p => (!c || p.category === c) && (!q || (p.name + ' ' + (p.sku || '') + ' ' + (p.category || '')).toLowerCase().includes(q))).forEach(p => {
             const out = stock(p) <= 0, prices = p.variants.map(v => v.price), min = Math.min(...prices);
             const b = document.createElement('button'); b.type = 'button'; b.disabled = out;
-            b.className = 'overflow-hidden rounded-xl border bg-white text-left transition hover:shadow-md hover:border-[#42a5dc] disabled:opacity-40 disabled:cursor-not-allowed';
+            b.className = 'overflow-hidden rounded-xl border bg-white text-left transition hover:shadow-md hover:border-[#1c3041] disabled:opacity-40 disabled:cursor-not-allowed';
             b.innerHTML = `<div class="aspect-square bg-slate-100">${p.image ? `<img src="${p.image}" class="h-full w-full object-cover" loading="lazy">` : '<div class="grid h-full place-items-center text-4xl text-slate-300"><i class="fas fa-shirt"></i></div>'}</div>
                 <div class="p-2"><div class="line-clamp-2 text-sm font-medium leading-tight">${p.name}</div>
-                <div class="mt-1 flex items-center justify-between text-xs"><span class="font-bold text-[#2c8fc6]">${prices.some(x => x !== min) ? 'From ' : ''}${money(min)}</span><span class="${out ? 'text-red-600' : 'text-slate-400'}">${out ? 'Sold out' : stock(p) + ' left'}</span></div></div>`;
+                <div class="mt-1 flex items-center justify-between text-xs"><span class="font-bold text-[#1c3041]">${prices.some(x => x !== min) ? 'From ' : ''}${money(min)}</span><span class="${out ? 'text-red-600' : 'text-slate-400'}">${out ? 'Sold out' : stock(p) + ' left'}</span></div></div>`;
             b.addEventListener('click', () => pick(p));
             grid.appendChild(b);
         });
@@ -91,7 +91,7 @@
         $('mTitle').textContent = p.name; const list = $('mList'); list.innerHTML = '';
         p.variants.forEach(v => {
             const b = document.createElement('button'); b.type = 'button'; b.disabled = v.stock <= 0;
-            b.className = 'flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-sm hover:border-[#42a5dc] disabled:opacity-40';
+            b.className = 'flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-sm hover:border-[#1c3041] disabled:opacity-40';
             b.innerHTML = `<span class="font-medium">${v.label}</span><span><strong>${money(v.price)}</strong> <span class="text-xs text-slate-400">· ${v.stock} left</span></span>`;
             b.addEventListener('click', () => { add(p, v); close(); });
             list.appendChild(b);

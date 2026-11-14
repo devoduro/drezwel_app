@@ -22,7 +22,7 @@
                 <label class="flex items-center gap-2"><input type="checkbox" name="remember" value="1"> Keep me signed in</label>
                 <a class="text-brand-accent font-medium" href="{{ route('password.forgot') }}">Forgot password?</a>
             </div>
-            <button class="w-full rounded-lg bg-gradient-to-br from-slate-900 to-slate-700 text-white py-2.5 font-semibold shadow hover:shadow-md transition">Sign in</button>
+            <button class="w-full rounded-lg bg-[#1c3041] text-white py-2.5 font-semibold shadow hover:shadow-md transition">Sign in</button>
         </form>
         <p class="mt-5 text-center text-sm text-slate-500">Waiting for an order? <a class="text-brand-accent font-medium" href="{{ route('track') }}">Track your delivery</a></p>
     </div>

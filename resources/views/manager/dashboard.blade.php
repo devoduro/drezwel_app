@@ -30,7 +30,7 @@
         <div class="mt-2 flex flex-wrap gap-2 text-sm">
             @foreach($lowProducts as $p)
                 <a href="{{ route('manager.products.show', $p) }}" class="rounded-full bg-white px-3 py-1 ring-1 ring-red-200 hover:ring-red-400">
-                    {{ $p->name }} · <strong class="{{ $p->stock_qty <= 0 ? 'text-red-600' : 'text-[#de7a14]' }}">{{ $p->stock_qty <= 0 ? 'out' : $p->stock_qty . ' left' }}</strong></a>
+                    {{ $p->name }} · <strong class="{{ $p->stock_qty <= 0 ? 'text-red-600' : 'text-amber-600' }}">{{ $p->stock_qty <= 0 ? 'out' : $p->stock_qty . ' left' }}</strong></a>
             @endforeach
         </div>
     </div>
@@ -47,7 +47,7 @@
 
 <div class="grid xl:grid-cols-2 gap-5">
     <section class="bg-white rounded-xl shadow-sm overflow-hidden xl:col-span-2">
-        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#42a5dc]">Today's queue ({{ $todayQueue->count() }})</div>
+        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#1c3041]">Today's queue ({{ $todayQueue->count() }})</div>
         <div class="overflow-x-auto"><table class="w-full text-sm">
             <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Reference</th><th>Customer</th><th>Location</th><th>Rider</th><th class="text-right">Amount</th><th class="p-3">Status</th></tr></thead>
             @forelse($todayQueue as $d)
@@ -62,7 +62,7 @@
     </section>
 
     <section class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#42a5dc]">Daily delivery &amp; revenue velocity</div>
+        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#1c3041]">Daily delivery &amp; revenue velocity</div>
         <div class="overflow-x-auto"><table class="w-full text-sm">
             <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Date</th><th class="text-right">Orders</th><th class="text-right">Delivered</th><th class="text-right">Pending</th><th class="text-right">Revenue</th><th class="text-right p-3">Cash</th></tr></thead>
             @forelse($daily as $r)
@@ -72,7 +72,7 @@
     </section>
 
     <section class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#42a5dc]">Rider fulfilment performance</div>
+        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#1c3041]">Rider fulfilment performance</div>
         <div class="overflow-x-auto"><table class="w-full text-sm">
             <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Rider</th><th class="text-right">Assigned</th><th class="text-right">Delivered</th><th class="text-right">Pending</th><th class="text-right">Rate</th><th class="text-right p-3">Revenue</th></tr></thead>
             @foreach($riders as $r)
@@ -82,7 +82,7 @@
     </section>
 
     <section class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#42a5dc] flex justify-between"><span>Live rider cash &amp; items</span><a class="underline text-white/80" href="{{ route('manager.remittances') }}">Manage</a></div>
+        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#1c3041] flex justify-between"><span>Live rider cash &amp; items</span><a class="underline text-white/80" href="{{ route('manager.remittances') }}">Manage</a></div>
         <div class="px-4 py-3 text-sm">Total cash with riders: <strong class="{{ $cashHeld > 0 ? 'text-red-600' : 'text-green-600' }}">{{ $m($cashHeld) }}</strong></div>
         <div class="overflow-x-auto"><table class="w-full text-sm">
             <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Rider</th><th class="text-right">Cash held</th><th class="text-right">Items to return</th><th class="p-3">Status</th></tr></thead>
@@ -94,7 +94,7 @@
     </section>
 
     <section class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#42a5dc]">Delivery mode &amp; order type</div>
+        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#1c3041]">Delivery mode &amp; order type</div>
         <div class="overflow-x-auto"><table class="w-full text-sm">
             <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Mode</th><th class="text-right">Orders</th><th class="text-right p-3">Revenue</th></tr></thead>
             @foreach(\App\Models\Delivery::MODES as $k => $label)
@@ -108,7 +108,7 @@
     </section>
 
     <section class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#42a5dc]">Top purchasing customers</div>
+        <div class="px-4 py-3 bg-white text-slate-800 font-semibold text-sm border-b border-gray-200 border-l-4 border-l-[#1c3041]">Top purchasing customers</div>
         <div class="overflow-x-auto"><table class="w-full text-sm">
             <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Customer</th><th class="text-right">Orders</th><th class="text-right">Spend</th><th class="text-right p-3">Balance</th></tr></thead>
             @forelse($topCustomers as $c)

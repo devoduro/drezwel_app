@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 /** Sends SMS through the Speso business API and keeps a log of every attempt. */
 class SmsService
 {
-    public function send(string $phone, string $message, ?int $deliveryId = null, string $purpose = 'general'): array
+    public function send(string $phone, string $message, ?int $deliveryId = null, string $purpose = 'general', ?int $campaignId = null): array
     {
         $phone = Phone::clean($phone) ?? $phone;
         $key = (string) config('services.speso_sms.api_key');
@@ -43,6 +43,7 @@ class SmsService
 
         SmsLog::create([
             'delivery_id' => $deliveryId,
+            'campaign_id' => $campaignId,
             'phone' => $phone,
             'purpose' => $purpose,
             // The one-time code itself is never stored.

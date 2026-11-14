@@ -12,7 +12,7 @@
 @endif
 <div class="space-y-3">
     @forelse($deliveries as $d) @include('rider._card', ['d' => $d]) @empty
-        <div class="bg-white rounded-xl p-8 text-center text-slate-500"><i class="fas fa-mug-hot text-3xl mb-2 block text-slate-300"></i>Nothing assigned yet.<br><a class="text-[#2c8fc6] font-semibold" href="{{ route('rider.available') }}">Pick an order →</a></div>
+        <div class="bg-white rounded-xl p-8 text-center text-slate-500"><i class="fas fa-mug-hot text-3xl mb-2 block text-slate-300"></i>Nothing assigned yet.<br><a class="text-[#1c3041] font-semibold" href="{{ route('rider.available') }}">Pick an order →</a></div>
     @endforelse
 </div>
 @endsection

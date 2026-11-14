@@ -2,7 +2,7 @@
 <?php
     $wholesale = $type === 'wholesale';
     $S = fn ($k) => \App\Models\Setting::get($k);
-    $field = 'mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-[15px] focus:border-jm-orange focus:outline-none focus:ring-1 focus:ring-jm-orange';
+    $field = 'mt-1 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-[15px] focus:border-jm-primary focus:outline-none focus:ring-1 focus:ring-jm-primary';
     $wa = preg_replace('/\D/', '', (string) $S('whatsapp'));
     $phones = \App\Models\Setting::phones();
     $faq = [
@@ -18,7 +18,7 @@
 <?php $__env->startSection('content'); ?>
 <div class="max-w-[1180px] mx-auto px-3 sm:px-4 py-3 space-y-3">
     <nav class="text-[13px] text-jm-grey">
-        <a class="hover:text-jm-orange" href="<?php echo e(route('home')); ?>">Home</a> <i class="fas fa-chevron-right mx-1 text-[8px]"></i>
+        <a class="hover:text-jm-primary" href="<?php echo e(route('home')); ?>">Home</a> <i class="fas fa-chevron-right mx-1 text-[8px]"></i>
         <span>Help center</span> <i class="fas fa-chevron-right mx-1 text-[8px]"></i> <span class="text-jm-dark"><?php echo e($wholesale ? 'Wholesale orders' : 'Contact us'); ?></span>
     </nav>
 
@@ -36,7 +36,7 @@
             <div class="grid gap-3 sm:grid-cols-3">
                 <?php $__currentLoopData = $phones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => [$disp, $digits]): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <?php if($i < 1): ?>
-                        <a href="tel:<?php echo e($digits); ?>" class="flex items-center gap-3 rounded-xl bg-white p-4 transition hover:shadow-[0_4px_16px_rgba(0,0,0,.12)]"><span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#fdecd5] text-xl text-jm-orange"><i class="fas fa-phone-volume"></i></span><div class="min-w-0"><div class="text-[13px] text-jm-grey">Call us</div><div class="truncate font-bold"><?php echo e($disp); ?></div></div></a>
+                        <a href="tel:<?php echo e($digits); ?>" class="flex items-center gap-3 rounded-xl bg-white p-4 transition hover:shadow-[0_4px_16px_rgba(0,0,0,.12)]"><span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e4eaf0] text-xl text-jm-primary"><i class="fas fa-phone-volume"></i></span><div class="min-w-0"><div class="text-[13px] text-jm-grey">Call us</div><div class="truncate font-bold"><?php echo e($disp); ?></div></div></a>
                     <?php endif; ?>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 <?php if($wa): ?>
@@ -60,11 +60,11 @@
                     </div>
                     <label class="block text-sm font-medium"><?php echo e($wholesale ? 'Tell us more: items, sizes, quantities, where you sell' : 'Your message'); ?>
 
-                        <textarea name="message" rows="5" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[15px] focus:border-jm-orange focus:outline-none focus:ring-1 focus:ring-jm-orange"><?php echo e(old('message')); ?></textarea></label>
+                        <textarea name="message" rows="5" required class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-[15px] focus:border-jm-primary focus:outline-none focus:ring-1 focus:ring-jm-primary"><?php echo e(old('message')); ?></textarea></label>
                     <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Company website<input name="company_website" tabindex="-1" autocomplete="off"></label></div>
                     <?php if($errors->any()): ?><div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"><?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $e): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><div><?php echo e($e); ?></div><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></div><?php endif; ?>
                     <div class="flex flex-wrap items-center gap-3">
-                        <button class="h-11 rounded-lg bg-jm-orange px-8 text-[14px] font-bold uppercase tracking-wide text-white shadow transition hover:bg-[#e07b10]"><?php echo e($wholesale ? 'Send enquiry' : 'Send message'); ?></button>
+                        <button class="h-11 rounded-lg bg-jm-primary px-8 text-[14px] font-bold uppercase tracking-wide text-white shadow transition hover:bg-[#14212d]"><?php echo e($wholesale ? 'Send enquiry' : 'Send message'); ?></button>
                         <span class="text-xs text-jm-grey">We usually reply by phone, so please check your number.</span>
                     </div>
                 </form>
@@ -90,12 +90,12 @@
                 <div class="border-b border-slate-200 px-4 py-3 text-[15px] font-bold uppercase tracking-wide">Visit us</div>
                 <div class="grid gap-3 p-4 text-sm sm:grid-cols-2">
                     <div class="space-y-1.5">
-                        <?php if($S('address')): ?><div class="flex gap-3"><i class="fas fa-location-dot mt-0.5 w-5 text-jm-orange"></i><span><?php echo e($S('address')); ?></span></div><?php endif; ?>
-                        <?php if($S('hours')): ?><div class="flex gap-3"><i class="fas fa-clock mt-0.5 w-5 text-jm-orange"></i><span><?php echo e($S('hours')); ?></span></div><?php endif; ?>
-                        <?php $__currentLoopData = $phones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as [$disp, $digits]): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><a class="flex gap-3 text-jm-orange hover:underline" href="tel:<?php echo e($digits); ?>"><i class="fas fa-phone mt-0.5 w-5"></i><?php echo e($disp); ?></a><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        <?php if($S('address')): ?><div class="flex gap-3"><i class="fas fa-location-dot mt-0.5 w-5 text-jm-primary"></i><span><?php echo e($S('address')); ?></span></div><?php endif; ?>
+                        <?php if($S('hours')): ?><div class="flex gap-3"><i class="fas fa-clock mt-0.5 w-5 text-jm-primary"></i><span><?php echo e($S('hours')); ?></span></div><?php endif; ?>
+                        <?php $__currentLoopData = $phones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as [$disp, $digits]): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><a class="flex gap-3 text-jm-primary hover:underline" href="tel:<?php echo e($digits); ?>"><i class="fas fa-phone mt-0.5 w-5"></i><?php echo e($disp); ?></a><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                     <?php if($S('address')): ?>
-                        <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=<?php echo e(urlencode($S('address'))); ?>" class="flex items-center justify-center gap-2 rounded-lg border border-jm-orange px-4 py-3 font-bold uppercase text-jm-orange transition hover:bg-[#fdecd5]/60"><i class="fas fa-map-location-dot"></i> Open in Google Maps</a>
+                        <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=<?php echo e(urlencode($S('address'))); ?>" class="flex items-center justify-center gap-2 rounded-lg border border-jm-primary px-4 py-3 font-bold uppercase text-jm-primary transition hover:bg-[#e4eaf0]/60"><i class="fas fa-map-location-dot"></i> Open in Google Maps</a>
                     <?php endif; ?>
                 </div>
             </section>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', $delivery->reference . ' · Drezwel Go')
-@php $input = 'w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#42a5dc]'; $mine = $delivery->rider_id === auth()->id(); @endphp
+@php $input = 'w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1c3041]'; $mine = $delivery->rider_id === auth()->id(); @endphp
 @section('content')
 <a href="{{ url()->previous() }}" class="text-sm text-slate-500">← Back</a>
 <div class="bg-white rounded-xl p-4 mt-2">
@@ -19,12 +19,12 @@
 </div>
 
 @if(! $mine && $delivery->status === 'pending')
-    <form method="POST" action="{{ route('rider.claim', $delivery) }}" class="mt-4">@csrf<button class="w-full rounded-lg bg-[#42a5dc] hover:bg-[#2c8fc6] text-white py-3 font-semibold transition shadow">Pick this delivery</button></form>
+    <form method="POST" action="{{ route('rider.claim', $delivery) }}" class="mt-4">@csrf<button class="w-full rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white py-3 font-semibold transition shadow">Pick this delivery</button></form>
 @endif
 
 @if($mine && $delivery->status === 'assigned')
     <form method="POST" action="{{ route('rider.start', $delivery) }}" class="mt-4">@csrf
-        <button class="w-full rounded-lg bg-[#42a5dc] hover:bg-[#2c8fc6] text-white py-3 font-semibold transition shadow">Start delivery</button>
+        <button class="w-full rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white py-3 font-semibold transition shadow">Start delivery</button>
         <p class="text-xs text-slate-500 mt-2 text-center">The customer will get a 4-digit code by SMS.</p>
     </form>
     <form method="POST" action="{{ route('rider.release', $delivery) }}" class="mt-3">@csrf<button class="w-full text-sm text-slate-500 py-2" onclick="return confirm('Hand this delivery back?')">Release this delivery</button></form>

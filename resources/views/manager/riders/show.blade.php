@@ -23,16 +23,16 @@
         @foreach(\App\Models\Delivery::STATUSES as $k => $l)<option value="{{ $k }}" @selected(request('status') === $k)>{{ $l }}</option>@endforeach</select>
     <input type="date" name="from" value="{{ request('from') }}" class="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2" title="From">
     <input type="date" name="to" value="{{ request('to') }}" class="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2" title="To">
-    <button class="rounded-lg bg-[#42a5dc] hover:bg-[#2c8fc6] text-white px-4 py-2 font-semibold transition"><i class="fas fa-filter"></i> Filter</button>
+    <button class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-4 py-2 font-semibold transition"><i class="fas fa-filter"></i> Filter</button>
 </form>
 
 <div class="bg-white rounded-xl overflow-hidden">
-    <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#42a5dc] font-semibold text-sm">Delivery history</div>
+    <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm">Delivery history</div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
         <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Reference</th><th>Date</th><th>Customer</th><th>Location</th><th class="text-right">Customer pays</th><th class="text-right">Of which fee</th><th>Delivered at</th><th class="p-3">Status</th></tr></thead>
         @forelse($deliveries as $d)
             <tr class="border-t border-slate-100 hover:bg-sky-50/50">
-                <td class="p-3"><a class="text-[#2c8fc6] font-semibold hover:underline" href="{{ route('manager.deliveries.show', $d) }}">{{ $d->reference }}</a></td>
+                <td class="p-3"><a class="text-[#1c3041] font-semibold hover:underline" href="{{ route('manager.deliveries.show', $d) }}">{{ $d->reference }}</a></td>
                 <td class="whitespace-nowrap">{{ $d->delivery_date->format('d M Y') }}</td>
                 <td><div class="font-medium">{{ $d->customer->name }}</div><div class="text-xs text-slate-400">{{ $d->customer->phone }}</div></td>
                 <td class="text-slate-600">{{ $d->location }}</td>

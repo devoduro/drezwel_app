@@ -111,12 +111,53 @@ class SiteTest extends TestCase
         $this->assertStringContainsString('tel:0200680701', $res->getContent());
 
         // shared menu: About is the highlighted entry on this page, Contact on the contact page
-        $this->assertMatchesRegularExpression('/font-bold text-jm-orange"><i class="fas fa-circle-info/', $res->getContent());
-        $this->assertMatchesRegularExpression('/font-bold text-jm-orange"><i class="fas fa-headset/', $this->get('/contact')->getContent());
+        $this->assertMatchesRegularExpression('/font-bold text-jm-primary"><i class="fas fa-circle-info/', $res->getContent());
+        $this->assertMatchesRegularExpression('/font-bold text-jm-primary"><i class="fas fa-headset/', $this->get('/contact')->getContent());
 
         // text edited in Settings still drives the page
         Setting::set('about_text', "First paragraph here.\n\nSecond paragraph here.");
         $this->get('/about')->assertSee('First paragraph here.')->assertSee('Second paragraph here.');
+    }
+
+    public function test_site_menu_has_a_login_for_visitors_and_a_dashboard_link_for_signed_in_staff(): void
+    {
+        foreach (['/shop', '/about', '/contact', '/cart', '/track'] as $url) {
+            $res = $this->get($url)->assertOk()->assertSee('Login');
+            $this->assertStringContainsString('href="' . route('login') . '"', $res->getContent());
+            $res->assertDontSee('My dashboard');
+        }
+
+        $manager = User::factory()->create(['role' => 'manager', 'name' => 'Ama Boss']);
+        $this->actingAs($manager)->get('/shop')->assertOk()->assertSee('My dashboard')->assertSee('Log out')->assertSee('Ama');
+        $this->assertStringContainsString('href="' . route('manager.dashboard') . '"', $this->get('/shop')->getContent());
+
+        $this->app['auth']->forgetGuards();
+        $rider = User::factory()->create(['role' => 'rider']);
+        $this->assertStringContainsString('href="' . route('rider.mine') . '"', $this->actingAs($rider)->get('/shop')->getContent());
+    }
+
+    public function test_manager_can_send_a_test_sms_and_sees_whether_speso_is_configured(): void
+    {
+        $m = User::factory()->create(['role' => 'manager']);
+
+        // no key: the page says so and the test reports the real reason
+        config(['services.speso_sms.api_key' => '']);
+        $this->actingAs($m)->get(route('manager.sms'))->assertOk()->assertSee('Speso connection')->assertSee('Missing')->assertSee('Send a test SMS');
+        $this->actingAs($m)->post(route('manager.sms.test'), ['phone' => '024 400 0111'])->assertSessionHas('error');
+        $this->assertSame(1, SmsLog::where('purpose', 'test')->where('success', false)->count());
+
+        // with a key it goes out through Speso and is logged
+        config(['services.speso_sms.api_key' => 'k', 'services.speso_sms.sender_id' => 'Drezwel']);
+        Http::fake(['*' => Http::response(['success' => true])]);
+        $this->actingAs($m)->get(route('manager.sms'))->assertSee('Set')->assertDontSee('Missing')->assertDontSee('>k<', false);   // the key is never shown
+        $this->actingAs($m)->post(route('manager.sms.test'), ['phone' => '0244000111', 'message' => 'Hello from the test'])->assertSessionHas('success');
+        Http::assertSent(fn ($r) => $r['phone'] === '0244000111' && $r['message'] === 'Hello from the test' && $r['sender_id'] === 'Drezwel');
+        $this->assertSame(1, SmsLog::where('purpose', 'test')->where('success', true)->count());
+
+        // bad numbers are refused, and riders cannot use it
+        $this->actingAs($m)->post(route('manager.sms.test'), ['phone' => '123'])->assertSessionHasErrors('phone');
+        $rider = User::factory()->create(['role' => 'rider']);
+        $this->actingAs($rider)->post(route('manager.sms.test'), ['phone' => '0244000111'])->assertForbidden();
     }
 
     public function test_old_site_addresses_redirect_permanently(): void

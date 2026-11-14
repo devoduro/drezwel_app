@@ -19,18 +19,18 @@
 <form method="GET" class="bg-white rounded-xl p-3 mb-4 text-sm">
     <div class="relative">
         <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-        <input name="q" value="{{ request('q') }}" placeholder="Search name or phone…" class="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#42a5dc]">
+        <input name="q" value="{{ request('q') }}" placeholder="Search name or phone…" class="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1c3041]">
     </div>
 </form>
 
 <div class="bg-white rounded-xl overflow-hidden">
-    <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#42a5dc] font-semibold text-sm text-slate-800">All customers</div>
+    <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm text-slate-800">All customers</div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
         <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Name</th><th>Phone</th><th>Default location</th><th class="text-right">Orders</th><th class="text-right">Lifetime spend</th><th class="text-right p-3">Balance due</th></tr></thead>
         @forelse($customers as $c)
             @php $bal = max(($c->spend ?? 0) - ($c->paid ?? 0), 0); @endphp
             <tr class="border-t border-slate-100 hover:bg-sky-50/50">
-                <td class="p-3"><a class="inline-flex items-center gap-2 font-semibold text-[#2c8fc6] hover:underline" href="{{ route('manager.customers.show', $c) }}">
+                <td class="p-3"><a class="inline-flex items-center gap-2 font-semibold text-[#1c3041] hover:underline" href="{{ route('manager.customers.show', $c) }}">
                     <span class="grid h-7 w-7 place-items-center rounded-full bg-slate-200 text-xs text-slate-600">{{ mb_strtoupper(mb_substr($c->name, 0, 1)) }}</span>{{ $c->name }}</a></td>
                 <td class="text-slate-600">{{ $c->phone }}</td><td class="text-slate-600">{{ $c->location }}</td>
                 <td class="text-right">{{ $c->orders }}</td><td class="text-right">{{ number_format($c->spend ?? 0, 2) }}</td>

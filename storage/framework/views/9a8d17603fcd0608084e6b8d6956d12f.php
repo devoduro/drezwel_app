@@ -14,7 +14,7 @@
                 <h2 class="text-[17px] font-bold">Order <?php echo e($delivery->reference); ?></h2>
                 <div class="mt-0.5 text-sm text-jm-grey">Placed on <?php echo e($delivery->created_at->format('d-m-Y')); ?><?php if($delivery->items->count()): ?> · <?php echo e($delivery->items->sum('qty')); ?> <?php echo e($delivery->items->sum('qty') === 1 ? 'item' : 'items'); ?><?php endif; ?> · Total: <strong class="text-jm-dark"><?php echo e($m($delivery->amount_due)); ?></strong></div>
             </div>
-            <span class="rounded px-2.5 py-1 text-[12px] font-bold uppercase <?php echo e($delivery->status === 'delivered' ? 'bg-green-100 text-green-700' : ($failed ? 'bg-red-100 text-jm-red' : 'bg-[#fdecd5] text-jm-orange')); ?>"><?php echo e(\App\Models\Delivery::STATUSES[$delivery->status] ?? $delivery->status); ?></span>
+            <span class="rounded px-2.5 py-1 text-[12px] font-bold uppercase <?php echo e($delivery->status === 'delivered' ? 'bg-green-100 text-green-700' : ($failed ? 'bg-red-100 text-jm-red' : 'bg-[#e4eaf0] text-jm-primary')); ?>"><?php echo e(\App\Models\Delivery::STATUSES[$delivery->status] ?? $delivery->status); ?></span>
         </div>
 
         
@@ -26,8 +26,8 @@
                     <?php $__currentLoopData = $steps; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <?php $i = array_search($key, $keys); $done = $current !== false && $i <= $current; $now = $current === $i; ?>
                         <li class="relative">
-                            <?php if(! $loop->first): ?><span class="absolute right-1/2 top-3 h-0.5 w-full <?php echo e($done ? 'bg-jm-orange' : 'bg-slate-200'); ?>"></span><?php endif; ?>
-                            <span class="relative z-10 mx-auto grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold <?php echo e($done ? 'bg-jm-orange text-white' : 'bg-slate-200 text-slate-500'); ?> <?php echo e($now ? 'ring-4 ring-[#fdecd5]' : ''); ?>"><?php echo $done ? '<i class="fas fa-check"></i>' : $i + 1; ?></span>
+                            <?php if(! $loop->first): ?><span class="absolute right-1/2 top-3 h-0.5 w-full <?php echo e($done ? 'bg-jm-primary' : 'bg-slate-200'); ?>"></span><?php endif; ?>
+                            <span class="relative z-10 mx-auto grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold <?php echo e($done ? 'bg-jm-primary text-white' : 'bg-slate-200 text-slate-500'); ?> <?php echo e($now ? 'ring-4 ring-[#e4eaf0]' : ''); ?>"><?php echo $done ? '<i class="fas fa-check"></i>' : $i + 1; ?></span>
                             <div class="mt-2 px-1 text-[12px] leading-tight sm:text-[13px] <?php echo e($done ? 'font-bold text-jm-dark' : 'text-jm-grey'); ?>"><?php echo e($label); ?></div>
                         </li>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -35,7 +35,7 @@
             <?php endif; ?>
 
             <?php if($delivery->status === 'out_for_delivery'): ?>
-                <div class="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm"><i class="fas fa-shield-halved text-jm-orange"></i> We texted you a <strong>4-digit code</strong>. Give it to the rider <strong>only when you have received your order</strong>.</div>
+                <div class="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm"><i class="fas fa-shield-halved text-jm-primary"></i> We texted you a <strong>4-digit code</strong>. Give it to the rider <strong>only when you have received your order</strong>.</div>
             <?php endif; ?>
         </div>
     </section>
@@ -75,7 +75,7 @@
                 <div class="text-jm-grey"><i class="fas fa-location-dot w-5"></i><?php echo e($delivery->location); ?></div>
                 <?php if($delivery->rider && in_array($delivery->status, ['assigned', 'out_for_delivery'])): ?>
                     <div class="mt-2 rounded-lg bg-jm-bg p-3"><div class="text-xs font-bold uppercase text-jm-grey">Your rider</div><div class="font-medium"><?php echo e($delivery->rider->name); ?></div>
-                        <?php if($delivery->rider->phone): ?><a class="font-bold text-jm-orange" href="tel:<?php echo e($delivery->rider->phone); ?>"><i class="fas fa-phone"></i> <?php echo e($delivery->rider->phone); ?></a><?php endif; ?></div>
+                        <?php if($delivery->rider->phone): ?><a class="font-bold text-jm-primary" href="tel:<?php echo e($delivery->rider->phone); ?>"><i class="fas fa-phone"></i> <?php echo e($delivery->rider->phone); ?></a><?php endif; ?></div>
                 <?php endif; ?>
             </div>
         </section>
@@ -84,7 +84,7 @@
     
     <section class="overflow-hidden rounded-xl bg-white">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3"><span class="text-[15px] font-bold uppercase tracking-wide">Order updates</span>
-            <a target="_blank" href="<?php echo e($invoice); ?>" class="inline-flex items-center gap-2 rounded-lg bg-jm-orange px-4 py-2 text-[13px] font-bold uppercase text-white shadow transition hover:bg-[#e07b10]"><i class="fas fa-print"></i> Print invoice</a></div>
+            <a target="_blank" href="<?php echo e($invoice); ?>" class="inline-flex items-center gap-2 rounded-lg bg-jm-primary px-4 py-2 text-[13px] font-bold uppercase text-white shadow transition hover:bg-[#14212d]"><i class="fas fa-print"></i> Print invoice</a></div>
         <ul class="divide-y divide-slate-100 text-sm">
             <?php $__currentLoopData = $delivery->events->whereIn('type', ['created', 'assigned', 'started', 'delivered', 'undelivered', 'reopened', 'cancelled'])->reverse(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $e): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <li class="flex justify-between gap-3 px-4 py-3">

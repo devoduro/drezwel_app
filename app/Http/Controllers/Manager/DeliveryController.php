@@ -8,6 +8,7 @@ use App\Models\Delivery;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\DeliveryWorkflow;
+use App\Services\SpesoPayments;
 use App\Services\StockService;
 use App\Support\Phone;
 use Illuminate\Http\Request;
@@ -150,6 +151,21 @@ class DeliveryController extends Controller
         $this->flow->recordPayment($delivery, $request->user(), (float) $data['amount'], $data['method'], $data['notes'] ?? null);
 
         return back()->with('success', 'Payment recorded.');
+    }
+
+    /** Ask Speso whether the customer really paid, and record the answer. */
+    public function verifyPayment(Delivery $delivery, SpesoPayments $payments)
+    {
+        $msg = match ($payments->verify($delivery)) {
+            'paid' => ['success', 'Speso confirms this order is paid.'],
+            'failed' => ['error', 'Speso says the payment was not completed. No money was taken.'],
+            'awaiting' => ['success', 'Still waiting for the customer to approve the prompt. No money has been taken yet.'],
+            'mismatch' => ['error', 'Speso shows a different amount than this order. It was left untouched: check it in your Speso dashboard.'],
+            'unreachable' => ['error', 'Could not reach Speso. Try again in a moment.'],
+            default => ['error', 'This order has no online payment to verify.'],
+        };
+
+        return back()->with(...$msg);
     }
 
     // ----------------------------------------------------------------------------------------

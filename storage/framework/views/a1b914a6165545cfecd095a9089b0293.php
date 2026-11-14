@@ -36,8 +36,8 @@ foreach ($attributes->all() as $__key => $__value) {
 
 unset($__defined_vars); ?>
 
-<div <?php echo e($attributes->merge(['class' => 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-7 text-white shadow-lg'])); ?>>
-    <div class="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#42a5dc]/20 blur-3xl"></div>
+<div <?php echo e($attributes->merge(['class' => 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1c3041] to-[#14212d] p-7 text-white shadow-lg'])); ?>>
+    <div class="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#8fb8d8]/20 blur-3xl"></div>
     <div class="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-indigo-500/15 blur-3xl"></div>
     <div class="pointer-events-none absolute inset-0 opacity-[0.07]" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 22px 22px;"></div>
 

@@ -1,3 +1,4 @@
+
 <?php $__env->startSection('title', 'Reset password · Drezwel Go'); ?>
 <?php $__env->startSection('content'); ?>
 <div class="min-h-[80vh] flex items-center">
@@ -21,7 +22,7 @@
                 <label class="text-sm font-medium">Repeat new password</label>
                 <input type="password" name="password_confirmation" required minlength="8" autocomplete="new-password" class="mt-1 w-full rounded-lg border-slate-300 border px-3 py-2.5">
             </div>
-            <button class="w-full rounded-lg bg-gradient-to-br from-slate-900 to-slate-700 text-white py-2.5 font-semibold shadow hover:shadow-md transition">Change password</button>
+            <button class="w-full rounded-lg bg-[#1c3041] text-white py-2.5 font-semibold shadow hover:shadow-md transition">Change password</button>
         </form>
         <div class="mt-4 flex justify-between text-sm">
             <a class="text-brand-accent font-medium" href="<?php echo e(route('password.forgot')); ?>">Send a new code</a>

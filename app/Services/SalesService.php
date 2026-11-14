@@ -99,13 +99,15 @@ class SalesService
     /** Text the customer and the managers about a new website order. Failures never block the order. */
     public function notifyOnlineOrder(Delivery $d): void
     {
-        $phone = Setting::phoneLink();
+        $paid = $d->payment_status === 'paid';
         $this->sms->send($d->customer->phone,
-            "Drezwel: thank you {$d->customer->name}! Order {$d->reference} for GH₵ " . number_format($d->amount_due, 2) . ' received. We will call to confirm delivery.'
+            "Drezwel: thank you {$d->customer->name}! "
+            . ($paid ? "Payment of GH₵ " . number_format($d->amount_paid, 2) . " received for order {$d->reference}. We will call to arrange delivery."
+                : "Order {$d->reference} for GH₵ " . number_format($d->amount_due, 2) . ' received. We will call to confirm delivery.')
             . ' Track it: ' . route('track', ['ref' => $d->reference, 'phone' => $d->customer->phone]), $d->id, 'order_received');
 
         User::where('role', 'manager')->where('is_active', true)->whereNotNull('phone')->get()->each(fn ($m) => $this->sms->send(
-            $m->phone, "Drezwel Go: NEW online order {$d->reference} from {$d->customer->name} ({$d->customer->phone}), GH₵ " . number_format($d->amount_due, 2) . '.', $d->id, 'new_order'));
+            $m->phone, "Drezwel Go: NEW online order {$d->reference} from {$d->customer->name} ({$d->customer->phone}), GH₵ " . number_format($d->amount_due, 2) . ($paid ? ' (PAID online).' : '.'), $d->id, 'new_order'));
     }
 
     /**

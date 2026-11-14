@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $customer->name . ' · Delivery history · Drezwel Go')
 @php
-    $input = 'rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm w-full focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#42a5dc]';
+    $input = 'rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm w-full focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1c3041]';
     $m = fn ($v) => 'GH₵ ' . number_format((float) $v, 2);
     $owed = max($stats['spend'] - $stats['paid'], 0);
 @endphp
@@ -35,16 +35,16 @@
         @foreach(\App\Models\Delivery::STATUSES as $k => $l)<option value="{{ $k }}" @selected(request('status') === $k)>{{ $l }}</option>@endforeach</select>
     <input type="date" name="from" value="{{ request('from') }}" class="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2" title="From">
     <input type="date" name="to" value="{{ request('to') }}" class="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2" title="To">
-    <button class="rounded-lg bg-[#42a5dc] hover:bg-[#2c8fc6] text-white px-4 py-2 font-semibold transition"><i class="fas fa-filter"></i> Filter</button>
+    <button class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-4 py-2 font-semibold transition"><i class="fas fa-filter"></i> Filter</button>
 </form>
 
 <div class="bg-white rounded-xl overflow-hidden">
-    <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#42a5dc] font-semibold text-sm">Delivery history</div>
+    <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm">Delivery history</div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
         <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Reference</th><th>Date</th><th>Package</th><th>Location</th><th>Rider</th><th class="text-right">Total</th><th class="text-right">Paid</th><th class="text-right">Balance</th><th>Delivered at</th><th class="p-3">Status</th></tr></thead>
         @forelse($deliveries as $d)
             <tr class="border-t border-slate-100 hover:bg-sky-50/50">
-                <td class="p-3"><a class="text-[#2c8fc6] font-semibold hover:underline" href="{{ route('manager.deliveries.show', $d) }}">{{ $d->reference }}</a></td>
+                <td class="p-3"><a class="text-[#1c3041] font-semibold hover:underline" href="{{ route('manager.deliveries.show', $d) }}">{{ $d->reference }}</a></td>
                 <td class="whitespace-nowrap">{{ $d->delivery_date->format('d M Y') }}</td>
                 <td>{{ $d->package_description }}<div class="text-xs text-slate-400">{{ \App\Models\Delivery::TYPES[$d->order_type] ?? '' }}</div></td>
                 <td class="text-slate-600">{{ $d->location }}</td>

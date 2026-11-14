@@ -2,7 +2,7 @@
 <?php $__env->startSection('title', ($delivery->exists ? 'Edit' : 'New') . ' delivery · Drezwel Go'); ?>
 <?php
     $v = fn ($k, $fallback = null) => old($k, $fallback);
-    $input = 'mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#42a5dc]';
+    $input = 'mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1c3041]';
 ?>
 <?php $__env->startSection('content'); ?>
 <?php if (isset($component)) { $__componentOriginalb08eb6e359b0cda244088e0d0db6136c = $component; } ?>
@@ -48,8 +48,8 @@
     ?>
     <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50/60 p-4" id="lines" data-catalog='<?php echo json_encode($catalog, 15, 512) ?>' data-rows='<?php echo json_encode($lineRows, 15, 512) ?>'>
         <div class="flex items-center justify-between mb-2">
-            <div class="text-sm font-semibold"><i class="fas fa-shirt text-[#42a5dc]"></i> Products on this order (pick size / colour) <span class="font-normal text-slate-500">(optional - takes them off stock)</span></div>
-            <button type="button" id="addLine" class="rounded-lg bg-[#42a5dc] hover:bg-[#2c8fc6] text-white px-3 py-1.5 text-sm font-semibold transition"><i class="fas fa-plus"></i> Add product</button>
+            <div class="text-sm font-semibold"><i class="fas fa-shirt text-[#1c3041]"></i> Products on this order (pick size / colour) <span class="font-normal text-slate-500">(optional - takes them off stock)</span></div>
+            <button type="button" id="addLine" class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-3 py-1.5 text-sm font-semibold transition"><i class="fas fa-plus"></i> Add product</button>
         </div>
         <div id="lineRows" class="space-y-2"></div>
         <div id="lineEmpty" class="text-sm text-slate-400">No products added. You can still type a package description and item count by hand.</div>
@@ -88,7 +88,7 @@
     </script>
     <label class="text-sm font-medium md:col-span-2">Notes / exchange reason<textarea name="notes" rows="2" class="<?php echo e($input); ?>"><?php echo e($v('notes', $delivery->notes)); ?></textarea></label>
     <div class="md:col-span-2 flex gap-3">
-        <button class="rounded-lg bg-[#42a5dc] hover:bg-[#2c8fc6] text-white px-5 py-2 font-semibold transition"><?php echo e($delivery->exists ? 'Save changes' : 'Create delivery'); ?></button>
+        <button class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-5 py-2 font-semibold transition"><?php echo e($delivery->exists ? 'Save changes' : 'Create delivery'); ?></button>
         <a href="<?php echo e($delivery->exists ? route('manager.deliveries.show', $delivery) : route('manager.deliveries.index')); ?>" class="px-4 py-2 text-slate-500">Cancel</a>
     </div>
 </form>

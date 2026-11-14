@@ -7,15 +7,20 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Setting;
 use App\Services\SalesService;
+use App\Services\SpesoClient;
+use App\Services\SpesoPayments;
+use App\Support\MomoApproval;
 use App\Support\Phone;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\URL;
+use Throwable;
 use Illuminate\Validation\ValidationException;
 
 /** The public online store: browse, cart, and checkout (pay on delivery). */
 class ShopController extends Controller
 {
-    public function __construct(private SalesService $sales) {}
+    public function __construct(private SalesService $sales, private SpesoPayments $payments) {}
 
     public function index(Request $request)
     {
@@ -149,7 +154,13 @@ class ShopController extends Controller
             'phone' => ['required', 'regex:/^0\d{9}$/'],
             'location' => 'required|string|max:200',
             'notes' => 'nullable|string|max:500',
-        ], ['phone.regex' => 'Enter a 10-digit Ghana phone number, e.g. 0241234567.', 'location.required' => 'Tell us where to deliver.']);
+            'pay_method' => ['nullable', 'in:cod,speso'],
+        ] + $this->momoRules($request, $request->input('pay_method') === 'speso'),
+            ['phone.regex' => 'Enter a 10-digit Ghana phone number, e.g. 0241234567.', 'location.required' => 'Tell us where to deliver.', 'momo_number.regex' => 'Enter the 10-digit mobile money number, e.g. 0241234567.']);
+        $online = ($data['pay_method'] ?? 'cod') === 'speso';
+        if ($online && ! SpesoClient::configured()) {
+            return back()->withInput()->withErrors(['pay_method' => 'Online payment is not available right now. Please choose pay on delivery.']);
+        }
 
         $cart = $request->session()->get('cart', []);
         $lines = collect($cart)->map(fn ($qty, $id) => ['variant_id' => (int) $id, 'qty' => (int) $qty])->values()->all();
@@ -166,9 +177,92 @@ class ShopController extends Controller
         }
 
         $request->session()->forget('cart');
-        $this->sales->notifyOnlineOrder($delivery);
+        $to = redirect($this->orderUrl($delivery));
 
-        return redirect(URL::temporarySignedRoute('shop.order', now()->addDays(7), ['reference' => $delivery->reference]));
+        if (! $online) {
+            $delivery->update(['payment_method' => 'cod']);
+            $this->sales->notifyOnlineOrder($delivery);
+
+            return $to;
+        }
+
+        // Pay now: the order exists and holds its stock, but nobody is told until the money arrives.
+        try {
+            $this->payments->request($delivery, Phone::clean($data['momo_number']), $data['network']);
+        } catch (Throwable $e) {
+            return $to->with('pay_error', 'We could not send the payment prompt. Check the number and try again, or pay on delivery.');
+        }
+
+        return $to;
+    }
+
+    /** Pay (or pay again) with mobile money for an order that is not paid yet. */
+    public function pay(Request $request, string $reference)
+    {
+        $delivery = $this->onlineOrder($reference);
+        abort_unless($delivery->status === 'pending' && in_array($delivery->payment_status, ['failed', 'awaiting'], true), 404);
+        if (! SpesoClient::configured()) {
+            return back()->with('pay_error', 'Online payment is not available right now. Please choose pay on delivery.');
+        }
+
+        $data = $request->validate($this->momoRules($request, true), ['momo_number.regex' => 'Enter the 10-digit mobile money number, e.g. 0241234567.']);
+        // A prompt may already have been approved without us knowing: ask Speso before sending another.
+        if ($this->payments->verify($delivery) === 'paid') {
+            return redirect($this->orderUrl($delivery));
+        }
+
+        try {
+            $this->payments->request($delivery->refresh(), Phone::clean($data['momo_number']), $data['network']);
+        } catch (Throwable $e) {
+            return redirect($this->orderUrl($delivery))->with('pay_error', 'We could not send the payment prompt. Check the number and try again, or pay on delivery.');
+        }
+
+        return redirect($this->orderUrl($delivery));
+    }
+
+    public function payOnDelivery(string $reference)
+    {
+        $delivery = $this->onlineOrder($reference);
+        // Make sure a payment is not already on its way before switching to cash.
+        if ($this->payments->verify($delivery) !== 'paid') {
+            $this->payments->switchToCashOnDelivery($delivery);
+        }
+
+        return redirect($this->orderUrl($delivery));
+    }
+
+    /** Polled by the waiting page: asks Speso (so it works without webhooks) and reports the state. */
+    public function paymentStatus(string $reference)
+    {
+        $delivery = $this->onlineOrder($reference);
+        $state = $delivery->payment_status;
+        if ($state === 'awaiting') {
+            // One Speso lookup per order every few seconds, however many tabs are open.
+            Cache::remember("speso-poll:{$delivery->id}", 4, fn () => $this->payments->verify($delivery));
+            $state = $delivery->fresh()->payment_status;
+        }
+
+        return response()->json(['state' => $state ?? 'none', 'status' => $delivery->fresh()->status]);
+    }
+
+    private function onlineOrder(string $reference): Delivery
+    {
+        return Delivery::with('customer')->where('reference', $reference)->where('source', 'online')->firstOrFail();
+    }
+
+    private function orderUrl(Delivery $d): string
+    {
+        return URL::temporarySignedRoute('shop.order', now()->addDays(7), ['reference' => $d->reference]);
+    }
+
+    private function momoRules(Request $request, bool $required): array
+    {
+        $request->merge(['momo_number' => Phone::clean($request->input('momo_number') ?: $request->input('phone'))]);
+
+        return [
+            'momo_number' => [$required ? 'required' : 'nullable', 'regex:/^0\d{9}$/'],
+            'network' => [$required ? 'required' : 'nullable', 'in:' . implode(',', array_keys(MomoApproval::NETWORKS))],
+        ];
     }
 
     /** "Thank you" page. The link is signed, so only the person who just ordered (or got the link) can open it. */

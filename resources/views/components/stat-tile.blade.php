@@ -10,13 +10,13 @@
 @php
     // Flat, two-tone tiles: a darker icon block beside a solid colour body.
     $palette = [
-        'blue'   => ['body' => 'bg-[#42a5dc]', 'icon' => 'bg-[#2c8fc6]'],
+        'blue'   => ['body' => 'bg-[#2c4a63]', 'icon' => 'bg-[#1c3041]'],
         'green'  => ['body' => 'bg-[#8cc152]', 'icon' => 'bg-[#74a83b]'],
-        'orange' => ['body' => 'bg-[#f5922f]', 'icon' => 'bg-[#de7a14]'],
+        'orange' => ['body' => 'bg-[#1c3041]', 'icon' => 'bg-[#14212d]'],
         'red'    => ['body' => 'bg-[#da4453]', 'icon' => 'bg-[#c12f3e]'],
         'slate'  => ['body' => 'bg-[#5b6f8f]', 'icon' => 'bg-[#4a5c7a]'],
         'purple' => ['body' => 'bg-[#967adc]', 'icon' => 'bg-[#7d62c4]'],
-    ][$color] ?? ['body' => 'bg-[#42a5dc]', 'icon' => 'bg-[#2c8fc6]'];
+    ][$color] ?? ['body' => 'bg-[#2c4a63]', 'icon' => 'bg-[#1c3041]'];
     $tag = $href ? 'a' : 'div';
     // Long values (e.g. "GH₵ 108,360.00") get a smaller size so they never clip in a 4-across row.
     $valueLength = mb_strlen(trim(strip_tags((string) $value)));

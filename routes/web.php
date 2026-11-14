@@ -22,7 +22,7 @@ Route::get('/', function () {
 Route::get('/about', [SiteController::class, 'about'])->name('site.about');
 Route::get('/contact', [SiteController::class, 'contact'])->name('site.contact');
 Route::get('/wholesale', [SiteController::class, 'wholesale'])->name('site.wholesale');
-Route::post('/contact', [SiteController::class, 'send'])->middleware('throttle:5,1')->name('site.send');
+Route::post('/contact', [SiteController::class, 'send'])->middleware('throttle:5,1,contact-send')->name('site.send');
 Route::get('/{slug}', [SiteController::class, 'page'])->where('slug', 'delivery-info|return-policy|terms|privacy-policy')->name('site.page');
 
 // Addresses from the old website keep working, so existing links and search results are not lost.
@@ -41,17 +41,21 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::redirect('/store', '/shop');
 Route::get('/shop/{slug}', [ShopController::class, 'product'])->name('shop.product');
 Route::get('/cart', [ShopController::class, 'cart'])->name('shop.cart');
-Route::post('/cart/add', [ShopController::class, 'add'])->middleware('throttle:60,1')->name('shop.cart.add');
-Route::post('/cart/update', [ShopController::class, 'update'])->middleware('throttle:60,1')->name('shop.cart.update');
+Route::post('/cart/add', [ShopController::class, 'add'])->middleware('throttle:60,1,cart-add')->name('shop.cart.add');
+Route::post('/cart/update', [ShopController::class, 'update'])->middleware('throttle:60,1,cart-update')->name('shop.cart.update');
 Route::get('/checkout', [ShopController::class, 'checkout'])->name('shop.checkout');
-Route::post('/checkout', [ShopController::class, 'placeOrder'])->middleware('throttle:6,1')->name('shop.checkout.place');
+Route::post('/checkout', [ShopController::class, 'placeOrder'])->middleware('throttle:6,1,checkout')->name('shop.checkout.place');
 Route::get('/order/{reference}', [ShopController::class, 'order'])->middleware('signed')->name('shop.order');
+Route::get('/order/{reference}/payment', [ShopController::class, 'paymentStatus'])->middleware(['signed', 'throttle:60,1,pay-status'])->name('shop.order.status');
+Route::post('/order/{reference}/pay', [ShopController::class, 'pay'])->middleware(['signed', 'throttle:6,1,pay-retry'])->name('shop.order.pay');
+Route::post('/order/{reference}/pay-on-delivery', [ShopController::class, 'payOnDelivery'])->middleware(['signed', 'throttle:6,1,pay-cod'])->name('shop.order.cod');
+Route::post('/webhooks/speso', App\Http\Controllers\Webhooks\SpesoWebhookController::class)->middleware('throttle:120,1,speso-webhook')->name('webhooks.speso');
 Route::get('/invoice/{reference}', [InvoiceController::class, 'publicShow'])->middleware('signed')->name('invoice.public');
 
 // Customers: follow a delivery (no account needed)
-Route::get('/track', [TrackingController::class, 'show'])->middleware('throttle:30,1')->name('track');
-Route::post('/track/code', [TrackingController::class, 'sendCode'])->middleware('throttle:10,1')->name('track.code');
-Route::post('/track/verify', [TrackingController::class, 'verify'])->middleware('throttle:15,1')->name('track.verify');
+Route::get('/track', [TrackingController::class, 'show'])->middleware('throttle:60,1,track-view')->name('track');
+Route::post('/track/code', [TrackingController::class, 'sendCode'])->middleware('throttle:10,1,track-code')->name('track.code');
+Route::post('/track/verify', [TrackingController::class, 'verify'])->middleware('throttle:15,1,track-verify')->name('track.verify');
 Route::post('/track/logout', [TrackingController::class, 'logout'])->name('track.logout');
 Route::post('/track/number', [TrackingController::class, 'changeNumber'])->name('track.number');
 
@@ -61,9 +65,9 @@ Route::middleware('guest')->group(function () {
 
     // Password reset by SMS code
     Route::get('/forgot-password', [PasswordResetController::class, 'showForgot'])->name('password.forgot');
-    Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])->middleware('throttle:10,1')->name('password.send');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])->middleware('throttle:10,1,pw-send')->name('password.send');
     Route::get('/reset-password', [PasswordResetController::class, 'showReset'])->name('password.reset');
-    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:15,1')->name('password.update');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:15,1,pw-update')->name('password.update');
 });
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
@@ -71,6 +75,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
     Route::get('/', [Manager\DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('orders', [Manager\OrderController::class, 'index'])->name('orders');
+    Route::get('sales', [Manager\SalesController::class, 'index'])->name('sales');
     Route::get('pos', [Manager\PosController::class, 'index'])->name('pos');
     Route::post('pos', [Manager\PosController::class, 'store'])->name('pos.store');
     Route::get('messages', [Manager\MessageController::class, 'index'])->name('messages');
@@ -88,6 +94,7 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
         Route::post('reopen', 'reopen')->name('reopen');
         Route::post('cancel', 'cancel')->name('cancel');
         Route::post('payment', 'payment')->name('payment');
+        Route::post('verify-payment', 'verifyPayment')->middleware('throttle:20,1,verify-payment')->name('verify-payment');
     });
 
     Route::get('riders', [Manager\RiderController::class, 'index'])->name('riders.index');
@@ -121,6 +128,12 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::post('remittances/{rider}/pay-fees', [Manager\RemittanceController::class, 'payFees'])->name('remittances.pay-fees');
     Route::post('remittances/{rider}/clear', [Manager\RemittanceController::class, 'clear'])->name('remittances.clear');
     Route::get('sms', [Manager\RemittanceController::class, 'smsLogs'])->name('sms');
+
+    Route::get('bulk-sms', [Manager\BulkSmsController::class, 'index'])->name('bulk');
+    Route::post('bulk-sms/preview', [Manager\BulkSmsController::class, 'preview'])->middleware('throttle:240,1,bulk-preview')->name('bulk.preview');
+    Route::post('bulk-sms', [Manager\BulkSmsController::class, 'send'])->middleware('throttle:6,1,bulk-send')->name('bulk.send');
+    Route::get('bulk-sms/{campaign}', [Manager\BulkSmsController::class, 'show'])->name('bulk.show');
+    Route::post('sms/test', [Manager\RemittanceController::class, 'testSms'])->middleware('throttle:5,1,sms-test')->name('sms.test');
 });
 
 // Riders

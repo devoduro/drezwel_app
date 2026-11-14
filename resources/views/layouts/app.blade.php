@@ -8,7 +8,7 @@
     <title>@yield('title', 'Drezwel Go')</title>
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script>tailwind.config = {theme: {extend: {colors: {brand: {DEFAULT: '#0f172a', 600: '#1e293b', accent: '#42a5dc'}}}}}</script>
+    <script>tailwind.config = {theme: {extend: {colors: {brand: {DEFAULT: '#1c3041', 600: '#14212d', accent: '#1c3041'}}}}}</script>
     <style>
         body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
         main section.bg-white, main .bg-white.rounded-xl { border: 1px solid #e5e7eb; box-shadow: 0 1px 2px rgb(0 0 0 / .04); }
@@ -23,10 +23,13 @@
 @php
     $user = auth()->user();
     $isRider = $user && $user->isRider();
+    $newOrders = $user && $user->isManager() ? \App\Models\Delivery::whereIn('source', ['online', 'phone'])->where('status', 'pending')->whereNull('rider_id')->paymentSettled()->count() : 0;
     $newMessages = $user && $user->isManager() ? \App\Models\ContactMessage::where('status', 'new')->count() : 0;
     $lowStock = $user && $user->isManager() ? \App\Models\Product::needingStock()->count() : 0;
     $managerNav = [
         ['manager.dashboard', 'Dashboard', 'manager.dashboard', 'fa-gauge-high'],
+        ['manager.orders', 'Orders', 'manager.orders', 'fa-clipboard-list'],
+        ['manager.sales', 'Sales', 'manager.sales', 'fa-receipt'],
         ['manager.pos', 'Point of sale', 'manager.pos', 'fa-cash-register'],
         ['manager.deliveries.index', 'Deliveries', 'manager.deliveries.*', 'fa-truck-fast'],
         ['manager.riders.index', 'Riders', 'manager.riders.*', 'fa-motorcycle'],
@@ -37,6 +40,7 @@
         ['manager.messages', 'Messages', 'manager.messages*', 'fa-inbox'],
         ['manager.reports', 'Reports', 'manager.reports*', 'fa-chart-pie'],
         ['manager.settings', 'Settings', 'manager.settings', 'fa-gear'],
+        ['manager.bulk', 'Bulk SMS', 'manager.bulk*', 'fa-bullhorn'],
         ['manager.sms', 'SMS log', 'manager.sms', 'fa-comment-sms'],
     ];
     $riderNav = [
@@ -64,9 +68,10 @@
             <nav class="px-3 py-4 space-y-1 text-sm">
                 <div class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Menu</div>
                 @foreach($managerNav as [$route, $label, $pattern, $icon])
-                    <a href="{{ route($route) }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition {{ request()->routeIs($pattern) ? 'bg-[#42a5dc] text-white font-semibold shadow' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <a href="{{ route($route) }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition {{ request()->routeIs($pattern) ? 'bg-white/15 text-white font-semibold shadow-inner ring-1 ring-white/10' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
                         <i class="fas {{ $icon }} w-5 text-center {{ request()->routeIs($pattern) ? '' : 'text-slate-400' }}"></i>{{ $label }}
-                        @if($route === 'manager.messages' && $newMessages > 0)<span class="ml-auto rounded-full bg-[#f5922f] px-2 py-0.5 text-[11px] font-bold text-white" title="New messages">{{ $newMessages }}</span>@endif
+                        @if($route === 'manager.orders' && $newOrders > 0)<span class="ml-auto rounded-full bg-[#8fb8d8] px-2 py-0.5 text-[11px] font-bold text-[#1c3041]" title="New website / phone orders waiting for a rider">{{ $newOrders }}</span>@endif
+                        @if($route === 'manager.messages' && $newMessages > 0)<span class="ml-auto rounded-full bg-[#8fb8d8] px-2 py-0.5 text-[11px] font-bold text-[#1c3041]" title="New messages">{{ $newMessages }}</span>@endif
                         @if($route === 'manager.products.index' && $lowStock > 0)<span class="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white" title="Products low or out of stock">{{ $lowStock }}</span>@endif</a>
                 @endforeach
                 <form method="POST" action="{{ route('logout') }}" class="pt-3 mt-3 border-t border-white/10">@csrf
@@ -88,7 +93,7 @@
         </main>
     </div>
 @elseif($isRider)
-    <header class="bg-gradient-to-br from-slate-900 to-slate-800 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow">
+    <header class="bg-[#1c3041] text-white px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow">
         <img src="{{ asset('images/logo-white.png') }}" alt="Drezwel Go" class="h-7 w-auto">
         <form method="POST" action="{{ route('logout') }}">@csrf<button class="text-xs text-white/70">{{ $user->name }} · Log out</button></form>
     </header>

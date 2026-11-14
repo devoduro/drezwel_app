@@ -15,7 +15,7 @@
     <div class="border-b border-slate-200 px-4 py-3 text-[13px] font-bold uppercase tracking-wide text-jm-grey">Help center</div>
     <nav class="py-1 text-[14px]">
         @foreach($items as [$key, $url, $label, $icon])
-            <a href="{{ $url }}" class="flex items-center gap-3 px-4 py-2.5 {{ $active === $key ? 'bg-[#fdecd5]/60 font-bold text-jm-orange' : 'hover:bg-jm-bg' }}"><i class="fas {{ $icon }} w-4 text-center {{ $active === $key ? '' : 'text-jm-grey' }}"></i>{{ $label }}</a>
+            <a href="{{ $url }}" class="flex items-center gap-3 px-4 py-2.5 {{ $active === $key ? 'bg-[#e4eaf0]/60 font-bold text-jm-primary' : 'hover:bg-jm-bg' }}"><i class="fas {{ $icon }} w-4 text-center {{ $active === $key ? '' : 'text-jm-grey' }}"></i>{{ $label }}</a>
         @endforeach
     </nav>
 </aside>

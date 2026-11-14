@@ -1,5 +1,6 @@
+
 <?php $__env->startSection('title', 'Riders · Drezwel Go'); ?>
-<?php $input = 'rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm w-full focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#42a5dc]'; ?>
+<?php $input = 'rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm w-full focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1c3041]'; ?>
 <?php $__env->startSection('content'); ?>
 <?php if (isset($component)) { $__componentOriginalb08eb6e359b0cda244088e0d0db6136c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalb08eb6e359b0cda244088e0d0db6136c = $attributes; } ?>
@@ -125,7 +126,7 @@
     <?php $__currentLoopData = $riders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <div class="min-w-0 bg-white rounded-xl p-4 transition hover:shadow-md <?php echo e($r->is_active ? '' : 'opacity-60'); ?>">
             <div class="flex items-center gap-3">
-                <span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#42a5dc] to-[#2c8fc6] text-lg font-bold text-white shadow"><?php echo e(mb_strtoupper(mb_substr($r->name, 0, 1))); ?></span>
+                <span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#1c3041] to-[#1c3041] text-lg font-bold text-white shadow"><?php echo e(mb_strtoupper(mb_substr($r->name, 0, 1))); ?></span>
                 <div class="min-w-0 flex-1">
                     <div class="font-semibold truncate"><?php echo e($r->name); ?></div>
                     <div class="text-xs text-slate-500 truncate"><i class="fas fa-phone"></i> <?php echo e($r->phone ?: 'No phone'); ?></div>
@@ -138,22 +139,22 @@
                     <input type="hidden" name="name" value="<?php echo e($r->name); ?>">
                     <input type="hidden" name="email" value="<?php echo e($r->email); ?>">
                     <input name="phone" inputmode="tel" required placeholder="Add phone e.g. 0241234567" class="<?php echo e($input); ?> min-w-0 flex-1">
-                    <button class="rounded-lg bg-[#f5922f] hover:bg-[#de7a14] text-white px-3 text-sm font-semibold transition whitespace-nowrap">Save</button>
+                    <button class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-3 text-sm font-semibold transition whitespace-nowrap">Save</button>
                 </form>
             <?php endif; ?>
             <div class="mt-4 grid grid-cols-2 gap-2 text-center">
                 <div class="rounded-lg bg-slate-50 py-2"><div class="text-lg font-bold text-green-600"><?php echo e($r->total_deliveries); ?></div><div class="text-[11px] uppercase tracking-wide text-slate-500">Delivered</div></div>
-                <div class="rounded-lg bg-slate-50 py-2"><div class="text-lg font-bold text-[#2c8fc6]"><?php echo e($r->open_deliveries); ?></div><div class="text-[11px] uppercase tracking-wide text-slate-500">Open runs</div></div>
+                <div class="rounded-lg bg-slate-50 py-2"><div class="text-lg font-bold text-[#1c3041]"><?php echo e($r->open_deliveries); ?></div><div class="text-[11px] uppercase tracking-wide text-slate-500">Open runs</div></div>
             </div>
             <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
                 <details class="relative">
-                    <summary class="cursor-pointer font-medium text-[#2c8fc6]"><i class="fas fa-pen"></i> Edit</summary>
+                    <summary class="cursor-pointer font-medium text-[#1c3041]"><i class="fas fa-pen"></i> Edit</summary>
                     <form method="POST" action="<?php echo e(route('manager.riders.update', $r)); ?>" class="absolute left-0 z-10 mt-2 w-60 space-y-2 rounded-lg border bg-white p-3 shadow-lg"><?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
                         <input name="name" value="<?php echo e($r->name); ?>" required class="<?php echo e($input); ?>">
                         <input name="phone" value="<?php echo e($r->phone); ?>" placeholder="Phone" required class="<?php echo e($input); ?>">
                         <input name="email" value="<?php echo e($r->email); ?>" placeholder="Email" class="<?php echo e($input); ?>">
                         <input name="password" placeholder="New password (optional)" class="<?php echo e($input); ?>">
-                        <button class="w-full rounded bg-[#42a5dc] text-white py-1.5 font-semibold">Save</button>
+                        <button class="w-full rounded bg-[#1c3041] text-white py-1.5 font-semibold">Save</button>
                     </form>
                 </details>
                 <a href="<?php echo e(route('manager.riders.show', $r)); ?>" class="font-medium text-slate-600 hover:text-slate-900"><i class="fas fa-clock-rotate-left"></i> History</a>

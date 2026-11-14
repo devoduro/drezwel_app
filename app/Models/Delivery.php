@@ -37,6 +37,7 @@ class Delivery extends Model
             'delivered_at' => 'datetime',
             'rider_fee_paid_at' => 'datetime',
             'code_sent_at' => 'datetime',
+            'payment_requested_at' => 'datetime',
             'confirmed_by_manager' => 'boolean',
             'total_amount' => 'decimal:2',
             'amount_paid' => 'decimal:2',
@@ -93,6 +94,12 @@ class Delivery extends Model
     public function scopeActive(Builder $q): Builder
     {
         return $q->where('status', '!=', 'cancelled');
+    }
+
+    /** Orders that are not still waiting on (or failed at) an online payment, so a rider can be sent. */
+    public function scopePaymentSettled(Builder $q): Builder
+    {
+        return $q->where(fn ($w) => $w->whereNull('payment_status')->orWhere('payment_status', 'paid'));
     }
 
     public function scopeSearch(Builder $q, ?string $term): Builder

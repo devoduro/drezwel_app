@@ -2,7 +2,7 @@
 <?php $__env->startSection('title', ($product->exists ? 'Edit' : 'New') . ' product · Drezwel Go'); ?>
 <?php
     $v = fn ($k, $fallback = null) => old($k, $fallback);
-    $input = 'mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#42a5dc]';
+    $input = 'mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1c3041]';
     $cell = 'rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm w-full';
 ?>
 <?php $__env->startSection('content'); ?>
@@ -51,7 +51,7 @@
             <div class="flex flex-wrap gap-3 mb-3">
                 <?php $__currentLoopData = $product->images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $img): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="w-24 text-center">
-                        <img src="<?php echo e($img->url); ?>" alt="" class="h-24 w-24 rounded-lg object-cover border <?php echo e($loop->first ? 'ring-2 ring-[#42a5dc]' : ''); ?>">
+                        <img src="<?php echo e($img->url); ?>" alt="" class="h-24 w-24 rounded-lg object-cover border <?php echo e($loop->first ? 'ring-2 ring-[#1c3041]' : ''); ?>">
                         <div class="mt-1 text-[11px] text-slate-500"><?php echo e($loop->first ? 'Main photo' : ''); ?></div>
                     </div>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -94,7 +94,7 @@
         </div>
 
         <div id="newRows" class="space-y-2"></div>
-        <button type="button" id="addRow" class="mt-2 text-sm text-[#2c8fc6] font-semibold"><i class="fas fa-plus"></i> Add one size/colour</button>
+        <button type="button" id="addRow" class="mt-2 text-sm text-[#1c3041] font-semibold"><i class="fas fa-plus"></i> Add one size/colour</button>
 
         <?php if (! ($product->exists)): ?>
             <label class="block mt-4 text-sm font-medium">If there are no sizes or colours, opening stock (units on hand now)
@@ -103,7 +103,7 @@
     </section>
 
     <div class="flex gap-3">
-        <button class="rounded-lg bg-[#42a5dc] hover:bg-[#2c8fc6] text-white px-6 py-2.5 font-semibold transition"><?php echo e($product->exists ? 'Save changes' : 'Add product'); ?></button>
+        <button class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-6 py-2.5 font-semibold transition"><?php echo e($product->exists ? 'Save changes' : 'Add product'); ?></button>
         <a href="<?php echo e(route('manager.products.index')); ?>" class="px-4 py-2.5 text-slate-500">Cancel</a>
     </div>
 </form>

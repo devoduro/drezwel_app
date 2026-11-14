@@ -14,7 +14,7 @@
                 <h2 class="text-[17px] font-bold">Order {{ $delivery->reference }}</h2>
                 <div class="mt-0.5 text-sm text-jm-grey">Placed on {{ $delivery->created_at->format('d-m-Y') }}@if($delivery->items->count()) · {{ $delivery->items->sum('qty') }} {{ $delivery->items->sum('qty') === 1 ? 'item' : 'items' }}@endif · Total: <strong class="text-jm-dark">{{ $m($delivery->amount_due) }}</strong></div>
             </div>
-            <span class="rounded px-2.5 py-1 text-[12px] font-bold uppercase {{ $delivery->status === 'delivered' ? 'bg-green-100 text-green-700' : ($failed ? 'bg-red-100 text-jm-red' : 'bg-[#fdecd5] text-jm-orange') }}">{{ \App\Models\Delivery::STATUSES[$delivery->status] ?? $delivery->status }}</span>
+            <span class="rounded px-2.5 py-1 text-[12px] font-bold uppercase {{ $delivery->status === 'delivered' ? 'bg-green-100 text-green-700' : ($failed ? 'bg-red-100 text-jm-red' : 'bg-[#e4eaf0] text-jm-primary') }}">{{ \App\Models\Delivery::STATUSES[$delivery->status] ?? $delivery->status }}</span>
         </div>
 
         {{-- Progress --}}
@@ -26,8 +26,8 @@
                     @foreach($steps as $key => $label)
                         @php $i = array_search($key, $keys); $done = $current !== false && $i <= $current; $now = $current === $i; @endphp
                         <li class="relative">
-                            @if(! $loop->first)<span class="absolute right-1/2 top-3 h-0.5 w-full {{ $done ? 'bg-jm-orange' : 'bg-slate-200' }}"></span>@endif
-                            <span class="relative z-10 mx-auto grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold {{ $done ? 'bg-jm-orange text-white' : 'bg-slate-200 text-slate-500' }} {{ $now ? 'ring-4 ring-[#fdecd5]' : '' }}">{!! $done ? '<i class="fas fa-check"></i>' : $i + 1 !!}</span>
+                            @if(! $loop->first)<span class="absolute right-1/2 top-3 h-0.5 w-full {{ $done ? 'bg-jm-primary' : 'bg-slate-200' }}"></span>@endif
+                            <span class="relative z-10 mx-auto grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold {{ $done ? 'bg-jm-primary text-white' : 'bg-slate-200 text-slate-500' }} {{ $now ? 'ring-4 ring-[#e4eaf0]' : '' }}">{!! $done ? '<i class="fas fa-check"></i>' : $i + 1 !!}</span>
                             <div class="mt-2 px-1 text-[12px] leading-tight sm:text-[13px] {{ $done ? 'font-bold text-jm-dark' : 'text-jm-grey' }}">{{ $label }}</div>
                         </li>
                     @endforeach
@@ -35,7 +35,7 @@
             @endif
 
             @if($delivery->status === 'out_for_delivery')
-                <div class="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm"><i class="fas fa-shield-halved text-jm-orange"></i> We texted you a <strong>4-digit code</strong>. Give it to the rider <strong>only when you have received your order</strong>.</div>
+                <div class="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm"><i class="fas fa-shield-halved text-jm-primary"></i> We texted you a <strong>4-digit code</strong>. Give it to the rider <strong>only when you have received your order</strong>.</div>
             @endif
         </div>
     </section>
@@ -75,7 +75,7 @@
                 <div class="text-jm-grey"><i class="fas fa-location-dot w-5"></i>{{ $delivery->location }}</div>
                 @if($delivery->rider && in_array($delivery->status, ['assigned', 'out_for_delivery']))
                     <div class="mt-2 rounded-lg bg-jm-bg p-3"><div class="text-xs font-bold uppercase text-jm-grey">Your rider</div><div class="font-medium">{{ $delivery->rider->name }}</div>
-                        @if($delivery->rider->phone)<a class="font-bold text-jm-orange" href="tel:{{ $delivery->rider->phone }}"><i class="fas fa-phone"></i> {{ $delivery->rider->phone }}</a>@endif</div>
+                        @if($delivery->rider->phone)<a class="font-bold text-jm-primary" href="tel:{{ $delivery->rider->phone }}"><i class="fas fa-phone"></i> {{ $delivery->rider->phone }}</a>@endif</div>
                 @endif
             </div>
         </section>
@@ -84,7 +84,7 @@
     {{-- Updates --}}
     <section class="overflow-hidden rounded-xl bg-white">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3"><span class="text-[15px] font-bold uppercase tracking-wide">Order updates</span>
-            <a target="_blank" href="{{ $invoice }}" class="inline-flex items-center gap-2 rounded-lg bg-jm-orange px-4 py-2 text-[13px] font-bold uppercase text-white shadow transition hover:bg-[#e07b10]"><i class="fas fa-print"></i> Print invoice</a></div>
+            <a target="_blank" href="{{ $invoice }}" class="inline-flex items-center gap-2 rounded-lg bg-jm-primary px-4 py-2 text-[13px] font-bold uppercase text-white shadow transition hover:bg-[#14212d]"><i class="fas fa-print"></i> Print invoice</a></div>
         <ul class="divide-y divide-slate-100 text-sm">
             @foreach($delivery->events->whereIn('type', ['created', 'assigned', 'started', 'delivered', 'undelivered', 'reopened', 'cancelled'])->reverse() as $e)
                 <li class="flex justify-between gap-3 px-4 py-3">

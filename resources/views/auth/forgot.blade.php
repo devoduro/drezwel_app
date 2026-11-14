@@ -14,7 +14,7 @@
                 <label class="text-sm font-medium">Phone or email</label>
                 <input name="login" value="{{ old('login') }}" required autofocus class="mt-1 w-full rounded-lg border-slate-300 border px-3 py-2.5">
             </div>
-            <button class="w-full rounded-lg bg-gradient-to-br from-slate-900 to-slate-700 text-white py-2.5 font-semibold shadow hover:shadow-md transition">Send me a code</button>
+            <button class="w-full rounded-lg bg-[#1c3041] text-white py-2.5 font-semibold shadow hover:shadow-md transition">Send me a code</button>
         </form>
         <p class="mt-5 text-center text-sm text-slate-500">No phone number on your account? Ask your manager to reset it from the Riders page.</p>
         <p class="mt-2 text-center text-sm"><a class="text-brand-accent font-medium" href="{{ route('login') }}">← Back to sign in</a></p>

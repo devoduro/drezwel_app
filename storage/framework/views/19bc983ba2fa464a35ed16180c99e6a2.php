@@ -1,4 +1,4 @@
-<a href="<?php echo e(route('rider.show', $d)); ?>" class="block bg-white rounded-xl p-4 border-l-4 transition hover:shadow-md <?php echo e($d->status === 'out_for_delivery' ? 'border-l-[#967adc]' : ($d->status === 'delivered' ? 'border-l-[#8cc152]' : ($d->status === 'undelivered' ? 'border-l-[#da4453]' : 'border-l-[#42a5dc]'))); ?>">
+<a href="<?php echo e(route('rider.show', $d)); ?>" class="block bg-white rounded-xl p-4 border-l-4 transition hover:shadow-md <?php echo e($d->status === 'out_for_delivery' ? 'border-l-[#967adc]' : ($d->status === 'delivered' ? 'border-l-[#8cc152]' : ($d->status === 'undelivered' ? 'border-l-[#da4453]' : 'border-l-[#1c3041]'))); ?>">
     <div class="flex justify-between gap-2">
         <div class="font-semibold"><?php echo e($d->customer->name); ?></div>
         <?php if (isset($component)) { $__componentOriginal2ddbc40e602c342e508ac696e52f8719 = $component; } ?>

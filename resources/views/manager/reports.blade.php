@@ -6,7 +6,7 @@
     $range = ($from || $to) ? ($from?->format('d M Y') ?? '…') . ' – ' . ($to?->format('d M Y') ?? '…') : 'All records';
     $qs = request()->only(['period', 'from', 'to']);
     $th = 'text-left text-slate-500 text-xs';
-    $head = 'px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#42a5dc] font-semibold text-sm text-slate-800';
+    $head = 'px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm text-slate-800';
 @endphp
 @section('content')
 <x-dashboard-hero class="mb-6" :eyebrow="$range" title="Business report" subtitle="Finances, orders and stock in one place. Print it or download the data as CSV.">
@@ -30,13 +30,13 @@
 
 <div class="no-print mb-6 flex flex-wrap gap-2 text-sm">
     <span class="text-slate-500 self-center">Download CSV:</span>
-    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#42a5dc]" href="{{ route('manager.reports.export', ['type' => 'orders'] + $qs) }}"><i class="fas fa-file-csv text-[#74a83b]"></i> Orders</a>
-    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#42a5dc]" href="{{ route('manager.reports.export', ['type' => 'sales'] + $qs) }}"><i class="fas fa-file-csv text-[#74a83b]"></i> Sales by product</a>
-    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#42a5dc]" href="{{ route('manager.reports.export', ['type' => 'stock']) }}"><i class="fas fa-file-csv text-[#74a83b]"></i> Current stock</a>
+    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="{{ route('manager.reports.export', ['type' => 'orders'] + $qs) }}"><i class="fas fa-file-csv text-[#74a83b]"></i> Orders</a>
+    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="{{ route('manager.reports.export', ['type' => 'sales'] + $qs) }}"><i class="fas fa-file-csv text-[#74a83b]"></i> Sales by product</a>
+    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="{{ route('manager.reports.export', ['type' => 'stock']) }}"><i class="fas fa-file-csv text-[#74a83b]"></i> Current stock</a>
 </div>
 
 {{-- ======================= FINANCES ======================= --}}
-<h2 class="text-lg font-bold mb-3"><i class="fas fa-sack-dollar text-[#42a5dc]"></i> Finances</h2>
+<h2 class="text-lg font-bold mb-3"><i class="fas fa-sack-dollar text-[#1c3041]"></i> Finances</h2>
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
     <x-stat-tile color="blue" icon="fa-receipt" title="Billed to customers" :value="$m($finance['revenue'])" :sub="'Goods ' . $m($finance['goods']) . ' + delivery ' . $m($finance['fees_charged'])" />
     <x-stat-tile color="green" icon="fa-money-bill-wave" title="Collected" :value="$m($finance['collected'])" :sub="$finance['collection_rate'] . '% of revenue'" />
@@ -101,7 +101,7 @@
 </div>
 
 {{-- ======================= ORDERS ======================= --}}
-<h2 class="text-lg font-bold mb-3 print-break"><i class="fas fa-truck-fast text-[#42a5dc]"></i> Orders</h2>
+<h2 class="text-lg font-bold mb-3 print-break"><i class="fas fa-truck-fast text-[#1c3041]"></i> Orders</h2>
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
     <x-stat-tile color="blue" icon="fa-box" title="Orders" :value="$orders" sub="Excluding cancelled" />
     <x-stat-tile color="green" icon="fa-circle-check" title="Delivered" :value="$delivered" :sub="($orders ? round($delivered / $orders * 100, 1) : 0) . '% fulfilment'" />
@@ -151,7 +151,7 @@
 </div>
 
 {{-- ======================= STOCK ======================= --}}
-<h2 class="text-lg font-bold mb-3 mt-8 print-break"><i class="fas fa-boxes-stacked text-[#42a5dc]"></i> Stock</h2>
+<h2 class="text-lg font-bold mb-3 mt-8 print-break"><i class="fas fa-boxes-stacked text-[#1c3041]"></i> Stock</h2>
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
     <x-stat-tile color="blue" icon="fa-cubes" title="Units in stock" :value="number_format($stock['units'])" :sub="$stock['products'] . ' products'" />
     <x-stat-tile color="orange" icon="fa-coins" title="Stock at cost" :value="$m($stock['cost_value'])" sub="Money tied up in stock" />
@@ -165,7 +165,7 @@
         <table class="w-full text-sm">
             <thead class="{{ $th }}"><tr><th class="px-4 py-2">Product</th><th class="text-right">In stock</th><th class="text-right">Reorder at</th><th class="px-4">Level</th></tr></thead>
             @forelse($needing as $p)
-                <tr class="border-t border-slate-100"><td class="px-4 py-2"><a class="text-[#2c8fc6] hover:underline" href="{{ route('manager.products.show', $p) }}">{{ $p->name }}</a></td><td class="text-right font-bold {{ $p->level === 'out' ? 'text-red-600' : 'text-[#de7a14]' }}">{{ $p->stock_qty }}</td><td class="text-right">{{ $p->reorder_level }}</td><td class="px-4">@include('manager.products._level', ['p' => $p])</td></tr>
+                <tr class="border-t border-slate-100"><td class="px-4 py-2"><a class="text-[#1c3041] hover:underline" href="{{ route('manager.products.show', $p) }}">{{ $p->name }}</a></td><td class="text-right font-bold {{ $p->level === 'out' ? 'text-red-600' : 'text-amber-600' }}">{{ $p->stock_qty }}</td><td class="text-right">{{ $p->reorder_level }}</td><td class="px-4">@include('manager.products._level', ['p' => $p])</td></tr>
             @empty <tr><td colspan="4" class="p-6 text-center text-slate-400"><i class="fas fa-circle-check text-green-500"></i> Everything is above its reorder level.</td></tr> @endforelse
         </table>
     </section>

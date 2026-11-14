@@ -1,4 +1,4 @@
-<a href="{{ route('rider.show', $d) }}" class="block bg-white rounded-xl p-4 border-l-4 transition hover:shadow-md {{ $d->status === 'out_for_delivery' ? 'border-l-[#967adc]' : ($d->status === 'delivered' ? 'border-l-[#8cc152]' : ($d->status === 'undelivered' ? 'border-l-[#da4453]' : 'border-l-[#42a5dc]')) }}">
+<a href="{{ route('rider.show', $d) }}" class="block bg-white rounded-xl p-4 border-l-4 transition hover:shadow-md {{ $d->status === 'out_for_delivery' ? 'border-l-[#967adc]' : ($d->status === 'delivered' ? 'border-l-[#8cc152]' : ($d->status === 'undelivered' ? 'border-l-[#da4453]' : 'border-l-[#1c3041]')) }}">
     <div class="flex justify-between gap-2">
         <div class="font-semibold">{{ $d->customer->name }}</div>
         <x-badge :status="$d->status"/>

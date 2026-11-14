@@ -120,10 +120,10 @@
 <div class="grid lg:grid-cols-2 gap-4">
     <?php $__currentLoopData = $riders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <?php $c = $r->c; ?>
-        <section class="bg-white rounded-xl p-4 border-l-4 <?php echo e($c['cleared'] ? 'border-l-[#8cc152]' : 'border-l-[#f5922f]'); ?> <?php echo e($r->rider->is_active ? '' : 'opacity-60'); ?>">
+        <section class="bg-white rounded-xl p-4 border-l-4 <?php echo e($c['cleared'] ? 'border-l-[#8cc152]' : 'border-l-[#1c3041]'); ?> <?php echo e($r->rider->is_active ? '' : 'opacity-60'); ?>">
             <div class="flex items-start justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0">
-                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#42a5dc] to-[#2c8fc6] font-bold text-white"><?php echo e(mb_strtoupper(mb_substr($r->rider->name, 0, 1))); ?></span>
+                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#1c3041] to-[#1c3041] font-bold text-white"><?php echo e(mb_strtoupper(mb_substr($r->rider->name, 0, 1))); ?></span>
                     <div class="min-w-0">
                         <div class="font-semibold truncate"><?php echo e($r->rider->name); ?>
 
@@ -157,14 +157,14 @@
                 <input type="number" min="0" name="items" value="0" class="<?php echo e($input); ?> w-16" title="Items checked in">
                 <select name="method" class="<?php echo e($input); ?>"><?php $__currentLoopData = \App\Models\Remittance::METHODS; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $l): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option value="<?php echo e($k); ?>"><?php echo e(\Illuminate\Support\Str::before($l, ' /')); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></select>
                 <input name="notes" placeholder="Notes" class="<?php echo e($input); ?> flex-1 min-w-20">
-                <button class="rounded-lg bg-[#42a5dc] hover:bg-[#2c8fc6] text-white px-3 py-1.5 text-sm font-semibold transition">Record partial</button>
+                <button class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-3 py-1.5 text-sm font-semibold transition">Record partial</button>
             </form>
         </section>
     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </div>
 
 <div class="bg-white rounded-xl overflow-hidden mt-8">
-    <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#42a5dc] font-semibold text-sm">Recent remittances</div>
+    <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm">Recent remittances</div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
         <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">When</th><th>Rider</th><th class="text-right">Cash</th><th class="text-right">Items</th><th>Method</th><th>Received by</th><th class="p-3">Notes</th></tr></thead>
         <?php $__empty_1 = true; $__currentLoopData = $history; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $h): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
