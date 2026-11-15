@@ -141,16 +141,7 @@
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </table>
     </section>
-    <section class="bg-white rounded-xl overflow-hidden">
-        <div class="<?php echo e($head); ?>">How customers paid</div>
-        <table class="w-full text-sm">
-            <thead class="text-left text-slate-500 text-xs"><tr><th class="px-4 py-2">Method</th><th class="text-right">Payments</th><th class="text-right px-4">Amount</th></tr></thead>
-            <?php $__currentLoopData = \App\Models\Payment::METHODS; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $l): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <tr class="border-t border-slate-100"><td class="px-4 py-2"><a class="hover:underline" href="<?php echo e(route('manager.sales', array_merge(request()->except('page', 'method'), ['method' => $k]))); ?>"><?php echo e($l); ?></a></td><td class="text-right"><?php echo e($byMethod[$k]->n ?? 0); ?></td><td class="text-right px-4"><?php echo e($m($byMethod[$k]->total ?? 0)); ?></td></tr>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            <tr class="border-t bg-slate-50 font-semibold"><td class="px-4 py-2">Total</td><td class="text-right"><?php echo e($byMethod->sum('n')); ?></td><td class="text-right px-4"><?php echo e($m($byMethod->sum('total'))); ?></td></tr>
-        </table>
-    </section>
+    <?php echo $__env->make('manager._top-products', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 </div>
 
 <form method="GET" class="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-white p-3 text-sm md:grid-cols-5">

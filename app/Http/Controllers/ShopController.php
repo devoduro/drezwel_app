@@ -77,8 +77,15 @@ class ShopController extends Controller
     public function product(string $slug)
     {
         $product = Product::inStore()->with(['images', 'variants' => fn ($q) => $q->where('is_active', true)])->where('slug', $slug)->firstOrFail();
-        $related = Product::inStore()->with(['images', 'variants'])->where('id', '!=', $product->id)
-            ->when($product->category, fn ($q) => $q->where('category', $product->category))->where('stock_qty', '>', 0)->limit(10)->get();
+        // Up to 7 suggestions for a sideways-scrolling row: same category first, then other in-stock items,
+        // then (if the shop is small) sold-out ones, so the row is never left with a lone card.
+        $suggest = fn () => Product::inStore()->with(['images', 'variants'])->where('id', '!=', $product->id)->inRandomOrder();
+        $related = $product->category ? $suggest()->where('stock_qty', '>', 0)->where('category', $product->category)->limit(7)->get() : collect();
+        foreach ([true, false] as $inStockOnly) {
+            if ($related->count() < 7) {
+                $related = $related->concat($suggest()->whereNotIn('id', $related->pluck('id'))->when($inStockOnly, fn ($q) => $q->where('stock_qty', '>', 0))->limit(7 - $related->count())->get());
+            }
+        }
 
         return view('shop.product', [
             'product' => $product,
@@ -111,7 +118,7 @@ class ShopController extends Controller
 
         // The "+" on a product tile keeps the customer browsing; the product page's button goes to the cart.
         if ($request->boolean('stay')) {
-            return back()->with('success', "{$variant->product->name} added to your cart.");
+            return back()->with('success', "{$variant->product->name} added to your cart.")->with('cart_added', true);
         }
 
         return redirect()->route('shop.cart')->with('success', "{$variant->product->name} added to your cart.");

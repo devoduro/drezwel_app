@@ -25,7 +25,8 @@
             <div>
                 <div class="relative aspect-square overflow-hidden rounded-lg bg-slate-100">
                     <?php if($product->images->count()): ?>
-                        <img id="mainPhoto" src="<?php echo e($product->images->first()->url); ?>" alt="<?php echo e($product->name); ?>" class="h-full w-full object-cover">
+                        <img id="mainPhoto" src="<?php echo e($product->images->first()->url); ?>" alt="<?php echo e($product->name); ?>" class="h-full w-full cursor-zoom-in object-cover" title="Click to view full size">
+                        <button type="button" id="zoomBtn" class="absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-jm-dark shadow" aria-label="View full size"><i class="fas fa-expand"></i></button>
                     <?php else: ?>
                         <div class="grid h-full place-items-center text-7xl text-slate-300"><i class="fas fa-shirt"></i></div>
                     <?php endif; ?>
@@ -138,9 +139,19 @@ unset($__errorArgs, $__bag); ?>
     </section>
 
     <?php if($related->count()): ?>
-        <?php echo $__env->make('shop._row', ['title' => 'You may also like', 'products' => $related, 'url' => $product->category ? route('shop.index', ['category' => $product->category]) : null], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+        <?php echo $__env->make('shop._row', ['title' => 'You may also like', 'products' => $related, 'url' => route('shop.index')], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <?php endif; ?>
 </div>
+
+<?php if($product->images->count()): ?>
+<div id="lightbox" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/90 p-4" role="dialog" aria-label="Product photo">
+    <button type="button" id="lbClose" class="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/15 text-xl text-white hover:bg-white/25" aria-label="Close"><i class="fas fa-xmark"></i></button>
+    <button type="button" id="lbPrev" class="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-white hover:bg-white/25" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+    <img id="lbImg" src="" alt="<?php echo e($product->name); ?>" class="max-h-full max-w-full rounded-lg object-contain">
+    <button type="button" id="lbNext" class="absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-white hover:bg-white/25" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+    <div id="lbCount" class="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-sm text-white"></div>
+</div>
+<?php endif; ?>
 
 <script>
 (function () {
@@ -155,6 +166,25 @@ unset($__errorArgs, $__bag); ?>
         document.querySelectorAll('.thumb').forEach(x => { x.classList.remove('border-jm-primary'); x.classList.add('border-slate-200'); });
         b.classList.remove('border-slate-200'); b.classList.add('border-jm-primary');
     }));
+
+    // full-size viewer: click the photo to enlarge, arrows / swipe / Esc to browse and close
+    const photos = <?php echo json_encode($product->images->pluck('url')->values(), 15, 512) ?>;
+    if (photos.length) {
+        let cur = 0;
+        const box = el('lightbox'), img = el('lbImg');
+        const show = i => { cur = (i + photos.length) % photos.length; img.src = photos[cur]; el('lbCount').textContent = photos.length > 1 ? (cur + 1) + ' / ' + photos.length : ''; };
+        const openBox = () => { const i = photos.indexOf(el('mainPhoto').getAttribute('src')); show(i < 0 ? 0 : i); box.classList.remove('hidden'); box.classList.add('flex'); document.body.style.overflow = 'hidden'; };
+        const closeBox = () => { box.classList.add('hidden'); box.classList.remove('flex'); document.body.style.overflow = ''; };
+        el('mainPhoto').addEventListener('click', openBox); el('zoomBtn').addEventListener('click', openBox);
+        el('lbClose').addEventListener('click', closeBox);
+        box.addEventListener('click', e => { if (e.target === box) closeBox(); });
+        el('lbPrev').addEventListener('click', () => show(cur - 1)); el('lbNext').addEventListener('click', () => show(cur + 1));
+        if (photos.length < 2) { el('lbPrev').classList.add('hidden'); el('lbNext').classList.add('hidden'); }
+        document.addEventListener('keydown', e => { if (box.classList.contains('hidden')) return; if (e.key === 'Escape') closeBox(); if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
+        let x0 = null;
+        box.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, {passive: true});
+        box.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) show(cur + (dx < 0 ? 1 : -1)); x0 = null; });
+    }
 
     const find = () => variants.find(v => (v.size || null) === size && (v.color || null) === color);
     const hasSizes = variants.some(v => v.size), hasColors = variants.some(v => v.color);

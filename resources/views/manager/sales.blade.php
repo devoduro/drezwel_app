@@ -48,16 +48,7 @@
             @endforeach
         </table>
     </section>
-    <section class="bg-white rounded-xl overflow-hidden">
-        <div class="{{ $head }}">How customers paid</div>
-        <table class="w-full text-sm">
-            <thead class="text-left text-slate-500 text-xs"><tr><th class="px-4 py-2">Method</th><th class="text-right">Payments</th><th class="text-right px-4">Amount</th></tr></thead>
-            @foreach(\App\Models\Payment::METHODS as $k => $l)
-                <tr class="border-t border-slate-100"><td class="px-4 py-2"><a class="hover:underline" href="{{ route('manager.sales', array_merge(request()->except('page', 'method'), ['method' => $k])) }}">{{ $l }}</a></td><td class="text-right">{{ $byMethod[$k]->n ?? 0 }}</td><td class="text-right px-4">{{ $m($byMethod[$k]->total ?? 0) }}</td></tr>
-            @endforeach
-            <tr class="border-t bg-slate-50 font-semibold"><td class="px-4 py-2">Total</td><td class="text-right">{{ $byMethod->sum('n') }}</td><td class="text-right px-4">{{ $m($byMethod->sum('total')) }}</td></tr>
-        </table>
-    </section>
+    @include('manager._top-products')
 </div>
 
 <form method="GET" class="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-white p-3 text-sm md:grid-cols-5">

@@ -37,9 +37,7 @@ class SalesController extends Controller
 
         $bySource = $scope()->selectRaw('source, COUNT(*) n, SUM(total_amount + delivery_fee) value, SUM(amount_paid) paid')->groupBy('source')->get()->keyBy('source');
 
-        $byMethod = Payment::query()
-            ->whereIn('delivery_id', $lineIds)
-            ->selectRaw('method, COUNT(*) n, SUM(amount) total')->groupBy('method')->get()->keyBy('method');
+        $topProducts = DashboardController::topProducts($lineIds);
 
         $sales = $scope()->with(['customer', 'items.product', 'payments'])->latest('delivery_date')->latest('id')->paginate(25)->withQueryString();
 
@@ -50,7 +48,7 @@ class SalesController extends Controller
                 'average' => $orders ? $billed / $orders : 0, 'profit' => $lineRevenue - $cost,
             ],
             'bySource' => $bySource,
-            'byMethod' => $byMethod,
+            'topProducts' => $topProducts,
             'sources' => OrderController::SOURCES,
             'period' => $request->input('period', '30d'),
             'periods' => DashboardController::PERIODS,

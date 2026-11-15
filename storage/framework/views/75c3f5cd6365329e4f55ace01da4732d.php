@@ -130,7 +130,17 @@
     </header>
 
     <main class="flex-1">
-        <div class="max-w-[1180px] mx-auto px-3 sm:px-4 pt-3"><?php echo $__env->make('partials.flash', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></div>
+        <div class="max-w-[1180px] mx-auto px-3 sm:px-4 pt-3"><?php if (! (session('cart_added'))): ?><?php echo $__env->make('partials.flash', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php endif; ?></div>
+        <?php if(session('cart_added') && ! request()->routeIs('shop.cart')): ?>
+            
+            <div id="cartToast" role="status" class="fixed inset-x-3 bottom-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-xl bg-jm-dark px-4 py-3 text-sm text-white shadow-2xl sm:bottom-auto sm:top-24 sm:left-auto sm:right-4 sm:mx-0">
+                <i class="fas fa-circle-check text-lg text-green-400"></i>
+                <div class="min-w-0 flex-1"><div class="truncate font-semibold"><?php echo e(session('success')); ?></div></div>
+                <a href="<?php echo e(route('shop.cart')); ?>" class="shrink-0 rounded-lg bg-white px-3 py-1.5 text-xs font-bold uppercase text-jm-primary">View cart</a>
+                <button type="button" onclick="this.parentNode.remove()" class="shrink-0 text-white/60 hover:text-white" aria-label="Close"><i class="fas fa-xmark"></i></button>
+            </div>
+            <script>setTimeout(function () { var t = document.getElementById('cartToast'); if (t) t.remove(); }, 7000);</script>
+        <?php endif; ?>
         <?php echo $__env->yieldContent('content'); ?>
     </main>
 

@@ -84,7 +84,7 @@ class OrdersSalesTest extends TestCase
         $res->assertSee('GH₵ 520.00')                  // billed: 300+20 and 200
             ->assertSee('GH₵ 320.00')                  // received: 120 and 200
             ->assertSee('GH₵ 200.00')                  // still owed: 520 - 320
-            ->assertSee('Sales by channel')->assertSee('How customers paid')->assertDontSee('9,999')->assertDontSee('9999');
+            ->assertSee('Sales by channel')->assertSee('Top performing products')->assertDontSee('9,999')->assertDontSee('9999');
         $res->assertSee($web->reference)->assertSee($pos->reference);
 
         // filters
@@ -103,6 +103,33 @@ class OrdersSalesTest extends TestCase
 
         $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertOk()->assertSee('GH₵ 80.00')   // 200 - 120 cost
             ->assertSee('Download CSV')->assertSee('reports/export/orders', false);
+    }
+
+    public function test_top_products_are_ranked_by_profit_and_by_units_on_sales_and_dashboard(): void
+    {
+        $m = $this->manager();
+        $mk = function (string $name, float $price, float $cost, int $qty) {
+            $p = Product::create(['name' => $name, 'slug' => strtolower($name), 'cost_price' => $cost, 'selling_price' => $price, 'stock_qty' => 50]);
+            $v = $p->variants()->create(['stock_qty' => 50]);
+            $this->order("{$name}-buyer", ['total_amount' => $price * $qty])->items()->create(['product_id' => $p->id, 'variant_id' => $v->id, 'qty' => $qty, 'unit_price' => $price, 'unit_cost' => $cost]);
+        };
+        $mk('Blazer', 500, 200, 2);     // profit 600, 2 units
+        $mk('Socks', 10, 5, 30);        // profit 150, 30 units
+        $mk('Cap', 40, 30, 4);          // profit 40, 4 units
+        $cancelled = $this->order('Gone', ['status' => 'cancelled', 'total_amount' => 9000]);
+        $p = Product::create(['name' => 'Ghost', 'slug' => 'ghost', 'cost_price' => 1, 'selling_price' => 900, 'stock_qty' => 500]);
+        $cancelled->items()->create(['product_id' => $p->id, 'variant_id' => $p->variants()->create(['stock_qty' => 500])->id, 'qty' => 10, 'unit_price' => 900, 'unit_cost' => 1]);
+
+        foreach ([route('manager.sales', ['period' => 'all']), route('manager.dashboard')] as $url) {
+            $html = $this->actingAs($m)->get($url)->assertOk()->assertSee('Most profit')->assertSee('Most units sold')->assertDontSee('Ghost')->getContent();
+            $html = substr($html, strpos($html, 'Top performing products'));   // ignore customer names etc. above the panel
+            $profit = strpos($html, 'Most profit');
+            $units = strpos($html, 'Most units sold');
+            $this->assertLessThan(strpos($html, 'Socks', $profit), strpos($html, 'Blazer', $profit));   // Blazer out-earns Socks
+            $this->assertLessThan(strpos($html, 'Blazer', $units), strpos($html, 'Socks', $units));     // Socks outsell Blazer
+            $this->assertStringContainsString('GH₵ 600.00', $html);
+            $this->assertStringContainsString('30 units', $html);
+        }
     }
 
     public function test_only_managers_can_open_orders_and_sales(): void

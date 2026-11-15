@@ -267,6 +267,8 @@
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="4" class="p-4 text-slate-400">No data yet.</td></tr> <?php endif; ?>
         </table></div>
     </section>
+
+    <?php echo $__env->make('manager._top-products', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 </div>
 <?php $__env->stopSection(); ?>
 

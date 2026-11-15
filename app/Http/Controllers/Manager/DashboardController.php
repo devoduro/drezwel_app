@@ -34,6 +34,25 @@ class DashboardController extends Controller
         };
     }
 
+    /**
+     * The best performing products among the given orders: by profit and by units sold.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder $deliveryIds query selecting deliveries.id
+     */
+    public static function topProducts($deliveryIds, int $limit = 4): array
+    {
+        $base = fn () => \App\Models\DeliveryItem::whereIn('delivery_items.delivery_id', $deliveryIds)
+            ->join('products', 'products.id', '=', 'delivery_items.product_id')
+            ->selectRaw('products.id, products.name, SUM(delivery_items.qty) as qty, SUM(delivery_items.qty * delivery_items.unit_price) as revenue,
+                SUM(delivery_items.qty * (delivery_items.unit_price - COALESCE(delivery_items.unit_cost, 0))) as profit')
+            ->groupBy('products.id', 'products.name');
+
+        return [
+            'profit' => $base()->orderByDesc('profit')->limit($limit)->get(),
+            'qty' => $base()->orderByDesc('qty')->orderByDesc('profit')->limit($limit)->get(),
+        ];
+    }
+
     public function index(Request $request)
     {
         [$from, $to] = self::range($request);
@@ -91,7 +110,7 @@ class DashboardController extends Controller
 
         return view('manager.dashboard', [
             'kpi' => $kpi, 'daily' => $daily, 'riders' => $riders, 'modes' => $modes, 'types' => $types,
-            'topCustomers' => $topCustomers, 'todayQueue' => $todayQueue, 'upcoming' => $upcoming,
+            'topCustomers' => $topCustomers, 'topProducts' => self::topProducts($scope()->select('deliveries.id')), 'todayQueue' => $todayQueue, 'upcoming' => $upcoming,
             'period' => $request->input('period', 'all'), 'periods' => self::PERIODS,
             'cashHeld' => $riders->sum(fn ($r) => $r->custody['cash_held']),
             'lowProducts' => \App\Models\Product::needingStock()->orderBy('stock_qty')->limit(8)->get(),

@@ -120,6 +120,12 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::post('products/{product}/toggle', [Manager\ProductController::class, 'toggle'])->name('products.toggle');
     Route::put('alert-phone', [Manager\ProductController::class, 'alertPhone'])->name('alert-phone');
 
+    Route::get('cashbook', [Manager\CashbookController::class, 'index'])->name('cashbook');
+    Route::get('cashbook/export', [Manager\CashbookController::class, 'export'])->name('cashbook.export');
+    Route::post('cashbook', [Manager\CashbookController::class, 'store'])->name('cashbook.store');
+    Route::put('cashbook/{entry}', [Manager\CashbookController::class, 'update'])->name('cashbook.update');
+    Route::delete('cashbook/{entry}', [Manager\CashbookController::class, 'destroy'])->name('cashbook.destroy');
+
     Route::get('reports', [Manager\ReportController::class, 'index'])->name('reports');
     Route::get('reports/export/{type}', [Manager\ReportController::class, 'export'])->name('reports.export');
 

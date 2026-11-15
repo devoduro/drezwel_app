@@ -38,6 +38,7 @@
         ['manager.debtors', 'Debtors', 'manager.debtors', 'fa-hand-holding-dollar'],
         ['manager.remittances', 'Rider cash & items', 'manager.remittances*', 'fa-wallet'],
         ['manager.messages', 'Messages', 'manager.messages*', 'fa-inbox'],
+        ['manager.cashbook', 'Cash book', 'manager.cashbook*', 'fa-book'],
         ['manager.reports', 'Reports', 'manager.reports*', 'fa-chart-pie'],
         ['manager.settings', 'Settings', 'manager.settings', 'fa-gear'],
         ['manager.bulk', 'Bulk SMS', 'manager.bulk*', 'fa-bullhorn'],

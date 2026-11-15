@@ -116,5 +116,7 @@
             @empty <tr><td colspan="4" class="p-4 text-slate-400">No data yet.</td></tr> @endforelse
         </table></div>
     </section>
+
+    @include('manager._top-products')
 </div>
 @endsection

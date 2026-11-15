@@ -465,4 +465,31 @@ class StoreTest extends TestCase
         $this->assertSame(5, $v->fresh()->stock_qty);
         $this->assertSame(20, $p->fresh()->stock_qty);
     }
+
+    public function test_adding_from_a_tile_shows_a_view_cart_message_and_product_page_suggests_other_categories(): void
+    {
+        $jeans = $this->jeans();
+        $cap = Product::create(['name' => 'Plain cap', 'slug' => 'plain-cap', 'category' => 'Caps', 'cost_price' => 10, 'selling_price' => 30, 'show_in_store' => true, 'stock_qty' => 3]);
+        $cap->variants()->create(['stock_qty' => 3]);
+
+        $this->post(route('shop.cart.add'), ['variant_id' => $jeans->variants->first()->id, 'stay' => 1])->assertSessionHas('cart_added');
+        $this->get(route('shop.index'))->assertSee('added to your cart')->assertSee('View cart');
+
+        // the only jeans has no same-category siblings, yet other categories are suggested
+        $this->get(route('shop.product', 'baggy-jeans'))->assertOk()->assertSee('You may also like')->assertSee('Plain cap');
+    }
+
+    public function test_product_page_fills_the_suggestions_row_and_photos_open_full_size(): void
+    {
+        $main = $this->jeans();
+        $main->images()->create(['path' => 'products/a.jpg', 'sort_order' => 0]);
+        foreach (range(1, 3) as $n) {                      // a small shop: 2 in stock, 1 sold out, all in other categories
+            $p = Product::create(['name' => "Other {$n}", 'slug' => "other-{$n}", 'category' => "Cat {$n}", 'cost_price' => 10, 'selling_price' => 30, 'show_in_store' => true, 'stock_qty' => $n === 3 ? 0 : 4]);
+            $p->variants()->create(['stock_qty' => $n === 3 ? 0 : 4]);
+        }
+
+        $this->get(route('shop.product', 'baggy-jeans'))->assertOk()
+            ->assertSee('Other 1')->assertSee('Other 2')->assertSee('Other 3')      // three suggestions, not a lone card
+            ->assertSee('id="lightbox"', false)->assertSee('id="zoomBtn"', false);
+    }
 }
