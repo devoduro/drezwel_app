@@ -18,7 +18,11 @@ class SalesController extends Controller
         $source = $request->input('source');
         $method = $request->input('method');
 
+        // A sale only counts once money has been recorded against it (by the rider, the manager, the counter or an online
+        // payment). A new order that nobody has paid for yet is an order, not a sale, and stays on the Orders page.
+        // A finished exchange is kept even when nothing changed hands, because it still moves stock and profit.
         $scope = fn () => Delivery::active()
+            ->where(fn ($q) => $q->where('amount_paid', '!=', 0)->orWhere(fn ($e) => $e->where('order_type', 'exchange')->where('status', 'delivered')))
             ->when($from, fn ($q) => $q->whereDate('delivery_date', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('delivery_date', '<=', $to))
             ->when($source, fn ($q) => $q->where('source', $source))

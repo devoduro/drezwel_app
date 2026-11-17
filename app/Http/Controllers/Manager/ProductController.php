@@ -162,6 +162,14 @@ class ProductController extends Controller
         return back()->with('success', 'Stock updated.');
     }
 
+    /** Add a product to (or take it out of) Today's deals on the store. */
+    public function deal(Product $product)
+    {
+        $product->update(['is_deal' => ! $product->is_deal]);
+
+        return back()->with('success', $product->is_deal ? "{$product->name} is now in Today's deals." : "{$product->name} removed from Today's deals.");
+    }
+
     public function toggle(Product $product)
     {
         $product->update(['is_active' => ! $product->is_active]);
@@ -225,6 +233,7 @@ class ProductController extends Controller
         unset($data['images']);
         $data['is_active'] = $product ? $product->is_active : true;
         $data['show_in_store'] = $request->boolean('show_in_store');
+        $data['is_deal'] = $request->boolean('is_deal');
 
         return $data;
     }

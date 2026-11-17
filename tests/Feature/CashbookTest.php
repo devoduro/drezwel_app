@@ -127,4 +127,25 @@ class CashbookTest extends TestCase
         $this->app['auth']->forgetGuards();
         $this->get(route('manager.cashbook'))->assertRedirect('/login');
     }
+
+    public function test_reports_page_shows_cash_book_spending_and_profit_after_expenses(): void
+    {
+        $m = $this->manager();
+        $this->entry(['type' => 'purchase', 'category' => 'Stock / goods for resale', 'description' => 'Restock', 'amount' => 1000]);
+        $this->entry(['description' => 'Rent', 'amount' => 300]);
+        $this->entry(['description' => 'Old', 'amount' => 7777, 'entry_date' => today()->subDays(90)]);   // outside the period
+        $c = Customer::create(['name' => 'Buyer', 'phone' => '0241112222']);
+        $p = \App\Models\Product::create(['name' => 'Jeans', 'slug' => 'jeans', 'cost_price' => 60, 'selling_price' => 100, 'stock_qty' => 5]);
+        $v = $p->variants()->create(['stock_qty' => 5]);
+        $d = Delivery::create(['reference' => Delivery::newReference(), 'customer_id' => $c->id, 'location' => 'Osu', 'package_description' => 'x', 'delivery_date' => today(),
+            'total_amount' => 2000, 'delivery_fee' => 0, 'items_sent' => 10, 'status' => 'delivered', 'source' => 'pos', 'amount_paid' => 2000]);
+        $d->items()->create(['product_id' => $p->id, 'variant_id' => $v->id, 'qty' => 10, 'unit_price' => 200, 'unit_cost' => 100]);   // gross profit 1000
+
+        $res = $this->actingAs($m)->get(route('manager.reports', ['period' => '30d']))->assertOk();
+        $res->assertSee('Cash book: where the money went')->assertSee('Rent')->assertSee('Stock / goods for resale')->assertDontSee('7,777')
+            ->assertSee('GH₵ 1,300.00')      // money spent: 1000 + 300
+            ->assertSee('GH₵ 700.00')        // net profit: gross 1000 - expenses 300 (purchases are not deducted twice)
+            ->assertSee('GH₵ 700.00')        // cash position: 2000 collected - 1300 spent
+            ->assertSee(route('manager.cashbook.export', ['period' => '30d']), false);
+    }
 }

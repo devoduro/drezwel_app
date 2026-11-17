@@ -13,7 +13,7 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'cost_price' => 'decimal:2', 'selling_price' => 'decimal:2', 'compare_at_price' => 'decimal:2', 'is_active' => 'boolean',
+            'cost_price' => 'decimal:2', 'selling_price' => 'decimal:2', 'compare_at_price' => 'decimal:2', 'is_active' => 'boolean', 'is_deal' => 'boolean',
             'low_alerted_at' => 'datetime',
         ];
     }
@@ -99,7 +99,8 @@ class Product extends Model
     /** Products on offer: a "was" price above the selling price. */
     public function scopeOnOffer(Builder $q): Builder
     {
-        return $q->whereNotNull('compare_at_price')->whereColumn('compare_at_price', '>', 'selling_price');
+        // Today's deals are picked by the manager (is_deal), whether or not the price was reduced.
+        return $q->where('is_deal', true);
     }
 
     public function scopeInStore(Builder $q): Builder

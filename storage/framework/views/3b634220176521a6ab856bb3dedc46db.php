@@ -1,4 +1,3 @@
-
 <?php $__env->startSection('title', $product->name . ' · ' . \App\Models\Setting::get('business_name')); ?>
 <?php $__env->startSection('description', \Illuminate\Support\Str::limit(strip_tags((string) $product->description), 150)); ?>
 <?php if($product->primary_image_url): ?><?php $__env->startSection('og_image', $product->primary_image_url); ?><?php endif; ?>
@@ -23,9 +22,9 @@
         
         <section class="grid gap-6 rounded-xl bg-white p-4 sm:p-5 md:grid-cols-[minmax(0,420px)_1fr]">
             <div>
-                <div class="relative aspect-square overflow-hidden rounded-lg bg-slate-100">
+                <div class="relative aspect-square overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
                     <?php if($product->images->count()): ?>
-                        <img id="mainPhoto" src="<?php echo e($product->images->first()->url); ?>" alt="<?php echo e($product->name); ?>" class="h-full w-full cursor-zoom-in object-cover" title="Click to view full size">
+                        <img id="mainPhoto" src="<?php echo e($product->images->first()->url); ?>" alt="<?php echo e($product->name); ?>" class="h-full w-full cursor-zoom-in object-contain" title="Click to view full size">
                         <button type="button" id="zoomBtn" class="absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-jm-dark shadow" aria-label="View full size"><i class="fas fa-expand"></i></button>
                     <?php else: ?>
                         <div class="grid h-full place-items-center text-7xl text-slate-300"><i class="fas fa-shirt"></i></div>
@@ -64,7 +63,7 @@
                         <div class="mb-4">
                             <div class="mb-1.5 text-sm">Size: <span id="sizeName" class="font-bold"></span></div>
                             <div class="flex flex-wrap gap-2" id="sizeBtns">
-                                <?php $__currentLoopData = $sizes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><button type="button" data-size="<?php echo e($s); ?>" class="opt-size min-w-12 rounded border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium transition"><?php echo e($s); ?></button><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php $__currentLoopData = $sizes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><button type="button" data-size="<?php echo e($s); ?>" class="opt-size min-w-14 rounded border-2 border-slate-200 bg-white px-3 py-1.5 text-sm font-medium transition" data-label="<?php echo e($s); ?>"><span class="block leading-tight"><?php echo e($s); ?></span><span class="left block text-[11px] font-normal leading-tight"></span></button><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                         </div>
                     <?php endif; ?>
@@ -72,7 +71,7 @@
                         <div class="mb-4">
                             <div class="mb-1.5 text-sm">Colour: <span id="colorName" class="font-bold"></span></div>
                             <div class="flex flex-wrap gap-2" id="colorBtns">
-                                <?php $__currentLoopData = $colors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><button type="button" data-color="<?php echo e($c); ?>" class="opt-color rounded border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium transition"><?php echo e($c); ?></button><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php $__currentLoopData = $colors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><button type="button" data-color="<?php echo e($c); ?>" class="opt-color rounded border-2 border-slate-200 bg-white px-3 py-1.5 text-sm font-medium transition" data-label="<?php echo e($c); ?>"><span class="block leading-tight"><?php echo e($c); ?></span><span class="left block text-[11px] font-normal leading-tight"></span></button><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                         </div>
                     <?php endif; ?>
@@ -190,16 +189,24 @@ unset($__errorArgs, $__bag); ?>
     const hasSizes = variants.some(v => v.size), hasColors = variants.some(v => v.color);
     // Is any variant with these options in stock?
     const available = (s, c) => variants.some(v => (s === undefined || (v.size || null) === s) && (c === undefined || (v.color || null) === c) && v.stock > 0);
-    const chip = 'rounded border-2 px-3 py-2 text-sm font-medium transition ';
+    const chip = 'rounded border-2 px-3 py-1.5 text-sm font-medium transition ';
+    // Units left for a size and/or colour (undefined = any), shown to the buyer on every option.
+    const unitsLeft = (s, c) => variants.filter(v => (s === undefined || (v.size || null) === s) && (c === undefined || (v.color || null) === c)).reduce((n, v) => n + Math.max(v.stock, 0), 0);
+    const leftText = n => n <= 0 ? 'Sold out' : n <= 5 ? 'Only ' + n + ' left' : n + ' left';
+    const leftClass = (n, on) => 'left block text-[11px] font-normal leading-tight ' + (n <= 0 ? 'text-slate-400' : n <= 5 ? 'text-jm-red font-medium' : on ? 'text-jm-primary' : 'text-jm-grey');
 
     function paint() {
         document.querySelectorAll('.opt-size').forEach(b => {
             const on = b.dataset.size === size, ok = available(b.dataset.size, hasColors ? color ?? undefined : undefined);
+            const n = unitsLeft(b.dataset.size, hasColors ? color ?? undefined : undefined), l = b.querySelector('.left');
             b.className = 'opt-size min-w-12 ' + chip + (on ? 'border-jm-primary bg-[#e4eaf0] text-jm-primary' : ok ? 'border-slate-200 bg-white hover:border-jm-primary' : 'border-slate-100 bg-slate-50 text-slate-300 line-through');
+            l.textContent = leftText(n); l.className = leftClass(n, on);
         });
         document.querySelectorAll('.opt-color').forEach(b => {
             const on = b.dataset.color === color, ok = available(hasSizes ? size ?? undefined : undefined, b.dataset.color);
+            const n = unitsLeft(hasSizes ? size ?? undefined : undefined, b.dataset.color), l = b.querySelector('.left');
             b.className = 'opt-color ' + chip + (on ? 'border-jm-primary bg-[#e4eaf0] text-jm-primary' : ok ? 'border-slate-200 bg-white hover:border-jm-primary' : 'border-slate-100 bg-slate-50 text-slate-300 line-through');
+            l.textContent = leftText(n); l.className = leftClass(n, on);
         });
         if (el('sizeName')) el('sizeName').textContent = size || '';
         if (el('colorName')) el('colorName').textContent = color || '';

@@ -111,7 +111,7 @@
             <tbody>
                 <?php $__empty_1 = true; $__currentLoopData = $delivery->items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <tr><td class="q"><?php echo e($i->qty); ?></td>
-                        <td><?php echo e($i->product->name); ?><?php if($i->variant && ! $i->variant->is_plain): ?> <span class="sub">(<?php echo e($i->variant->label); ?>)</span><?php endif; ?></td>
+                        <td><?php if($i->qty < 0): ?>Returned: <?php endif; ?><?php echo e($i->product->name); ?><?php if($i->variant && ! $i->variant->is_plain): ?> <span class="sub">(<?php echo e($i->variant->label); ?>)</span><?php endif; ?></td>
                         <td class="p"><?php echo e($m($i->unit_price)); ?></td><td class="a"><?php echo e($m($i->line_total)); ?></td></tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr><td class="q"><?php echo e($delivery->items_sent); ?></td><td><?php echo e($delivery->package_description); ?></td><td class="p">—</td><td class="a"><?php echo e($m($delivery->total_amount)); ?></td></tr>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Models\CashbookEntry;
 use App\Models\Delivery;
 use App\Models\DeliveryItem;
 use App\Models\Payment;
@@ -82,6 +83,14 @@ class ReportController extends Controller
         $feesPaid = (float) $scope()->where('status', 'delivered')->where('rider_fee_status', 'paid')->sum('delivery_fee');
         $gross = $lineRevenue - $cogs;
 
+        // ---- Cash book: what the business spent in the period (by the date on each entry)
+        $book = fn () => CashbookEntry::query()
+            ->when($from, fn ($q) => $q->whereDate('entry_date', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('entry_date', '<=', $to));
+        $purchases = (float) $book()->where('type', 'purchase')->sum('amount');
+        $expenses = (float) $book()->where('type', 'expense')->sum('amount');
+        $cashbookCategories = $book()->selectRaw('category, type, COUNT(*) n, SUM(amount) total')->groupBy('category', 'type')->orderByDesc('total')->get();
+
         $finance = [
             'revenue' => $revenue, 'collected' => $collected, 'outstanding' => max($revenue - $collected, 0),
             'collection_rate' => $revenue > 0 ? round($collected / $revenue * 100, 1) : 0,
@@ -90,7 +99,10 @@ class ReportController extends Controller
             'goods' => $goods, 'fees_charged' => $feesCharged, 'fees_earned' => $feesEarned,
             'fees_paid' => $feesPaid, 'fees_owed' => $feesEarned - $feesPaid,
             // Delivery fees are paid by the customer and passed to the rider, so they are not business profit or cost.
-            'net' => $gross,
+            // Cost of goods sold already covers the stock that was sold, so only running expenses come off gross profit.
+            // Purchases are shown separately as cash that went out.
+            'expenses' => $expenses, 'purchases' => $purchases, 'cash_out' => $purchases + $expenses,
+            'net' => $gross - $expenses, 'cash_position' => $collected - $purchases - $expenses,
             'untracked' => max($goods - $lineRevenue, 0), // goods sold on orders with no products attached
         ];
 
@@ -139,7 +151,7 @@ class ReportController extends Controller
             ->when($to, fn ($q) => $q->whereDate('created_at', '<=', $to))
             ->selectRaw('type, COUNT(*) n, SUM(qty) units')->groupBy('type')->get()->keyBy('type');
 
-        return compact('orders', 'byStatus', 'delivered', 'finance', 'payments', 'daily', 'modes', 'types', 'topCustomers', 'riders', 'stock', 'needing', 'sales', 'movements');
+        return compact('orders', 'byStatus', 'delivered', 'finance', 'payments', 'daily', 'modes', 'types', 'topCustomers', 'riders', 'stock', 'needing', 'sales', 'movements', 'cashbookCategories');
     }
 
     // ---- CSV

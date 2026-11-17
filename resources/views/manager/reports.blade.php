@@ -32,6 +32,7 @@
     <span class="text-slate-500 self-center">Download CSV:</span>
     <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="{{ route('manager.reports.export', ['type' => 'orders'] + $qs) }}"><i class="fas fa-file-csv text-[#74a83b]"></i> Orders</a>
     <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="{{ route('manager.reports.export', ['type' => 'sales'] + $qs) }}"><i class="fas fa-file-csv text-[#74a83b]"></i> Sales by product</a>
+    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="{{ route('manager.cashbook.export', $qs) }}"><i class="fas fa-file-csv text-[#74a83b]"></i> Cash book</a>
     <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="{{ route('manager.reports.export', ['type' => 'stock']) }}"><i class="fas fa-file-csv text-[#74a83b]"></i> Current stock</a>
 </div>
 
@@ -41,7 +42,14 @@
     <x-stat-tile color="blue" icon="fa-receipt" title="Billed to customers" :value="$m($finance['revenue'])" :sub="'Goods ' . $m($finance['goods']) . ' + delivery ' . $m($finance['fees_charged'])" />
     <x-stat-tile color="green" icon="fa-money-bill-wave" title="Collected" :value="$m($finance['collected'])" :sub="$finance['collection_rate'] . '% of revenue'" />
     <x-stat-tile color="red" icon="fa-hand-holding-dollar" title="Outstanding" :value="$m($finance['outstanding'])" sub="Owed by customers" />
-    <x-stat-tile :color="$finance['net'] >= 0 ? 'purple' : 'red'" icon="fa-chart-line" title="Net profit" :value="$m($finance['net'])" sub="Goods profit - delivery fees go to riders" />
+    <x-stat-tile :color="$finance['net'] >= 0 ? 'purple' : 'red'" icon="fa-chart-line" title="Net profit" :value="$m($finance['net'])" sub="Gross profit minus cash book expenses" />
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+    <x-stat-tile color="red" icon="fa-arrow-trend-down" title="Money spent" :value="$m($finance['cash_out'])" sub="Purchases + expenses (cash book)" :href="route('manager.cashbook', $qs)" />
+    <x-stat-tile color="blue" icon="fa-cart-flatbed" title="Purchases" :value="$m($finance['purchases'])" sub="Stock and goods bought" />
+    <x-stat-tile color="orange" icon="fa-file-invoice-dollar" title="Expenses" :value="$m($finance['expenses'])" sub="Rent, fuel, wages and other running costs" />
+    <x-stat-tile :color="$finance['cash_position'] >= 0 ? 'green' : 'red'" icon="fa-scale-balanced" title="Cash position" :value="$m($finance['cash_position'])" sub="Collected from customers minus money spent" />
 </div>
 
 <div class="grid xl:grid-cols-2 gap-5 mb-8">
@@ -52,6 +60,7 @@
                 ['Sales of products', $finance['line_revenue'], ''],
                 ['Cost of goods sold', -$finance['cogs'], 'text-slate-500'],
                 ['Gross profit', $finance['gross'], 'font-semibold border-t'],
+                ['Expenses (from the cash book)', -$finance['expenses'], 'text-slate-500'],
                 ['Net profit', $finance['net'], 'font-bold border-t text-base ' . ($finance['net'] >= 0 ? 'text-green-700' : 'text-red-600')],
             ] as [$l, $v, $c])
                 <tr class="{{ $c }}"><td class="px-4 py-2">{{ $l }}</td><td class="px-4 py-2 text-right">{{ $v < 0 ? '- ' . $m(abs($v)) : $m($v) }}</td></tr>
@@ -99,6 +108,19 @@
         </table></div>
     </section>
 </div>
+
+<section class="bg-white rounded-xl overflow-hidden mb-8">
+    <div class="{{ $head }} flex items-center justify-between"><span>Cash book: where the money went</span><a class="no-print text-xs font-semibold text-[#1c3041] hover:underline" href="{{ route('manager.cashbook', $qs) }}">Open cash book <i class="fas fa-arrow-right"></i></a></div>
+    <table class="w-full text-sm">
+        <thead class="{{ $th }}"><tr><th class="px-4 py-2">Category</th><th>Type</th><th class="text-right">Entries</th><th class="text-right px-4">Amount</th></tr></thead>
+        @forelse($cashbookCategories as $c)
+            <tr class="border-t border-slate-100"><td class="px-4 py-2">{{ $c->category }}</td><td class="text-xs text-slate-500">{{ $c->type === 'purchase' ? 'Purchase' : 'Expense' }}</td><td class="text-right">{{ $c->n }}</td><td class="text-right px-4 font-medium">{{ $m($c->total) }}</td></tr>
+        @empty
+            <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400">Nothing recorded in the cash book for this period.</td></tr>
+        @endforelse
+        @if($cashbookCategories->count())<tr class="border-t font-semibold bg-slate-50"><td class="px-4 py-2" colspan="3">Total spent</td><td class="text-right px-4">{{ $m($finance['cash_out']) }}</td></tr>@endif
+    </table>
+</section>
 
 {{-- ======================= ORDERS ======================= --}}
 <h2 class="text-lg font-bold mb-3 print-break"><i class="fas fa-truck-fast text-[#1c3041]"></i> Orders</h2>

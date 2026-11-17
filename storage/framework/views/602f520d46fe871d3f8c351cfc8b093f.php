@@ -50,6 +50,7 @@
     <span class="text-slate-500 self-center">Download CSV:</span>
     <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="<?php echo e(route('manager.reports.export', ['type' => 'orders'] + $qs)); ?>"><i class="fas fa-file-csv text-[#74a83b]"></i> Orders</a>
     <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="<?php echo e(route('manager.reports.export', ['type' => 'sales'] + $qs)); ?>"><i class="fas fa-file-csv text-[#74a83b]"></i> Sales by product</a>
+    <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="<?php echo e(route('manager.cashbook.export', $qs)); ?>"><i class="fas fa-file-csv text-[#74a83b]"></i> Cash book</a>
     <a class="rounded-lg bg-white border border-slate-200 px-3 py-1.5 hover:border-[#1c3041]" href="<?php echo e(route('manager.reports.export', ['type' => 'stock'])); ?>"><i class="fas fa-file-csv text-[#74a83b]"></i> Current stock</a>
 </div>
 
@@ -118,14 +119,97 @@
 <?php endif; ?>
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => $finance['net'] >= 0 ? 'purple' : 'red','icon' => 'fa-chart-line','title' => 'Net profit','value' => $m($finance['net']),'sub' => 'Goods profit - delivery fees go to riders']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => $finance['net'] >= 0 ? 'purple' : 'red','icon' => 'fa-chart-line','title' => 'Net profit','value' => $m($finance['net']),'sub' => 'Gross profit minus cash book expenses']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($finance['net'] >= 0 ? 'purple' : 'red'),'icon' => 'fa-chart-line','title' => 'Net profit','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['net'])),'sub' => 'Goods profit - delivery fees go to riders']); ?>
+<?php $component->withAttributes(['color' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($finance['net'] >= 0 ? 'purple' : 'red'),'icon' => 'fa-chart-line','title' => 'Net profit','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['net'])),'sub' => 'Gross profit minus cash book expenses']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $attributes = $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $component = $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
+    <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'red','icon' => 'fa-arrow-trend-down','title' => 'Money spent','value' => $m($finance['cash_out']),'sub' => 'Purchases + expenses (cash book)','href' => route('manager.cashbook', $qs)]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('stat-tile'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['color' => 'red','icon' => 'fa-arrow-trend-down','title' => 'Money spent','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['cash_out'])),'sub' => 'Purchases + expenses (cash book)','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('manager.cashbook', $qs))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $attributes = $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $component = $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+    <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'blue','icon' => 'fa-cart-flatbed','title' => 'Purchases','value' => $m($finance['purchases']),'sub' => 'Stock and goods bought']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('stat-tile'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['color' => 'blue','icon' => 'fa-cart-flatbed','title' => 'Purchases','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['purchases'])),'sub' => 'Stock and goods bought']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $attributes = $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $component = $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+    <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'orange','icon' => 'fa-file-invoice-dollar','title' => 'Expenses','value' => $m($finance['expenses']),'sub' => 'Rent, fuel, wages and other running costs']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('stat-tile'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['color' => 'orange','icon' => 'fa-file-invoice-dollar','title' => 'Expenses','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['expenses'])),'sub' => 'Rent, fuel, wages and other running costs']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $attributes = $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $component = $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+    <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => $finance['cash_position'] >= 0 ? 'green' : 'red','icon' => 'fa-scale-balanced','title' => 'Cash position','value' => $m($finance['cash_position']),'sub' => 'Collected from customers minus money spent']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('stat-tile'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['color' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($finance['cash_position'] >= 0 ? 'green' : 'red'),'icon' => 'fa-scale-balanced','title' => 'Cash position','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['cash_position'])),'sub' => 'Collected from customers minus money spent']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -146,6 +230,7 @@
                 ['Sales of products', $finance['line_revenue'], ''],
                 ['Cost of goods sold', -$finance['cogs'], 'text-slate-500'],
                 ['Gross profit', $finance['gross'], 'font-semibold border-t'],
+                ['Expenses (from the cash book)', -$finance['expenses'], 'text-slate-500'],
                 ['Net profit', $finance['net'], 'font-bold border-t text-base ' . ($finance['net'] >= 0 ? 'text-green-700' : 'text-red-600')],
             ]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as [$l, $v, $c]): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <tr class="<?php echo e($c); ?>"><td class="px-4 py-2"><?php echo e($l); ?></td><td class="px-4 py-2 text-right"><?php echo e($v < 0 ? '- ' . $m(abs($v)) : $m($v)); ?></td></tr>
@@ -193,6 +278,19 @@
         </table></div>
     </section>
 </div>
+
+<section class="bg-white rounded-xl overflow-hidden mb-8">
+    <div class="<?php echo e($head); ?> flex items-center justify-between"><span>Cash book: where the money went</span><a class="no-print text-xs font-semibold text-[#1c3041] hover:underline" href="<?php echo e(route('manager.cashbook', $qs)); ?>">Open cash book <i class="fas fa-arrow-right"></i></a></div>
+    <table class="w-full text-sm">
+        <thead class="<?php echo e($th); ?>"><tr><th class="px-4 py-2">Category</th><th>Type</th><th class="text-right">Entries</th><th class="text-right px-4">Amount</th></tr></thead>
+        <?php $__empty_1 = true; $__currentLoopData = $cashbookCategories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+            <tr class="border-t border-slate-100"><td class="px-4 py-2"><?php echo e($c->category); ?></td><td class="text-xs text-slate-500"><?php echo e($c->type === 'purchase' ? 'Purchase' : 'Expense'); ?></td><td class="text-right"><?php echo e($c->n); ?></td><td class="text-right px-4 font-medium"><?php echo e($m($c->total)); ?></td></tr>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+            <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400">Nothing recorded in the cash book for this period.</td></tr>
+        <?php endif; ?>
+        <?php if($cashbookCategories->count()): ?><tr class="border-t font-semibold bg-slate-50"><td class="px-4 py-2" colspan="3">Total spent</td><td class="text-right px-4"><?php echo e($m($finance['cash_out'])); ?></td></tr><?php endif; ?>
+    </table>
+</section>
 
 
 <h2 class="text-lg font-bold mb-3 print-break"><i class="fas fa-truck-fast text-[#1c3041]"></i> Orders</h2>

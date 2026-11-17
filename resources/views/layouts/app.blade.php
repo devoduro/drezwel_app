@@ -40,6 +40,8 @@
         ['manager.messages', 'Messages', 'manager.messages*', 'fa-inbox'],
         ['manager.cashbook', 'Cash book', 'manager.cashbook*', 'fa-book'],
         ['manager.reports', 'Reports', 'manager.reports*', 'fa-chart-pie'],
+        ['manager.pages', 'Website pages', 'manager.pages*', 'fa-file-lines'],
+        ['manager.fees', 'Delivery fees', 'manager.fees*', 'fa-map-location-dot'],
         ['manager.settings', 'Settings', 'manager.settings', 'fa-gear'],
         ['manager.bulk', 'Bulk SMS', 'manager.bulk*', 'fa-bullhorn'],
         ['manager.sms', 'SMS log', 'manager.sms', 'fa-comment-sms'],
@@ -51,13 +53,13 @@
         ['rider.stats', 'Statistics', 'rider.stats', 'fa-chart-column'],
     ];
 @endphp
-<body class="bg-slate-100 text-slate-800 min-h-screen {{ $isRider ? 'pb-20' : '' }}">
+<body class="bg-slate-100 text-slate-800 min-h-screen {{ $isRider ? 'pb-20' : ($user && $user->isManager() ? 'pb-20 lg:pb-0' : '') }}">
 @if($user && $user->isManager())
     <div class="lg:flex min-h-screen">
-        {{-- Top bar with a menu button on small screens --}}
-        <header class="lg:hidden sticky top-0 z-20 bg-brand text-white flex items-center gap-3 px-4 py-3">
-            <button type="button" id="menuBtn" aria-label="Open menu" class="text-2xl leading-none">☰</button>
-            <img src="{{ asset('images/logo-white.png') }}" alt="Drezwel Go" class="h-7 w-auto">
+        {{-- Phones: a slim top bar, with the main screens as tabs along the bottom (see the nav at the end) --}}
+        <header class="lg:hidden sticky top-0 z-20 bg-brand text-white flex items-center justify-between gap-3 px-4 py-3">
+            <a href="{{ route('manager.dashboard') }}"><img src="{{ asset('images/logo-white.png') }}" alt="Drezwel Go" class="h-7 w-auto"></a>
+            <span class="truncate text-xs text-white/70">{{ $user->name }}</span>
         </header>
         <div id="menuBackdrop" class="hidden fixed inset-0 bg-black/40 z-30 lg:hidden"></div>
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full transition-transform bg-brand text-white overflow-y-auto
@@ -93,6 +95,31 @@
             @yield('content')
         </main>
     </div>
+
+    {{-- Phone tabs: the screens used all day; "More" opens the full menu --}}
+    @php
+        $tabs = [
+            ['manager.dashboard', 'Home', 'manager.dashboard', 'fa-gauge-high'],
+            ['manager.orders', 'Orders', 'manager.orders', 'fa-clipboard-list'],
+            ['manager.deliveries.index', 'Deliveries', 'manager.deliveries.*', 'fa-truck-fast'],
+            ['manager.products.index', 'Stock', 'manager.products.*', 'fa-boxes-stacked'],
+        ];
+        $onTab = collect($tabs)->contains(fn ($t) => request()->routeIs($t[2]));
+    @endphp
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 grid grid-cols-5 border-t border-slate-200 bg-white text-center text-[11px] shadow-[0_-2px_8px_rgba(0,0,0,.06)]" style="padding-bottom:env(safe-area-inset-bottom)" aria-label="Main tabs">
+        @foreach($tabs as [$route, $label, $pattern, $icon])
+            @php $on = request()->routeIs($pattern); @endphp
+            <a href="{{ route($route) }}" class="relative py-2 {{ $on ? 'border-t-2 border-brand font-semibold text-brand' : 'border-t-2 border-transparent text-slate-500' }}">
+                <i class="fas {{ $icon }} mb-0.5 block text-lg"></i>{{ $label }}
+                @if($route === 'manager.orders' && $newOrders > 0)<span class="absolute right-1/4 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#8fb8d8] px-1 text-[10px] font-bold text-[#1c3041]">{{ $newOrders }}</span>@endif
+                @if($route === 'manager.products.index' && $lowStock > 0)<span class="absolute right-1/4 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{{ $lowStock }}</span>@endif
+            </a>
+        @endforeach
+        <button type="button" id="menuBtn" aria-label="More menu" class="relative border-t-2 py-2 {{ $onTab ? 'border-transparent text-slate-500' : 'border-brand font-semibold text-brand' }}">
+            <i class="fas fa-ellipsis mb-0.5 block text-lg"></i>More
+            @if($newMessages > 0)<span class="absolute right-1/4 top-1 h-2.5 w-2.5 rounded-full bg-[#8fb8d8]"></span>@endif
+        </button>
+    </nav>
 @elseif($isRider)
     <header class="bg-[#1c3041] text-white px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow">
         <img src="{{ asset('images/logo-white.png') }}" alt="Drezwel Go" class="h-7 w-auto">

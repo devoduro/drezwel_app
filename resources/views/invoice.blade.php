@@ -111,7 +111,7 @@
             <tbody>
                 @forelse($delivery->items as $i)
                     <tr><td class="q">{{ $i->qty }}</td>
-                        <td>{{ $i->product->name }}@if($i->variant && ! $i->variant->is_plain) <span class="sub">({{ $i->variant->label }})</span>@endif</td>
+                        <td>@if($i->qty < 0)Returned: @endif{{ $i->product->name }}@if($i->variant && ! $i->variant->is_plain) <span class="sub">({{ $i->variant->label }})</span>@endif</td>
                         <td class="p">{{ $m($i->unit_price) }}</td><td class="a">{{ $m($i->line_total) }}</td></tr>
                 @empty
                     <tr><td class="q">{{ $delivery->items_sent }}</td><td>{{ $delivery->package_description }}</td><td class="p">—</td><td class="a">{{ $m($delivery->total_amount) }}</td></tr>

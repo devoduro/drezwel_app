@@ -14,7 +14,10 @@
     </x-slot:chips>
     <a href="{{ route('manager.deliveries.index') }}"><i class="fas fa-arrow-left"></i> Deliveries</a>
     <a href="{{ route('manager.deliveries.invoice', $delivery) }}" target="_blank"><i class="fas fa-print"></i> Invoice</a>
-    @if(! in_array($delivery->status, ['delivered', 'cancelled']))
+    @if($delivery->status === 'delivered' && $delivery->order_type !== 'exchange')
+        <a href="{{ route('manager.deliveries.create', ['exchange_of' => $delivery->id]) }}"><i class="fas fa-rotate-left"></i> Return / exchange</a>
+    @endif
+    @if($delivery->status !== 'cancelled')
         <a href="{{ route('manager.deliveries.edit', $delivery) }}" class="primary"><i class="fas fa-pen"></i> Edit</a>
     @endif
 </x-dashboard-hero>
@@ -24,6 +27,8 @@
         <section class="bg-white rounded-xl p-5 grid sm:grid-cols-2 gap-3 text-sm">
             <div><div class="text-xs text-slate-500">Customer</div><a class="font-medium text-brand-accent" href="{{ route('manager.customers.show', $delivery->customer) }}">{{ $delivery->customer->name }}</a> · {{ $delivery->customer->phone }}</div>
             <div><div class="text-xs text-slate-500">Location</div>{{ $delivery->location }}</div>
+            @if($delivery->exchangeOf)<div class="sm:col-span-2 rounded-lg bg-amber-50 px-3 py-2 text-amber-900"><i class="fas fa-rotate-left"></i> Exchange for <a class="font-semibold underline" href="{{ route('manager.deliveries.show', $delivery->exchangeOf) }}">{{ $delivery->exchangeOf->reference }}</a></div>@endif
+            @if($delivery->exchanges->count())<div class="sm:col-span-2 rounded-lg bg-amber-50 px-3 py-2 text-amber-900"><i class="fas fa-rotate-left"></i> Returns / exchanges against this sale: @foreach($delivery->exchanges as $x)<a class="font-semibold underline" href="{{ route('manager.deliveries.show', $x) }}">{{ $x->reference }}</a>@unless($loop->last), @endunless @endforeach</div>@endif
             <div><div class="text-xs text-slate-500">Package</div>{{ $delivery->package_description }} ({{ $delivery->items_sent }} item{{ $delivery->items_sent > 1 ? 's' : '' }})</div>
             <div><div class="text-xs text-slate-500">Date / window</div>{{ $delivery->delivery_date->format('D d M Y') }} {{ $delivery->time_window }}</div>
             <div><div class="text-xs text-slate-500">Mode · Type</div>{{ \App\Models\Delivery::MODES[$delivery->delivery_mode] }} · {{ \App\Models\Delivery::TYPES[$delivery->order_type] }}</div>
@@ -65,15 +70,44 @@
             @if($delivery->confirmed_by_manager)<div class="sm:col-span-2 text-amber-700 text-xs">Receipt was confirmed by the manager without the customer's code.</div>@endif
         </section>
 
-        @if($delivery->items->count())
+        @if($delivery->returned_items->count())
+            <section class="rounded-xl border border-amber-200 bg-amber-50/50 p-5">
+                <h2 class="text-slate-800 font-semibold mb-3"><i class="fas fa-rotate-left text-amber-700"></i> Returned by the customer</h2>
+                <table class="w-full text-sm">
+                    <thead class="text-left text-slate-500 text-xs"><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Credit each</th><th class="text-right">Credit</th></tr></thead>
+                    @foreach($delivery->returned_items as $i)
+                        <tr class="border-t border-amber-100"><td class="py-1.5">{{ $i->product->name }}@if($i->variant && ! $i->variant->is_plain) <span class="text-slate-500">({{ $i->variant->label }})</span>@endif</td><td class="text-right">{{ -$i->qty }}</td><td class="text-right">{{ number_format($i->unit_price, 2) }}</td><td class="text-right font-medium text-amber-800">- {{ number_format(-$i->line_total, 2) }}</td></tr>
+                    @endforeach
+                </table>
+            </section>
+        @endif
+
+        @if($delivery->sent_items->count())
             <section class="bg-white rounded-xl p-5">
-                <h2 class="text-slate-800 font-semibold mb-3"><i class="fas fa-shirt text-[#1c3041]"></i> Products</h2>
+                <h2 class="text-slate-800 font-semibold mb-3"><i class="fas fa-shirt text-[#1c3041]"></i> {{ $delivery->order_type === 'exchange' ? 'New items given to the customer' : 'Products' }}</h2>
                 <table class="w-full text-sm">
                     <thead class="text-left text-slate-500 text-xs"><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Total</th></tr></thead>
-                    @foreach($delivery->items as $i)
+                    @foreach($delivery->sent_items as $i)
                         <tr class="border-t border-slate-100"><td class="py-1.5"><a class="text-[#1c3041] hover:underline" href="{{ route('manager.products.show', $i->product) }}">{{ $i->product->name }}</a></td><td class="text-right">{{ $i->qty }}</td><td class="text-right">{{ number_format($i->unit_price, 2) }}</td><td class="text-right font-medium">{{ number_format($i->line_total, 2) }}</td></tr>
                     @endforeach
                 </table>
+            </section>
+        @endif
+
+        @if($delivery->order_type === 'exchange')
+            @php $newSum = $delivery->sent_items->sum('line_total'); $retSum = -$delivery->returned_items->sum('line_total'); $net = $newSum - $retSum; @endphp
+            <section class="rounded-xl border-2 border-[#1c3041] bg-[#f3f6f9] p-5 text-sm">
+                <div class="flex justify-between"><span>New items</span><strong>{{ $m($newSum) }}</strong></div>
+                <div class="flex justify-between"><span>Returned items</span><strong>- {{ $m($retSum) }}</strong></div>
+                <div class="mt-2 flex justify-between border-t border-slate-300 pt-2 text-base"><span class="font-bold">{{ $net < 0 ? 'Refund to customer' : ($net == 0 ? 'Even swap' : 'Customer pays') }}</span><strong class="text-lg">{{ $m(abs($net)) }}</strong></div>
+                @if($delivery->refund_due > 0 && $delivery->status !== 'cancelled')
+                    <form method="POST" action="{{ route('manager.deliveries.refund', $delivery) }}" class="mt-3 flex flex-wrap gap-2 border-t border-slate-300 pt-3">@csrf
+                        <input type="number" step="0.01" name="amount" value="{{ $delivery->refund_due }}" max="{{ $delivery->refund_due }}" min="0.01" class="{{ $input }} w-28">
+                        <select name="method" class="{{ $input }} bg-white">@foreach(\App\Models\Payment::METHODS as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select>
+                        <input name="notes" placeholder="Note" class="{{ $input }} flex-1 min-w-24">
+                        <button class="{{ $btn }} bg-amber-600 text-white">Record refund of {{ $m($delivery->refund_due) }}</button>
+                    </form>
+                @endif
             </section>
         @endif
 
@@ -91,7 +125,7 @@
                 @endif
             @endif
             @forelse($delivery->payments as $p)
-                <div class="flex justify-between text-sm border-b py-1.5"><span>{{ $p->paid_at->format('d M, g:ia') }} · {{ \App\Models\Payment::METHODS[$p->method] ?? $p->method }}{{ $p->rider ? ' · via ' . $p->rider->name : '' }}</span><strong>{{ $m($p->amount) }}</strong></div>
+                <div class="flex justify-between text-sm border-b py-1.5"><span>{{ $p->paid_at->format('d M, g:ia') }} · {{ $p->amount < 0 ? 'Refund · ' : '' }}{{ \App\Models\Payment::METHODS[$p->method] ?? $p->method }}{{ $p->rider ? ' · via ' . $p->rider->name : '' }}</span><strong class="{{ $p->amount < 0 ? 'text-amber-700' : '' }}">{{ $p->amount < 0 ? '- ' . $m(abs($p->amount)) : $m($p->amount) }}</strong></div>
             @empty <p class="text-sm text-slate-400">No payments yet.</p> @endforelse
             @if($delivery->balance > 0 && $delivery->status !== 'cancelled')
                 <form method="POST" action="{{ route('manager.deliveries.payment', $delivery) }}" class="mt-3 flex flex-wrap gap-2">@csrf
@@ -158,6 +192,8 @@
             @if(! in_array($delivery->status, ['delivered', 'cancelled']))
                 <form method="POST" action="{{ route('manager.deliveries.cancel', $delivery) }}">@csrf<button class="{{ $btn }} border border-red-300 text-red-700 w-full" onclick="return confirm('Cancel this delivery?')">Cancel delivery</button></form>
             @endif
+            <form method="POST" action="{{ route('manager.deliveries.destroy', $delivery) }}" onsubmit="return confirm('Permanently delete {{ $delivery->reference }}? Its payments and history are removed and its items go back to stock. This cannot be undone.')">@csrf @method('DELETE')
+                <button class="{{ $btn }} w-full bg-red-600 text-white hover:bg-red-700"><i class="fas fa-trash"></i> Delete record</button></form>
         </section>
     </div>
 </div>

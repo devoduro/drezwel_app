@@ -35,7 +35,7 @@
     <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm text-slate-800">All deliveries</div>
     <div class="overflow-x-auto">
     <table class="w-full text-sm">
-        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Reference</th><th>Date</th><th>Customer</th><th>Location</th><th>Rider</th><th class="text-right">Total</th><th class="text-right">Balance</th><th class="p-3">Status</th></tr></thead>
+        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Reference</th><th>Date</th><th>Customer</th><th>Location</th><th>Rider</th><th class="text-right">Total</th><th class="text-right">Balance</th><th class="p-3">Status</th><th class="p-3"></th></tr></thead>
         @forelse($deliveries as $d)
             <tr class="border-t border-slate-100 hover:bg-sky-50/50">
                 <td class="p-3"><a class="text-[#1c3041] font-semibold hover:underline" href="{{ route('manager.deliveries.show', $d) }}">{{ $d->reference }}</a>
@@ -47,8 +47,9 @@
                 <td class="text-right">{{ number_format($d->amount_due, 2) }}</td>
                 <td class="text-right {{ $d->balance > 0 ? 'text-red-600 font-medium' : 'text-green-600' }}">{{ number_format($d->balance, 2) }}</td>
                 <td class="p-3"><x-badge :status="$d->status"/></td>
+                <td class="p-3 whitespace-nowrap text-right text-xs">@include('manager._delete-delivery', ['d' => $d])</td>
             </tr>
-        @empty <tr><td colspan="8" class="p-10 text-center text-slate-400"><i class="fas fa-box-open text-3xl mb-2 block"></i>No deliveries found.</td></tr> @endforelse
+        @empty <tr><td colspan="9" class="p-10 text-center text-slate-400"><i class="fas fa-box-open text-3xl mb-2 block"></i>No deliveries found.</td></tr> @endforelse
     </table>
     </div>
 </div>

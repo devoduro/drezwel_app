@@ -1,3 +1,4 @@
+
 <?php $__env->startSection('title', 'Orders · Drezwel Go'); ?>
 <?php
     $m = fn ($v) => 'GH₵ ' . number_format((float) $v, 2);
@@ -179,7 +180,9 @@
 <?php endif; ?></td>
                 <td class="p-3 whitespace-nowrap text-right text-xs">
                     <a class="text-[#1c3041] hover:underline" href="<?php echo e(route('manager.deliveries.show', $o)); ?>">Open</a> ·
-                    <a class="text-[#1c3041] hover:underline" target="_blank" href="<?php echo e(route('manager.deliveries.invoice', $o)); ?>">Invoice</a>
+                    <a class="text-[#1c3041] hover:underline" target="_blank" href="<?php echo e(route('manager.deliveries.invoice', $o)); ?>">Invoice</a> ·
+                    <?php if($o->status !== 'cancelled'): ?><a class="text-[#1c3041] hover:underline" href="<?php echo e(route('manager.deliveries.edit', $o)); ?>">Edit</a> ·<?php endif; ?>
+                    <?php echo $__env->make('manager._delete-delivery', ['d' => $o], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 </td>
             </tr>
         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="10" class="p-10 text-center text-slate-400"><i class="fas fa-box-open text-3xl mb-2 block"></i>No orders match.</td></tr> <?php endif; ?>

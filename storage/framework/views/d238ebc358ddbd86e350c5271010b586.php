@@ -147,7 +147,7 @@
 <div class="bg-white rounded-xl overflow-hidden">
     <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm">All products</div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
-        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Product</th><th>Category</th><th class="text-right">In stock</th><th class="text-right">Reorder at</th><th class="text-right">Cost</th><th class="text-right">Price</th><th class="text-right">Value</th><th class="p-3">Level</th></tr></thead>
+        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Product</th><th>Category</th><th class="text-right">In stock</th><th class="text-right">Reorder at</th><th class="text-right">Cost</th><th class="text-right">Price</th><th class="text-right">Value</th><th>Level</th><th class="p-3 text-center">Deal</th></tr></thead>
         <?php $__empty_1 = true; $__currentLoopData = $products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <tr class="border-t border-slate-100 hover:bg-sky-50/50 <?php echo e($p->is_active ? '' : 'opacity-50'); ?>">
                 <td class="p-3"><div class="flex items-center gap-3">
@@ -160,9 +160,14 @@
                 <td class="text-right text-slate-500"><?php echo e(number_format($p->cost_price, 2)); ?></td>
                 <td class="text-right"><?php echo e(number_format($p->selling_price, 2)); ?></td>
                 <td class="text-right text-slate-500"><?php echo e(number_format($p->stock_qty * $p->selling_price, 2)); ?></td>
-                <td class="p-3"><?php echo $__env->make('manager.products._level', ['p' => $p], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></td>
+                <td><?php echo $__env->make('manager.products._level', ['p' => $p], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?></td>
+                <td class="p-3 text-center">
+                    <form method="POST" action="<?php echo e(route('manager.products.deal', $p)); ?>"><?php echo csrf_field(); ?>
+                        <button class="grid h-8 w-8 place-items-center rounded-full <?php echo e($p->is_deal ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-400 hover:bg-red-100 hover:text-red-600'); ?>" title="<?php echo e($p->is_deal ? 'In Today\'s deals: click to remove' : 'Add to Today\'s deals'); ?>"><i class="fas fa-bolt"></i></button>
+                    </form>
+                </td>
             </tr>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="8" class="p-10 text-center text-slate-400"><i class="fas fa-shirt text-3xl mb-2 block"></i>No products yet. <a class="text-[#1c3041] font-semibold" href="<?php echo e(route('manager.products.create')); ?>">Add your first product</a>.</td></tr> <?php endif; ?>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="9" class="p-10 text-center text-slate-400"><i class="fas fa-shirt text-3xl mb-2 block"></i>No products yet. <a class="text-[#1c3041] font-semibold" href="<?php echo e(route('manager.products.create')); ?>">Add your first product</a>.</td></tr> <?php endif; ?>
     </table></div>
 </div>
 <div class="mt-4"><?php echo e($products->links()); ?></div>

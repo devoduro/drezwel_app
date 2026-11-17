@@ -75,13 +75,40 @@ class StockService
             $d->items()->delete();
 
             foreach ($this->mergeLines($lines) as $line) {
+                if ($line['qty'] === 0) {
+                    continue;
+                }
                 $v = $line['variant'];
                 $product = $v->product;
-                $this->move($product, 'sale', -$line['qty'], $by, "Order {$d->reference}", $d, null, $v);
+                // A negative quantity is an item the customer brought back: it goes onto the shelf instead of off it.
+                $line['qty'] > 0
+                    ? $this->move($product, 'sale', -$line['qty'], $by, "Order {$d->reference}", $d, null, $v)
+                    : $this->move($product, 'return', -$line['qty'], $by, "Returned by customer, order {$d->reference}", $d, null, $v);
                 $d->items()->create([
                     'product_id' => $product->id, 'variant_id' => $v->id, 'qty' => $line['qty'],
                     'unit_price' => $line['price'], 'unit_cost' => $product->cost_price,
                 ]);
+            }
+        });
+    }
+
+    /**
+     * Undo whatever an order still has out of stock, before the order is deleted. Uses the ledger,
+     * so goods already returned (cancelled, edited, part-returned) are never put back twice.
+     */
+    public function restoreDeletedDelivery(Delivery $d, ?User $by): void
+    {
+        DB::transaction(function () use ($d, $by) {
+            $net = StockMovement::where('delivery_id', $d->id)->whereNotNull('variant_id')
+                ->selectRaw('product_id, variant_id, SUM(qty) as net')->groupBy('product_id', 'variant_id')->get();
+            foreach ($net as $row) {
+                $variant = ProductVariant::findOrFail($row->variant_id);
+                if ($row->net < 0) {
+                    $this->move(Product::findOrFail($row->product_id), 'return', (int) -$row->net, $by, "Order {$d->reference} deleted", null, null, $variant);
+                } elseif ($row->net > 0 && $variant->stock_qty > 0) {
+                    // An exchange that took items back in: take them out again (never below zero).
+                    $this->move(Product::findOrFail($row->product_id), 'adjustment', -min((int) $row->net, $variant->stock_qty), $by, "Order {$d->reference} deleted", null, null, $variant);
+                }
             }
         });
     }

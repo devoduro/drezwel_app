@@ -117,12 +117,22 @@
 <?php endif; ?>
 </div>
 
-<form method="POST" action="<?php echo e(route('manager.customers.update', $customer)); ?>" class="bg-white rounded-xl p-4 grid md:grid-cols-4 gap-2 mb-5 border-l-4 border-l-[#8cc152]"><?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
-    <input name="name" value="<?php echo e($customer->name); ?>" required class="<?php echo e($input); ?>">
+<?php $walkIn = $customer->phone === \App\Services\SalesService::WALK_IN_PHONE; $orderCount = $customer->deliveries()->count(); ?>
+<form method="POST" action="<?php echo e(route('manager.customers.update', $customer)); ?>" class="bg-white rounded-xl p-4 grid md:grid-cols-5 gap-2 mb-3 border-l-4 border-l-[#8cc152]"><?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
+    <?php if($errors->any()): ?><div class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 md:col-span-5"><?php echo e($errors->first()); ?></div><?php endif; ?>
+    <input name="name" value="<?php echo e(old('name', $customer->name)); ?>" required placeholder="Name" class="<?php echo e($input); ?>">
+    <?php if (! ($walkIn)): ?><input name="phone" value="<?php echo e(old('phone', $customer->phone)); ?>" required inputmode="tel" placeholder="Phone" class="<?php echo e($input); ?>"><?php endif; ?>
     <input name="location" value="<?php echo e($customer->location); ?>" placeholder="Default location" class="<?php echo e($input); ?>">
     <input name="notes" value="<?php echo e($customer->notes); ?>" placeholder="Notes" class="<?php echo e($input); ?>">
     <button class="rounded-lg bg-[#8cc152] hover:bg-[#74a83b] text-white px-4 py-2 text-sm font-semibold transition">Save details</button>
 </form>
+<?php if (! ($walkIn)): ?>
+    <form method="POST" action="<?php echo e(route('manager.customers.destroy', $customer)); ?>" class="mb-5 flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 text-sm"
+          onsubmit="return confirm('Permanently delete <?php echo e(addslashes($customer->name)); ?><?php echo e($orderCount ? ' and their ' . $orderCount . ' order(s)' : ''); ?>? This cannot be undone.')"><?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
+        <?php if($orderCount): ?><label class="flex items-center gap-2 text-slate-600"><input type="checkbox" name="with_orders" value="1" required class="accent-red-600"> Also delete their <?php echo e($orderCount); ?> <?php echo e($orderCount === 1 ? 'order' : 'orders'); ?> (items go back to stock)</label><?php endif; ?>
+        <button class="ml-auto rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700"><i class="fas fa-trash"></i> Delete customer</button>
+    </form>
+<?php endif; ?>
 
 <form method="GET" class="bg-white rounded-xl p-3 grid grid-cols-2 md:grid-cols-4 gap-2 mb-4 text-sm">
     <select name="status" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"><option value="">All statuses</option>

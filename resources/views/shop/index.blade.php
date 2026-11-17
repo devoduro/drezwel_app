@@ -86,4 +86,5 @@
         </div>
     </div>
 </div>
+@if($products === null)@include('shop._seo')@endif
 @endsection

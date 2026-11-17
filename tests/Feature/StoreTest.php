@@ -156,7 +156,7 @@ class StoreTest extends TestCase
     public function test_offers_show_old_price_and_discount_and_have_their_own_band_and_filter(): void
     {
         $jeans = $this->jeans();
-        $jeans->update(['compare_at_price' => 500]);              // selling 250 -> 50% off
+        $jeans->update(['compare_at_price' => 500, 'is_deal' => true]);   // selling 250 -> 50% off, and chosen as a deal
         $shirt = Product::create(['name' => 'Plain shirt', 'slug' => 'plain-shirt', 'category' => 'Shirts', 'cost_price' => 50, 'selling_price' => 120, 'stock_qty' => 4, 'show_in_store' => true]);
         $shirt->variants()->create(['stock_qty' => 4]);
 
@@ -167,9 +167,11 @@ class StoreTest extends TestCase
         $this->assertStringContainsString('bg-jm-red', $res->getContent());           // the crimson deals band
         $this->get('/shop?deals=1')->assertOk()->assertSee('Baggy jeans')->assertDontSee('Plain shirt')->assertSee("Today's deals");
 
-        // a "was" price that is not higher than the selling price is no discount
+        // a "was" price that is not higher than the selling price is no discount, though the product stays a deal until the manager removes it
         $jeans->update(['compare_at_price' => 200]);
         $this->assertNull($jeans->fresh('variants')->discount_percent);
+        $this->get('/shop?deals=1')->assertSee('Baggy jeans');
+        $jeans->update(['is_deal' => false]);
         $this->get('/shop?deals=1')->assertDontSee('Baggy jeans');
     }
 
@@ -491,5 +493,43 @@ class StoreTest extends TestCase
         $this->get(route('shop.product', 'baggy-jeans'))->assertOk()
             ->assertSee('Other 1')->assertSee('Other 2')->assertSee('Other 3')      // three suggestions, not a lone card
             ->assertSee('id="lightbox"', false)->assertSee('id="zoomBtn"', false);
+    }
+
+    public function test_product_page_shows_units_left_on_each_size_option(): void
+    {
+        $p = $this->jeans();
+        $this->get(route('shop.product', $p->slug))->assertOk()
+            ->assertSee('class="left block', false)                     // the "N left" line under every size and colour chip
+            ->assertSee('"stock":5', false);                            // and the numbers it is computed from
+    }
+
+    public function test_manager_picks_todays_deals_regardless_of_price_reductions(): void
+    {
+        $m = $this->manager();
+        $shirt = Product::create(['name' => 'Plain shirt', 'slug' => 'plain-shirt', 'category' => 'Shirts', 'cost_price' => 50, 'selling_price' => 120, 'stock_qty' => 4, 'show_in_store' => true]);
+        $shirt->variants()->create(['stock_qty' => 4]);
+        $sale = Product::create(['name' => 'Reduced tee', 'slug' => 'reduced-tee', 'category' => 'Shirts', 'cost_price' => 20, 'selling_price' => 60, 'compare_at_price' => 90, 'stock_qty' => 4, 'show_in_store' => true]);
+        $sale->variants()->create(['stock_qty' => 4]);
+
+        // a reduced price alone no longer puts a product in the deals row
+        $this->get('/shop?deals=1')->assertDontSee('Reduced tee')->assertDontSee('Plain shirt');
+
+        // one click in the product list adds a product that has NO price reduction
+        $this->actingAs($m)->post(route('manager.products.deal', $shirt))->assertSessionHas('success');
+        $this->assertTrue($shirt->fresh()->is_deal);
+        $this->flushSession();
+        $this->get('/shop?deals=1')->assertSee('Plain shirt')->assertDontSee('Reduced tee');
+        $this->get('/shop')->assertSee("Today's deals")->assertSee('Plain shirt');
+
+        // the tick box on the product form does the same, and un-ticking removes it
+        $this->actingAs($m)->get(route('manager.products.index'))->assertSee(route('manager.products.deal', $shirt), false);
+        $this->actingAs($m)->get(route('manager.products.edit', $sale))->assertOk()->assertSee("Feature in Today's deals", false);
+        $this->actingAs($m)->post(route('manager.products.deal', $shirt));
+        $this->assertFalse($shirt->fresh()->is_deal);
+        $this->flushSession();                                              // drop the "removed from Today's deals" confirmation
+        $this->get('/shop?deals=1')->assertDontSee('Plain shirt');
+
+        $this->app['auth']->forgetGuards();
+        $this->post(route('manager.products.deal', $shirt))->assertRedirect('/login');
     }
 }

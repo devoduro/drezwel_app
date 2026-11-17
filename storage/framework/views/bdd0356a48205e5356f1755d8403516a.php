@@ -62,12 +62,7 @@
     <label class="text-sm font-medium">TikTok<input name="tiktok" value="<?php echo e($v('tiktok')); ?>" class="<?php echo e($input); ?>"></label>
     <label class="text-sm font-medium">YouTube<input name="youtube" value="<?php echo e($v('youtube')); ?>" class="<?php echo e($input); ?>"></label>
 
-    <div class="md:col-span-2 border-t pt-4 font-semibold"><i class="fas fa-file-lines text-[#1c3041]"></i> Website pages <span class="font-normal text-xs text-slate-500">(leave a blank line between paragraphs)</span></div>
-    <label class="text-sm font-medium md:col-span-2">About us<textarea name="about_text" rows="6" class="<?php echo e($input); ?>"><?php echo e($v('about_text')); ?></textarea></label>
-    <label class="text-sm font-medium md:col-span-2">Delivery &amp; payment<textarea name="delivery_text" rows="8" class="<?php echo e($input); ?>"><?php echo e($v('delivery_text')); ?></textarea></label>
-    <label class="text-sm font-medium md:col-span-2">Return policy<textarea name="policy_returns" rows="6" class="<?php echo e($input); ?>"><?php echo e($v('policy_returns')); ?></textarea></label>
-    <label class="text-sm font-medium md:col-span-2">Terms &amp; conditions<textarea name="policy_terms" rows="8" class="<?php echo e($input); ?>"><?php echo e($v('policy_terms')); ?></textarea></label>
-    <label class="text-sm font-medium md:col-span-2">Privacy policy<textarea name="policy_privacy" rows="8" class="<?php echo e($input); ?>"><?php echo e($v('policy_privacy')); ?></textarea><span class="text-xs font-normal text-slate-500">The starting text for the policies is a draft. Please read it and change it to match how you really work.</span></label>
+    <div class="md:col-span-2 border-t pt-4 text-sm"><i class="fas fa-file-lines text-[#1c3041]"></i> <strong>Policies, FAQs and About us</strong> are now edited under <a class="font-semibold text-[#1c3041] underline" href="<?php echo e(route('manager.pages')); ?>">Website pages</a>.</div>
 
     <label class="flex items-center gap-2 text-sm font-medium md:col-span-2"><input type="checkbox" name="store_open" value="1" <?php if(old('store_open', $s['store_open'] ?? '1') == '1'): echo 'checked'; endif; ?>> Accept orders on the online store (untick to pause - customers will be asked to call)</label>
     <div class="md:col-span-2"><button class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-6 py-2.5 font-semibold transition">Save settings</button></div>

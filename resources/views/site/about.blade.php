@@ -1,11 +1,11 @@
 @extends('layouts.shop')
 @section('title', 'About us | ' . \App\Models\Setting::get('business_name'))
-@section('description', \Illuminate\Support\Str::limit(strtok((string) \App\Models\Setting::get('about_text'), "\n"), 155))
+@section('description', \Illuminate\Support\Str::limit(\App\Support\Markup::plain(\App\Support\Pages::text('about_text')), 155))
 @php
     $S = fn ($k) => \App\Models\Setting::get($k);
     $phones = \App\Models\Setting::phones();
     $wa = preg_replace('/\D/', '', (string) $S('whatsapp'));
-    $paras = preg_split("/\n\s*\n/", trim((string) $S('about_text')));
+    $aboutText = \App\Support\Pages::text('about_text');
     $cats = \App\Models\Product::inStore()->whereNotNull('category')->where('category', '!=', '')->distinct()->orderBy('category')->pluck('category');
 @endphp
 @section('content')
@@ -36,8 +36,9 @@
             {{-- Our story --}}
             <section class="overflow-hidden rounded-xl bg-white">
                 <div class="border-b border-slate-200 px-4 py-3 text-[15px] font-bold uppercase tracking-wide">Who we are</div>
-                <div class="space-y-3 p-4 leading-relaxed text-[#535357] sm:p-5">
-                    @foreach($paras as $para)<p>{{ $para }}</p>@endforeach
+                <div class="p-4 sm:p-5">
+                    @include('site._md-style')
+                    <div class="md-text">{!! \App\Support\Markup::render($aboutText) !!}</div>
                 </div>
             </section>
 

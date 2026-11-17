@@ -23,7 +23,7 @@ Route::get('/about', [SiteController::class, 'about'])->name('site.about');
 Route::get('/contact', [SiteController::class, 'contact'])->name('site.contact');
 Route::get('/wholesale', [SiteController::class, 'wholesale'])->name('site.wholesale');
 Route::post('/contact', [SiteController::class, 'send'])->middleware('throttle:5,1,contact-send')->name('site.send');
-Route::get('/{slug}', [SiteController::class, 'page'])->where('slug', 'delivery-info|return-policy|terms|privacy-policy')->name('site.page');
+Route::get('/{slug}', [SiteController::class, 'page'])->where('slug', 'delivery-info|return-policy|terms|privacy-policy|faqs')->name('site.page');
 
 // Addresses from the old website keep working, so existing links and search results are not lost.
 Route::permanentRedirect('/categories', '/shop');
@@ -85,7 +85,7 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::put('settings', [Manager\SettingController::class, 'update'])->name('settings.update');
     Route::get('deliveries/{delivery}/invoice', [InvoiceController::class, 'manager'])->name('deliveries.invoice');
 
-    Route::resource('deliveries', Manager\DeliveryController::class)->except('destroy');
+    Route::resource('deliveries', Manager\DeliveryController::class);
     Route::controller(Manager\DeliveryController::class)->prefix('deliveries/{delivery}')->name('deliveries.')->group(function () {
         Route::post('assign', 'assign')->name('assign');
         Route::post('resend-code', 'resendCode')->name('resend');
@@ -94,6 +94,7 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
         Route::post('reopen', 'reopen')->name('reopen');
         Route::post('cancel', 'cancel')->name('cancel');
         Route::post('payment', 'payment')->name('payment');
+        Route::post('refund', 'refund')->name('refund');
         Route::post('verify-payment', 'verifyPayment')->middleware('throttle:20,1,verify-payment')->name('verify-payment');
     });
 
@@ -104,8 +105,10 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::post('riders/{rider}/toggle', [Manager\RiderController::class, 'toggle'])->name('riders.toggle');
 
     Route::get('customers', [Manager\CustomerController::class, 'index'])->name('customers.index');
+    Route::post('customers', [Manager\CustomerController::class, 'store'])->name('customers.store');
     Route::get('customers/{customer}', [Manager\CustomerController::class, 'show'])->name('customers.show');
     Route::put('customers/{customer}', [Manager\CustomerController::class, 'update'])->name('customers.update');
+    Route::delete('customers/{customer}', [Manager\CustomerController::class, 'destroy'])->name('customers.destroy');
     Route::get('debtors', [Manager\CustomerController::class, 'debtors'])->name('debtors');
 
     Route::get('products', [Manager\ProductController::class, 'index'])->name('products.index');
@@ -117,8 +120,18 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::post('products/{product}/stock', [Manager\ProductController::class, 'adjust'])->name('products.adjust');
     Route::delete('product-images/{image}', [Manager\ProductController::class, 'deleteImage'])->name('products.image.delete');
     Route::post('product-images/{image}/main', [Manager\ProductController::class, 'mainImage'])->name('products.image.main');
+    Route::post('products/{product}/deal', [Manager\ProductController::class, 'deal'])->name('products.deal');
     Route::post('products/{product}/toggle', [Manager\ProductController::class, 'toggle'])->name('products.toggle');
     Route::put('alert-phone', [Manager\ProductController::class, 'alertPhone'])->name('alert-phone');
+
+    Route::get('pages', [Manager\PageController::class, 'index'])->name('pages');
+    Route::get('pages/{slug}', [Manager\PageController::class, 'edit'])->name('pages.edit');
+    Route::put('pages/{slug}', [Manager\PageController::class, 'update'])->name('pages.update');
+
+    Route::get('delivery-fees', [Manager\DeliveryFeeController::class, 'index'])->name('fees');
+    Route::put('delivery-fees/{region}', [Manager\DeliveryFeeController::class, 'update'])->name('fees.update');
+    Route::post('delivery-fees/{region}/towns', [Manager\DeliveryFeeController::class, 'addTowns'])->name('fees.towns');
+    Route::delete('delivery-fees/towns/{zone}', [Manager\DeliveryFeeController::class, 'destroy'])->name('fees.destroy');
 
     Route::get('cashbook', [Manager\CashbookController::class, 'index'])->name('cashbook');
     Route::get('cashbook/export', [Manager\CashbookController::class, 'export'])->name('cashbook.export');

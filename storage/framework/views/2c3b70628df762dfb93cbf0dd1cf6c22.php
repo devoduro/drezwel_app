@@ -1,0 +1,2 @@
+<form method="POST" action="<?php echo e(route('manager.deliveries.destroy', $d)); ?>" class="inline" onsubmit="return confirm('Permanently delete <?php echo e($d->reference); ?>? Its payments and history are removed and its items go back to stock. This cannot be undone.')"><?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?><button class="text-red-600 hover:underline" title="Delete this record">Delete</button></form>
+<?php /**PATH C:\xampp\htdocs\drezwel_app\resources\views/manager/_delete-delivery.blade.php ENDPATH**/ ?>

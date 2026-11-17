@@ -111,7 +111,7 @@ class OrdersSalesTest extends TestCase
         $mk = function (string $name, float $price, float $cost, int $qty) {
             $p = Product::create(['name' => $name, 'slug' => strtolower($name), 'cost_price' => $cost, 'selling_price' => $price, 'stock_qty' => 50]);
             $v = $p->variants()->create(['stock_qty' => 50]);
-            $this->order("{$name}-buyer", ['total_amount' => $price * $qty])->items()->create(['product_id' => $p->id, 'variant_id' => $v->id, 'qty' => $qty, 'unit_price' => $price, 'unit_cost' => $cost]);
+            $this->order("{$name}-buyer", ['total_amount' => $price * $qty, 'amount_paid' => $price * $qty])->items()->create(['product_id' => $p->id, 'variant_id' => $v->id, 'qty' => $qty, 'unit_price' => $price, 'unit_cost' => $cost]);
         };
         $mk('Blazer', 500, 200, 2);     // profit 600, 2 units
         $mk('Socks', 10, 5, 30);        // profit 150, 30 units
@@ -141,5 +141,36 @@ class OrdersSalesTest extends TestCase
         $this->app['auth']->forgetGuards();
         $this->get(route('manager.orders'))->assertRedirect('/login');
         $this->get(route('manager.sales'))->assertRedirect('/login');
+    }
+
+    public function test_manager_screens_have_phone_tabs_with_a_more_button_and_the_full_menu_stays_reachable(): void
+    {
+        $m = $this->manager();
+        $this->order('Web Ama', ['source' => 'online', 'status' => 'pending']);
+
+        $html = $this->actingAs($m)->get(route('manager.orders'))->assertOk()->assertSee('aria-label="Main tabs"', false)->assertSee('More')->getContent();
+        foreach (['manager.dashboard', 'manager.orders', 'manager.deliveries.index', 'manager.products.index'] as $r) {
+            $this->assertStringContainsString('<nav class="lg:hidden fixed bottom-0', $html);
+            $this->assertStringContainsString('href="' . route($r) . '" class="relative py-2', $html);       // each tab
+        }
+        $this->assertStringContainsString('id="menuBtn"', $html);                                           // "More" opens the drawer
+        $this->assertStringContainsString('id="sidebar"', $html);                                           // which still lists everything
+        $this->assertStringNotContainsString('aria-label="Open menu"', $html);                              // the old hamburger is gone
+    }
+
+    public function test_an_order_only_becomes_a_sale_once_a_payment_is_recorded_and_the_page_shows_location(): void
+    {
+        $m = $this->manager();
+        $order = $this->order('Waiting Ama', ['source' => 'phone', 'status' => 'pending', 'total_amount' => 200, 'location' => 'Madina Estate']);
+
+        $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertOk()->assertDontSee($order->reference)->assertSee('No paid sales');
+        $this->actingAs($m)->get(route('manager.orders'))->assertSee($order->reference);                    // still an order
+
+        $this->actingAs($m)->post(route('manager.deliveries.payment', $order), ['amount' => 50, 'method' => 'cash'])->assertSessionHas('success');
+        $html = $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertOk()->assertSee($order->reference)->assertSee('Madina Estate')
+            ->assertSee('GH₵ 150.00')                                                                      // still owed on the part payment
+            ->getContent();
+        $this->assertStringContainsString('<th>Location</th>', $html);
+        $this->assertStringNotContainsString('<th>Channel</th>', $html);
     }
 }

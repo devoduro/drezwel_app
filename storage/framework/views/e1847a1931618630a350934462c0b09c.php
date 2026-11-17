@@ -64,9 +64,8 @@
                 <div class="border-b border-slate-200 px-4 py-3 text-[15px] font-bold uppercase tracking-wide">Cart summary</div>
                 <div class="space-y-2 p-4 text-[15px]">
                     <div class="flex items-center justify-between"><span>Subtotal</span><span class="text-[18px] font-medium"><?php echo e($m($subtotal)); ?></span></div>
-                    <div class="flex items-center justify-between text-sm text-jm-grey"><span>Delivery</span><span><?php echo e($fee > 0 ? $m($fee) : 'Confirmed by phone'); ?></span></div>
-                    <?php if($fee > 0): ?><div class="flex items-center justify-between border-t pt-2"><span class="font-bold">Total</span><span class="text-[18px] font-bold"><?php echo e($m($total)); ?></span></div><?php endif; ?>
-                    <p class="pt-1 text-xs text-jm-grey"><?php echo e($fee > 0 ? '' : 'Delivery fees not included yet. '); ?>You pay when your order arrives.</p>
+                    <div class="flex items-center justify-between text-sm text-jm-grey"><span>Delivery</span><span>Worked out at checkout</span></div>
+                    <p class="pt-1 text-xs text-jm-grey">Choose your region and town at checkout to see the delivery fee. Delivery fees are not included in the subtotal.</p>
                 </div>
                 <div class="border-t border-slate-200 p-3">
                     <a href="<?php echo e(route('shop.checkout')); ?>" class="flex items-center justify-between rounded-lg bg-jm-primary px-4 py-3 text-[15px] font-bold uppercase tracking-wide text-white shadow transition hover:bg-[#14212d]"><span>Checkout</span><span>(<?php echo e($m($total)); ?>)</span></a>

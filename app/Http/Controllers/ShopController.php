@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Delivery;
+use App\Models\DeliveryZone;
+use App\Models\Region;
+use App\Services\DeliveryFees;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Setting;
@@ -145,7 +148,7 @@ class ShopController extends Controller
             return redirect()->route('shop.cart');
         }
 
-        return view('shop.checkout', $data);
+        return view('shop.checkout', $data + ['regions' => DeliveryFees::catalogue()]);
     }
 
     public function placeOrder(Request $request)
@@ -156,17 +159,37 @@ class ShopController extends Controller
         }
 
         $request->merge(['phone' => Phone::clean($request->input('phone'))]);
+        if ($request->input('zone_id') === 'other') {
+            $request->merge(['zone_id' => null]);
+        }
+        $byRegion = $request->filled('region_id');
         $data = $request->validate([
             'name' => 'required|string|max:120',
             'phone' => ['required', 'regex:/^0\d{9}$/'],
-            'location' => 'required|string|max:200',
+            'region_id' => 'nullable|exists:regions,id',
+            'zone_id' => 'nullable|integer',
+            'address' => $byRegion ? 'required|string|max:200' : 'nullable|string|max:200',
+            'location' => $byRegion ? 'nullable|string|max:200' : 'required|string|max:200',
             'notes' => 'nullable|string|max:500',
             'pay_method' => ['nullable', 'in:cod,speso'],
         ] + $this->momoRules($request, $request->input('pay_method') === 'speso'),
-            ['phone.regex' => 'Enter a 10-digit Ghana phone number, e.g. 0241234567.', 'location.required' => 'Tell us where to deliver.', 'momo_number.regex' => 'Enter the 10-digit mobile money number, e.g. 0241234567.']);
+            ['phone.regex' => 'Enter a 10-digit Ghana phone number, e.g. 0241234567.', 'location.required' => 'Tell us where to deliver.', 'address.required' => 'Tell us the street, landmark or house number.', 'momo_number.regex' => 'Enter the 10-digit mobile money number, e.g. 0241234567.']);
         $online = ($data['pay_method'] ?? 'cod') === 'speso';
         if ($online && ! SpesoClient::configured()) {
             return back()->withInput()->withErrors(['pay_method' => 'Online payment is not available right now. Please choose pay on delivery.']);
+        }
+
+        // Where to, and what it costs: the fee comes from the region / town the customer picked, never from the browser.
+        $location = $data['location'] ?? '';
+        $fee = (float) Setting::get('default_delivery_fee', '0');
+        if ($byRegion) {
+            $region = Region::findOrFail($data['region_id']);
+            $zone = ! empty($data['zone_id']) ? DeliveryZone::orderable()->where('region_id', $region->id)->find($data['zone_id']) : null;
+            if (! empty($data['zone_id']) && ! $zone) {
+                return back()->withInput()->withErrors(['zone_id' => 'Please choose a town from the list.']);
+            }
+            $fee = DeliveryFees::feeFor($region, $zone);
+            $location = trim($data['address']) . ', ' . ($zone ? $zone->name . ', ' : '') . $region->name;
         }
 
         $cart = $request->session()->get('cart', []);
@@ -174,9 +197,9 @@ class ShopController extends Controller
 
         try {
             $delivery = $this->sales->placeOrder(
-                ['name' => $data['name'], 'phone' => $data['phone'], 'location' => $data['location']],
+                ['name' => $data['name'], 'phone' => $data['phone'], 'location' => mb_substr($location, 0, 200)],
                 $lines,
-                ['source' => 'online', 'delivery_fee' => (float) Setting::get('default_delivery_fee', '0'), 'notes' => $data['notes'] ?? null, 'update_customer' => false],
+                ['source' => 'online', 'delivery_fee' => $fee, 'notes' => $data['notes'] ?? null, 'update_customer' => false],
             );
         } catch (ValidationException $e) {
             // Stock ran out while they were checking out: send them back to the cart with the reason.

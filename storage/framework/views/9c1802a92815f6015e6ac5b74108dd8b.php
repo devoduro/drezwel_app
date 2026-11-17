@@ -1,3 +1,4 @@
+
 <?php $__env->startSection('title', 'Sales · Drezwel Go'); ?>
 <?php
     $m = fn ($v) => 'GH₵ ' . number_format((float) $v, 2);
@@ -10,14 +11,14 @@
 <?php $__env->startSection('content'); ?>
 <?php if (isset($component)) { $__componentOriginalb08eb6e359b0cda244088e0d0db6136c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalb08eb6e359b0cda244088e0d0db6136c = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.dashboard-hero','data' => ['class' => 'mb-6','eyebrow' => $range,'title' => 'Sales','subtitle' => 'What you sold, through which channel, and how you were paid.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.dashboard-hero','data' => ['class' => 'mb-6','eyebrow' => $range,'title' => 'Sales','subtitle' => 'Orders appear here once a payment has been recorded against them.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('dashboard-hero'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['class' => 'mb-6','eyebrow' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($range),'title' => 'Sales','subtitle' => 'What you sold, through which channel, and how you were paid.']); ?>
+<?php $component->withAttributes(['class' => 'mb-6','eyebrow' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($range),'title' => 'Sales','subtitle' => 'Orders appear here once a payment has been recorded against them.']); ?>
      <?php $__env->slot('chips', null, []); ?> 
         <span><i class="fas fa-calendar-days"></i> <?php echo e($periods[$period] ?? 'Last 30 days'); ?></span>
         <span><i class="fas fa-receipt"></i> <?php echo e($kpi['orders']); ?> sales</span>
@@ -33,6 +34,8 @@
             <input type="date" name="to" value="<?php echo e(request('to')); ?>" class="rounded-xl bg-white text-slate-800 px-2 py-2">
             <button class="rounded-xl bg-white text-slate-800 px-3 py-2 font-semibold">Apply</button>
         <?php endif; ?>
+        <a href="<?php echo e(route('manager.pos')); ?>" class="rounded-xl bg-white text-slate-800 px-4 py-2.5 font-semibold hover:bg-gray-100 transition"><i class="fas fa-plus"></i> New sale</a>
+        <a href="<?php echo e(route('manager.deliveries.create', ['order_type' => 'exchange'])); ?>" class="rounded-xl bg-white text-slate-800 px-4 py-2.5 font-semibold hover:bg-gray-100 transition"><i class="fas fa-rotate-left"></i> Return / exchange</a>
         <a href="<?php echo e(route('manager.reports.export', ['type' => 'orders'] + $qs)); ?>" class="rounded-xl bg-white text-slate-800 px-4 py-2.5 font-semibold hover:bg-gray-100 transition"><i class="fas fa-file-csv"></i> Download CSV</a>
     </form>
  <?php echo $__env->renderComponent(); ?>
@@ -156,20 +159,25 @@
 <div class="bg-white rounded-xl overflow-hidden">
     <div class="<?php echo e($head); ?>">Sales (<?php echo e($sales->total()); ?>)</div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
-        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Date</th><th>Invoice</th><th>Customer</th><th>Channel</th><th>What was sold</th><th class="text-right">Total</th><th class="text-right">Paid</th><th>Paid by</th><th class="text-right p-3">Balance</th></tr></thead>
+        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Date</th><th>Invoice</th><th>Customer</th><th>Location</th><th>What was sold</th><th class="text-right">Total</th><th class="text-right">Paid</th><th>Paid by</th><th class="text-right">Balance</th><th class="p-3"></th></tr></thead>
         <?php $__empty_1 = true; $__currentLoopData = $sales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <tr class="border-t border-slate-100 hover:bg-sky-50/50 align-top">
                 <td class="p-3 whitespace-nowrap text-slate-600"><?php echo e($s->delivery_date->format('d M Y')); ?></td>
                 <td><a class="font-semibold text-[#1c3041] hover:underline" target="_blank" href="<?php echo e(route('manager.deliveries.invoice', $s)); ?>"><?php echo e($s->reference); ?></a></td>
                 <td><?php echo e($s->customer->phone === \App\Services\SalesService::WALK_IN_PHONE ? 'Walk-in customer' : $s->customer->name); ?></td>
-                <td><span class="rounded-full px-2 py-0.5 text-xs font-medium <?php echo e($badge[$s->source] ?? $badge['manager']); ?>"><?php echo e($sources[$s->source] ?? $s->source); ?></span></td>
+                <td class="max-w-[180px] truncate text-slate-600" title="<?php echo e($s->location); ?>"><?php echo e($s->location); ?></td>
                 <td class="max-w-[240px] truncate text-slate-600" title="<?php echo e($s->package_description); ?>"><?php echo e($s->package_description); ?></td>
                 <td class="text-right"><?php echo e(number_format($s->amount_due, 2)); ?></td>
                 <td class="text-right text-slate-600"><?php echo e(number_format($s->amount_paid, 2)); ?></td>
                 <td class="text-xs text-slate-500"><?php echo e($s->payments->map(fn ($p) => \App\Models\Payment::METHODS[$p->method] ?? $p->method)->unique()->implode(', ') ?: '—'); ?></td>
                 <td class="text-right p-3 <?php echo e($s->balance > 0 ? 'text-red-600 font-medium' : 'text-green-600'); ?>"><?php echo e(number_format($s->balance, 2)); ?></td>
+                <td class="p-3 whitespace-nowrap text-right text-xs">
+                    <?php if($s->status === 'delivered' && $s->order_type !== 'exchange'): ?><a class="text-amber-700 hover:underline" href="<?php echo e(route('manager.deliveries.create', ['exchange_of' => $s->id])); ?>">Return</a> ·<?php endif; ?>
+                    <?php if($s->status !== 'cancelled'): ?><a class="text-[#1c3041] hover:underline" href="<?php echo e(route('manager.deliveries.edit', $s)); ?>">Edit</a> ·<?php endif; ?>
+                    <?php echo $__env->make('manager._delete-delivery', ['d' => $s], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                </td>
             </tr>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="9" class="p-10 text-center text-slate-400"><i class="fas fa-receipt text-3xl mb-2 block"></i>No sales in this period.</td></tr> <?php endif; ?>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="10" class="p-10 text-center text-slate-400"><i class="fas fa-receipt text-3xl mb-2 block"></i>No paid sales in this period.</td></tr> <?php endif; ?>
     </table></div>
 </div>
 <div class="mt-4"><?php echo e($sales->links()); ?></div>

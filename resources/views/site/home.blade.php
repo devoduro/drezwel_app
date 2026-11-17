@@ -115,4 +115,5 @@
         </div>
     </section>
 </div>
+@include('shop._seo')
 @endsection

@@ -1,0 +1,1 @@
+<form method="POST" action="{{ route('manager.deliveries.destroy', $d) }}" class="inline" onsubmit="return confirm('Permanently delete {{ $d->reference }}? Its payments and history are removed and its items go back to stock. This cannot be undone.')">@csrf @method('DELETE')<button class="text-red-600 hover:underline" title="Delete this record">Delete</button></form>

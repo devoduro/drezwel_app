@@ -67,7 +67,9 @@
                 <td class="p-3"><x-badge :status="$o->status"/></td>
                 <td class="p-3 whitespace-nowrap text-right text-xs">
                     <a class="text-[#1c3041] hover:underline" href="{{ route('manager.deliveries.show', $o) }}">Open</a> ·
-                    <a class="text-[#1c3041] hover:underline" target="_blank" href="{{ route('manager.deliveries.invoice', $o) }}">Invoice</a>
+                    <a class="text-[#1c3041] hover:underline" target="_blank" href="{{ route('manager.deliveries.invoice', $o) }}">Invoice</a> ·
+                    @if($o->status !== 'cancelled')<a class="text-[#1c3041] hover:underline" href="{{ route('manager.deliveries.edit', $o) }}">Edit</a> ·@endif
+                    @include('manager._delete-delivery', ['d' => $o])
                 </td>
             </tr>
         @empty <tr><td colspan="10" class="p-10 text-center text-slate-400"><i class="fas fa-box-open text-3xl mb-2 block"></i>No orders match.</td></tr> @endforelse

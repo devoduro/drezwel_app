@@ -25,7 +25,15 @@
                 <div class="grid gap-4 p-4 sm:grid-cols-2">
                     <label class="block text-sm font-medium">Full name<input name="name" value="{{ old('name') }}" required autocomplete="name" class="{{ $field }}"></label>
                     <label class="block text-sm font-medium">Phone number<input name="phone" value="{{ old('phone') }}" required inputmode="tel" autocomplete="tel" placeholder="0241234567" class="{{ $field }}"></label>
-                    <label class="block text-sm font-medium sm:col-span-2">Delivery address<input name="location" value="{{ old('location') }}" required autocomplete="street-address" placeholder="Area, street, landmark, house number" class="{{ $field }}"></label>
+                    <label class="block text-sm font-medium">Region
+                        <select name="region_id" id="regionSel" required class="{{ $field }}"><option value="">Choose your region…</option>
+                            @foreach($regions as $r)<option value="{{ $r['id'] }}" @selected(old('region_id') == $r['id'])>{{ $r['name'] }}</option>@endforeach</select></label>
+                    <label class="block text-sm font-medium">City / town
+                        <select name="zone_id" id="zoneSel" disabled class="{{ $field }}"><option value="">Choose a region first</option></select></label>
+                    @error('zone_id')<p class="text-sm text-red-600 sm:col-span-2">{{ $message }}</p>@enderror
+                    <label class="block text-sm font-medium sm:col-span-2">Street address / landmark<input name="address" value="{{ old('address') }}" required autocomplete="street-address" placeholder="Area, street, landmark, house number" class="{{ $field }}"></label>
+                    @error('address')<p class="text-sm text-red-600 sm:col-span-2">{{ $message }}</p>@enderror
+                    <p id="feeNote" class="hidden rounded-lg bg-jm-bg px-3 py-2 text-sm text-[#535357] sm:col-span-2"><i class="fas fa-truck-fast text-jm-primary"></i> Delivery to <strong id="feePlace"></strong>: <strong id="feeAmount"></strong></p>
                     <label class="block text-sm font-medium sm:col-span-2">Additional information (optional)<textarea name="notes" rows="2" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-[15px] focus:border-jm-primary focus:outline-none focus:ring-1 focus:ring-jm-primary" placeholder="Anything the rider should know?">{{ old('notes') }}</textarea></label>
                     <p class="text-xs text-jm-grey sm:col-span-2"><i class="fas fa-circle-info"></i> We text your order updates and delivery code to this number, and the rider will call it.</p>
                 </div>
@@ -39,7 +47,7 @@
                     <div class="flex items-start gap-3 rounded-lg border-2 border-jm-primary bg-[#f3f6f9] p-3">
                         <i class="fas fa-truck-fast mt-0.5 text-xl text-jm-primary"></i>
                         <div class="text-sm"><div class="font-bold">Door delivery</div>
-                            <div class="text-[#535357]">Delivery fee: <strong>{{ $fee > 0 ? $m($fee) : 'confirmed when we call you' }}</strong></div>
+                            <div class="text-[#535357]">Delivery fee: <strong id="feeText">{{ $fee > 0 ? $m($fee) : 'choose your region and town above' }}</strong></div>
                             <div class="text-jm-grey">Accra by rider. For other regions we send by station bus or parcel office. We call to confirm before dispatch.</div></div>
                     </div>
 
@@ -88,11 +96,48 @@
                 </div>
                 <script>
                     (function () {
+                        var regions = @json($regions), sub = {{ (float) $subtotal }}, fallback = {{ (float) $fee }};
+                        var rs = document.getElementById('regionSel'), zs = document.getElementById('zoneSel');
+                        window.__total = sub + fallback;
+                        window.__fmt = function (n) { return 'GH₵ ' + Number(n).toFixed(2); };
+                        function setFee(fee, place) {
+                            window.__total = sub + fee;
+                            document.getElementById('feeText').textContent = window.__fmt(fee);
+                            document.getElementById('feeSum').textContent = window.__fmt(fee);
+                            document.getElementById('totalSum').textContent = window.__fmt(window.__total);
+                            document.getElementById('feePlace').textContent = place; document.getElementById('feeAmount').textContent = window.__fmt(fee);
+                            document.getElementById('feeNote').classList.remove('hidden');
+                            document.querySelectorAll('input[name=pay_method]').forEach(function (r) { if (r.checked) r.dispatchEvent(new Event('change')); });
+                        }
+                        function pickRegion(keep) {
+                            var r = regions.find(function (x) { return String(x.id) === rs.value; });
+                            zs.innerHTML = '';
+                            if (!r) { zs.disabled = true; zs.innerHTML = '<option value="">Choose a region first</option>'; return; }
+                            zs.disabled = false; zs.required = true;
+                            zs.innerHTML = '<option value="">' + (r.zones.length ? 'Choose your city / town…' : 'No towns listed') + '</option>' +
+                                r.zones.map(function (z) { return '<option value="' + z.id + '"' + (String(z.id) === String(keep) ? ' selected' : '') + '>' + z.name + ' - ' + window.__fmt(z.fee) + '</option>'; }).join('') +
+                                '<option value="other"' + (keep === 'other' ? ' selected' : '') + '>Another town in ' + r.name + ' - ' + window.__fmt(r.fee) + '</option>';
+                            pickZone();
+                        }
+                        function pickZone() {
+                            var r = regions.find(function (x) { return String(x.id) === rs.value; });
+                            if (!r) return;
+                            var z = r.zones.find(function (x) { return String(x.id) === zs.value; });
+                            if (z) setFee(z.fee, z.name + ', ' + r.name);
+                            else if (zs.value === 'other') setFee(r.fee, r.name);
+                        }
+                        rs.addEventListener('change', function () { pickRegion(null); });
+                        zs.addEventListener('change', pickZone);
+                        if (rs.value) pickRegion('{{ old('zone_id') }}');
+                    })();
+                </script>
+                <script>
+                    (function () {
                         var radios = document.querySelectorAll('input[name=pay_method]'), box = document.getElementById('momo-fields'), btn = document.getElementById('confirm-btn');
                         function sync() {
                             var now = document.querySelector('input[name=pay_method]:checked').value === 'speso';
                             if (box) box.classList.toggle('hidden', !now);
-                            if (btn) btn.textContent = now ? 'Pay {{ $m($total) }} now' : 'Confirm order';
+                            if (btn) btn.textContent = now ? 'Pay ' + (window.__fmt ? window.__fmt(window.__total) : '{{ $m($total) }}') + ' now' : 'Confirm order';
                             document.querySelectorAll('[data-pay-card]').forEach(function (c) {
                                 var on = c.querySelector('input').checked;
                                 c.classList.toggle('border-jm-primary', on); c.classList.toggle('bg-[#f3f6f9]', on); c.classList.toggle('border-slate-200', !on);
@@ -111,8 +156,8 @@
                 <div class="border-b border-slate-200 px-4 py-3 text-[15px] font-bold uppercase tracking-wide">Order summary</div>
                 <div class="space-y-2 p-4 text-[15px]">
                     <div class="flex justify-between"><span>Item's total ({{ $count }})</span><span>{{ $m($subtotal) }}</span></div>
-                    <div class="flex justify-between"><span>Delivery fees</span><span>{{ $fee > 0 ? $m($fee) : 'To be confirmed' }}</span></div>
-                    <div class="flex items-center justify-between border-t pt-3"><span class="font-bold">Total</span><span class="text-[20px] font-bold">{{ $m($total) }}</span></div>
+                    <div class="flex justify-between"><span>Delivery fees</span><span id="feeSum">{{ $fee > 0 ? $m($fee) : 'To be confirmed' }}</span></div>
+                    <div class="flex items-center justify-between border-t pt-3"><span class="font-bold">Total</span><span class="text-[20px] font-bold" id="totalSum">{{ $m($total) }}</span></div>
                 </div>
                 <div class="border-t border-slate-200 p-3">
                     <button id="confirm-btn" @disabled(! $open) class="h-12 w-full rounded-lg bg-jm-primary text-[15px] font-bold uppercase tracking-wide text-white shadow transition hover:bg-[#14212d] disabled:cursor-not-allowed disabled:opacity-40">Confirm order</button>

@@ -18,6 +18,7 @@ class SiteController extends Controller
         'return-policy' => ['Return policy', 'policy_returns'],
         'terms' => ['Terms & conditions', 'policy_terms'],
         'privacy-policy' => ['Privacy policy', 'policy_privacy'],
+        'faqs' => ['FAQs', 'faq_text'],
     ];
 
     public function home()
@@ -57,7 +58,7 @@ class SiteController extends Controller
         abort_unless(isset(self::PAGES[$slug]), 404);
         [$title, $key] = self::PAGES[$slug];
 
-        return view('site.page', ['title' => $title, 'body' => (string) Setting::get($key), 'slug' => $slug]);
+        return view('site.page', ['title' => $title, 'body' => \App\Support\Pages::text($key), 'slug' => $slug]);
     }
 
     public function contact()

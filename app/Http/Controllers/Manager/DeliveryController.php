@@ -37,11 +37,18 @@ class DeliveryController extends Controller
 
     public function create()
     {
-        return view('manager.deliveries.form', [
-            'delivery' => new Delivery(['delivery_date' => today(), 'items_sent' => 1, 'delivery_mode' => 'rider', 'order_type' => 'standard']),
-            'riders' => $this->activeRiders(),
-            'products' => $this->products(),
-        ]);
+        $original = request()->filled('exchange_of') ? Delivery::with(['customer', 'items.variant'])->find(request()->input('exchange_of')) : null;
+        $exchange = request()->input('order_type') === 'exchange';
+        $delivery = new Delivery(['delivery_date' => today(), 'items_sent' => $exchange ? 0 : 1, 'delivery_mode' => $exchange ? 'pick_up' : 'rider', 'order_type' => $exchange ? 'exchange' : 'standard', 'total_amount' => 0]);
+        $returnRows = [];
+        if ($original) {
+            // Started from a sale: same customer, handed over at the counter, with that sale's items ready to be returned.
+            $delivery->fill(['order_type' => 'exchange', 'delivery_mode' => 'pick_up', 'items_sent' => 1, 'exchange_of_id' => $original->id, 'location' => $original->location, 'total_amount' => 0]);
+            $delivery->setRelation('customer', $original->customer);
+            $returnRows = $original->items->filter(fn ($i) => $i->qty > 0)->map(fn ($i) => ['variant_id' => $i->variant_id, 'qty' => $i->qty, 'price' => (float) $i->unit_price])->values()->all();
+        }
+
+        return view('manager.deliveries.form', ['delivery' => $delivery, 'riders' => $this->activeRiders(), 'products' => $this->products(), 'original' => $original, 'returnRows' => $returnRows, 'prefillReturns' => (bool) $original, 'feeCatalogue' => \App\Services\DeliveryFees::catalogue()]);
     }
 
     public function store(Request $request)
@@ -65,32 +72,45 @@ class DeliveryController extends Controller
             return $delivery;
         });
 
-        if ($request->filled('rider_id')) {
+        if ($delivery->order_type === 'exchange' && $request->boolean('settle_now')) {
+            $this->settleAtCounter($delivery, $request);
+        } elseif ($request->filled('rider_id')) {
             $this->flow->assign($delivery, User::findOrFail($request->input('rider_id')), $request->user());
         }
 
-        return redirect()->route('manager.deliveries.show', $delivery)->with('success', "Delivery {$delivery->reference} created.");
+        $word = $delivery->order_type === 'exchange' ? 'Exchange' : 'Delivery';
+
+        return redirect()->route('manager.deliveries.show', $delivery)->with('success', "{$word} {$delivery->reference} " . ($delivery->status === 'delivered' ? 'completed.' : 'created.'));
     }
 
     public function show(Delivery $delivery)
     {
-        $delivery->load(['customer', 'rider', 'events.user', 'payments.rider', 'items.product']);
+        $delivery->load(['customer', 'rider', 'events.user', 'payments.rider', 'items.product', 'items.variant', 'exchangeOf', 'exchanges']);
 
         return view('manager.deliveries.show', ['delivery' => $delivery, 'riders' => $this->activeRiders()]);
     }
 
     public function edit(Delivery $delivery)
     {
-        return view('manager.deliveries.form', ['delivery' => $delivery->load(['customer', 'items.variant']), 'riders' => $this->activeRiders(), 'products' => $this->products()]);
+        $delivery->load(['customer', 'items.variant']);
+        $returnRows = $delivery->returned_items->map(fn ($i) => ['variant_id' => $i->variant_id, 'qty' => -$i->qty, 'price' => (float) $i->unit_price])->all();
+
+        return view('manager.deliveries.form', ['delivery' => $delivery, 'riders' => $this->activeRiders(), 'products' => $this->products(), 'original' => $delivery->exchangeOf, 'returnRows' => $returnRows, 'prefillReturns' => false, 'feeCatalogue' => \App\Services\DeliveryFees::catalogue()]);
     }
 
     public function update(Request $request, Delivery $delivery)
     {
-        abort_if(in_array($delivery->status, ['delivered', 'cancelled'], true), 403, 'This delivery is closed.');
+        abort_if($delivery->status === 'cancelled', 403, 'Reopen this cancelled order before editing it.');
         $data = $this->validated($request);
         DB::transaction(function () use ($data, $delivery, $request) {
             $customer = $this->customerFor($data);
-            $delivery->update($this->deliveryFields($data) + ['customer_id' => $customer->id]);
+            $fields = $this->deliveryFields($data) + ['customer_id' => $customer->id];
+            if ($delivery->status === 'delivered') {
+                // A finished sale: keep "items kept" in step with the corrected number of items.
+                $newSent = (int) ($fields['items_sent'] ?? $delivery->items_sent);
+                $fields['items_kept'] = $delivery->items_kept === null || (int) $delivery->items_kept === (int) $delivery->items_sent ? $newSent : min((int) $delivery->items_kept, $newSent);
+            }
+            $delivery->update($fields);
             $this->stock->syncDeliveryItems($delivery, $data['items'], $request->user());
         });
         $delivery->recalcPaid();
@@ -153,6 +173,50 @@ class DeliveryController extends Controller
         return back()->with('success', 'Payment recorded.');
     }
 
+    /** Record money handed back to the customer for an exchange or return. Stored as a negative payment. */
+    public function refund(Request $request, Delivery $delivery)
+    {
+        $max = $delivery->refund_due;
+        abort_if($max <= 0, 422, 'There is nothing to refund on this order.');
+        $data = $request->validate(['amount' => ['required', 'numeric', 'min:0.01', 'max:' . max($max, 0.01)], 'method' => ['required', Rule::in(array_keys(Payment::METHODS))], 'notes' => 'nullable|string|max:200']);
+
+        $delivery->payments()->create(['amount' => -(float) $data['amount'], 'method' => $data['method'], 'notes' => $data['notes'] ?? 'Refund to customer', 'recorded_by' => $request->user()->id, 'paid_at' => now()]);
+        $delivery->recalcPaid();
+        $delivery->logEvent('payment', 'Refunded GH₵ ' . number_format((float) $data['amount'], 2) . " to the customer ({$data['method']})", $request->user()->id);
+
+        return back()->with('success', 'Refund recorded.');
+    }
+
+    /** The customer is at the counter: finish the exchange now and record the money that changed hands. */
+    private function settleAtCounter(Delivery $delivery, Request $request): void
+    {
+        $method = in_array($request->input('settle_method'), array_keys(Payment::METHODS), true) ? $request->input('settle_method') : 'cash';
+        $delivery->update(['status' => 'delivered', 'delivered_at' => now(), 'items_kept' => $delivery->items_sent, 'delivery_mode' => 'pick_up']);
+        $due = $delivery->amount_due;
+        if (abs($due) >= 0.01) {
+            $delivery->payments()->create(['amount' => $due, 'method' => $method, 'notes' => $due < 0 ? 'Refund at the counter' : 'Paid at the counter', 'recorded_by' => $request->user()->id, 'paid_at' => now()]);
+            $delivery->recalcPaid();
+        }
+        $delivery->logEvent('delivered', 'Exchange completed at the counter' . ($due < 0 ? ', customer refunded GH₵ ' . number_format(-$due, 2) : ($due > 0 ? ', customer paid GH₵ ' . number_format($due, 2) : ', even swap')), $request->user()->id);
+    }
+
+    /** Permanently remove an order/sale: its items go back to stock; payments, items and history are deleted with it. */
+    public function destroy(Request $request, Delivery $delivery)
+    {
+        if ($why = $this->flow->deletionBlocker($delivery)) {
+            return back()->with('error', $why);
+        }
+
+        $ref = $delivery->reference;
+        $id = $delivery->id;
+        $this->flow->destroy($delivery, $request->user());
+
+        $prev = url()->previous();
+        $target = str_contains($prev, "/deliveries/{$id}") ? route('manager.deliveries.index') : $prev;
+
+        return redirect($target)->with('success', "Order {$ref} deleted. Its items went back to stock.");
+    }
+
     /** Ask Speso whether the customer really paid, and record the answer. */
     public function verifyPayment(Delivery $delivery, SpesoPayments $payments)
     {
@@ -192,27 +256,43 @@ class DeliveryController extends Controller
             'items.*.variant_id' => 'required|exists:product_variants,id',
             'items.*.qty' => 'required|integer|min:1|max:999',
             'items.*.price' => 'required|numeric|min:0',
+            'returns' => 'nullable|array|max:30',
+            'returns.*.variant_id' => 'required|exists:product_variants,id',
+            'returns.*.qty' => 'required|integer|min:1|max:999',
+            'returns.*.price' => 'required|numeric|min:0',
+            'exchange_of_id' => 'nullable|exists:deliveries,id',
             'customer_name' => 'required|string|max:120',
             'customer_phone' => ['required', 'regex:/^0\d{9}$/'],
             'location' => 'required|string|max:200',
-            'package_description' => 'required_without:items|nullable|string|max:200',
+            'package_description' => 'required_without_all:items,returns|nullable|string|max:200',
             'delivery_mode' => ['required', Rule::in(array_keys(Delivery::MODES))],
             'order_type' => ['required', Rule::in(array_keys(Delivery::TYPES))],
             'delivery_date' => 'required|date',
             'time_window' => ['nullable', Rule::in(Delivery::WINDOWS)],
-            'total_amount' => 'required|numeric|min:0',
+            'total_amount' => ['required', 'numeric', $request->input('order_type') === 'exchange' ? 'min:-9999999' : 'min:0'],
             'delivery_fee' => 'nullable|numeric|min:0',
-            'items_sent' => 'required_without:items|nullable|integer|min:1|max:99',
+            'items_sent' => 'required_without_all:items,returns|nullable|integer|min:0|max:99',
             'notes' => 'nullable|string|max:1000',
             'rider_id' => 'nullable|exists:users,id',
         ], ['customer_phone.regex' => 'Enter a 10-digit Ghana number, e.g. 0241234567.']);
 
         // With product lines, the package text and item count come from the lines.
         $data['items'] = array_values($data['items'] ?? []);
-        if ($data['items']) {
-            $names = \App\Models\ProductVariant::with('product')->whereIn('id', array_column($data['items'], 'variant_id'))->get()->keyBy('id');
-            $data['package_description'] ??= collect($data['items'])->map(fn ($l) => $names[$l['variant_id']]->product->name . ($names[$l['variant_id']]->is_plain ? '' : ' (' . $names[$l['variant_id']]->label . ')') . ' x' . $l['qty'])->implode(', ');
-            $data['items_sent'] = array_sum(array_column($data['items'], 'qty'));
+        // Items brought back are only meaningful on an exchange; they are stored as negative quantities.
+        $returns = $data['order_type'] === 'exchange' ? array_values($data['returns'] ?? []) : [];
+        unset($data['returns']);
+        $all = array_merge($data['items'], array_map(fn ($r) => ['variant_id' => $r['variant_id'], 'qty' => -(int) $r['qty'], 'price' => $r['price']], $returns));
+        if ($all) {
+            $names = \App\Models\ProductVariant::with('product')->whereIn('id', array_column($all, 'variant_id'))->get()->keyBy('id');
+            $label = fn ($l) => $names[$l['variant_id']]->product->name . ($names[$l['variant_id']]->is_plain ? '' : ' (' . $names[$l['variant_id']]->label . ')') . ' x' . abs($l['qty']);
+            $sent = array_filter($all, fn ($l) => $l['qty'] > 0);
+            $back = array_filter($all, fn ($l) => $l['qty'] < 0);
+            $data['package_description'] ??= $back
+                ? trim(($sent ? 'New: ' . collect($sent)->map($label)->implode(', ') . '. ' : '') . 'Returned: ' . collect($back)->map($label)->implode(', '))
+                : collect($sent)->map($label)->implode(', ');
+            $data['package_description'] = mb_substr($data['package_description'], 0, 200);
+            $data['items_sent'] = array_sum(array_column($sent, 'qty'));
+            $data['items'] = $all;
         }
 
         return $data;
@@ -220,7 +300,7 @@ class DeliveryController extends Controller
 
     private function deliveryFields(array $d): array
     {
-        return collect($d)->only(['location', 'package_description', 'delivery_mode', 'order_type', 'delivery_date', 'time_window', 'total_amount', 'delivery_fee', 'items_sent', 'notes'])
+        return collect($d)->only(['location', 'package_description', 'delivery_mode', 'order_type', 'delivery_date', 'time_window', 'total_amount', 'delivery_fee', 'items_sent', 'notes', 'exchange_of_id'])
             ->map(fn ($v) => $v === '' ? null : $v)->put('delivery_fee', $d['delivery_fee'] ?? 0)->all();
     }
 

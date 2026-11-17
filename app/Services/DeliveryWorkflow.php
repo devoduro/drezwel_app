@@ -19,6 +19,28 @@ class DeliveryWorkflow
 {
     public function __construct(private SmsService $sms, private StockService $stock) {}
 
+    /** Why this order cannot be deleted, or null when it can. */
+    public function deletionBlocker(Delivery $d): ?string
+    {
+        if ($d->payment_status === 'paid') {
+            return "{$d->reference} was paid online through Speso, so it cannot be deleted. Cancel it instead and refund the customer.";
+        }
+        if ($d->status === 'out_for_delivery') {
+            return "A rider is out delivering {$d->reference}. Mark it undelivered or cancel it before deleting.";
+        }
+
+        return null;
+    }
+
+    /** Permanently remove an order: whatever it still has out of stock goes back; payments, items and history go with it. */
+    public function destroy(Delivery $d, User $by): void
+    {
+        DB::transaction(function () use ($d, $by) {
+            $this->stock->restoreDeletedDelivery($d, $by);
+            $d->delete();
+        });
+    }
+
     public function assign(Delivery $d, User $rider, User $by): Delivery
     {
         $this->ensure($rider->isRider() && $rider->is_active, 'rider', 'That rider is not active.');

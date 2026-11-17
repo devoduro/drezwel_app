@@ -65,6 +65,35 @@ class Delivery extends Model
         return $this->hasMany(Payment::class);
     }
 
+    /** The sale this exchange / return was made against, if it was started from one. */
+    public function exchangeOf(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'exchange_of_id');
+    }
+
+    public function exchanges(): HasMany
+    {
+        return $this->hasMany(self::class, 'exchange_of_id');
+    }
+
+    /** Items the customer is bringing back (stored as negative quantities). */
+    public function getReturnedItemsAttribute()
+    {
+        return $this->items->filter(fn ($i) => $i->qty < 0)->values();
+    }
+
+    /** Items being handed over (positive quantities). */
+    public function getSentItemsAttribute()
+    {
+        return $this->items->filter(fn ($i) => $i->qty > 0)->values();
+    }
+
+    /** Money owed back to the customer, when what they returned is worth more than what they took. */
+    public function getRefundDueAttribute(): float
+    {
+        return max(round((float) $this->amount_paid - $this->amount_due, 2), 0);
+    }
+
     public function events(): HasMany
     {
         return $this->hasMany(DeliveryEvent::class)->orderBy('id');

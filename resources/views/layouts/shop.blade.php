@@ -156,7 +156,8 @@
                 <div class="font-bold uppercase tracking-wide text-white">Need help?</div>
                 <a class="block hover:text-white" href="{{ route('site.page', 'delivery-info') }}">Delivery &amp; payment</a>
                 <a class="block hover:text-white" href="{{ route('track') }}">Track your order</a>
-                <a class="block hover:text-white" href="{{ route('site.page', 'return-policy') }}">Returns policy</a>
+                <a class="block hover:text-white" href="{{ route('site.page', 'return-policy') }}">Returns &amp; exchanges</a>
+                <a class="block hover:text-white" href="{{ route('site.page', 'faqs') }}">FAQs</a>
                 <a class="block hover:text-white" href="{{ route('site.contact') }}">Contact us</a>
             </div>
             <div class="space-y-2">

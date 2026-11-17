@@ -23,12 +23,22 @@
     <x-stat-tile :color="$owed > 0 ? 'red' : 'green'" icon="fa-hand-holding-dollar" title="Balance due" :value="$m($owed)" :sub="$owed > 0 ? 'Still owed' : 'All settled'" :href="$owed > 0 ? route('manager.debtors') : null" />
 </div>
 
-<form method="POST" action="{{ route('manager.customers.update', $customer) }}" class="bg-white rounded-xl p-4 grid md:grid-cols-4 gap-2 mb-5 border-l-4 border-l-[#8cc152]">@csrf @method('PUT')
-    <input name="name" value="{{ $customer->name }}" required class="{{ $input }}">
+@php $walkIn = $customer->phone === \App\Services\SalesService::WALK_IN_PHONE; $orderCount = $customer->deliveries()->count(); @endphp
+<form method="POST" action="{{ route('manager.customers.update', $customer) }}" class="bg-white rounded-xl p-4 grid md:grid-cols-5 gap-2 mb-3 border-l-4 border-l-[#8cc152]">@csrf @method('PUT')
+    @if($errors->any())<div class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 md:col-span-5">{{ $errors->first() }}</div>@endif
+    <input name="name" value="{{ old('name', $customer->name) }}" required placeholder="Name" class="{{ $input }}">
+    @unless($walkIn)<input name="phone" value="{{ old('phone', $customer->phone) }}" required inputmode="tel" placeholder="Phone" class="{{ $input }}">@endunless
     <input name="location" value="{{ $customer->location }}" placeholder="Default location" class="{{ $input }}">
     <input name="notes" value="{{ $customer->notes }}" placeholder="Notes" class="{{ $input }}">
     <button class="rounded-lg bg-[#8cc152] hover:bg-[#74a83b] text-white px-4 py-2 text-sm font-semibold transition">Save details</button>
 </form>
+@unless($walkIn)
+    <form method="POST" action="{{ route('manager.customers.destroy', $customer) }}" class="mb-5 flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 text-sm"
+          onsubmit="return confirm('Permanently delete {{ addslashes($customer->name) }}{{ $orderCount ? ' and their ' . $orderCount . ' order(s)' : '' }}? This cannot be undone.')">@csrf @method('DELETE')
+        @if($orderCount)<label class="flex items-center gap-2 text-slate-600"><input type="checkbox" name="with_orders" value="1" required class="accent-red-600"> Also delete their {{ $orderCount }} {{ $orderCount === 1 ? 'order' : 'orders' }} (items go back to stock)</label>@endif
+        <button class="ml-auto rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700"><i class="fas fa-trash"></i> Delete customer</button>
+    </form>
+@endunless
 
 <form method="GET" class="bg-white rounded-xl p-3 grid grid-cols-2 md:grid-cols-4 gap-2 mb-4 text-sm">
     <select name="status" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"><option value="">All statuses</option>
