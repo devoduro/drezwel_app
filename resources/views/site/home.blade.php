@@ -46,8 +46,11 @@
         </section>
 
         <div class="hidden lg:grid gap-3 grid-rows-3">
-            @if($tel)
-                <a href="tel:{{ $tel }}" class="flex flex-col justify-center rounded-xl bg-jm-primary p-4 text-white transition hover:bg-[#14212d]"><i class="fas fa-phone-volume text-2xl"></i><div class="mt-1 text-lg font-bold leading-tight">Order by phone</div><div class="text-sm text-white/90">{{ $S('phone') }}</div></a>
+            @php $channel = \App\Models\Setting::get('whatsapp_channel'); @endphp
+            @if($channel)
+                <a href="{{ $channel }}" target="_blank" rel="noopener" class="flex flex-col justify-center rounded-xl bg-jm-primary p-4 text-white transition hover:bg-[#14212d]"><i class="fab fa-whatsapp text-2xl text-[#25d366]"></i><div class="mt-1 text-lg font-bold leading-tight">Join our WhatsApp channel</div><div class="text-sm text-white/90">Get updates on new stock</div></a>
+            @elseif($tel)
+                <a href="tel:{{ $tel }}" class="flex flex-col justify-center rounded-xl bg-jm-primary p-4 text-white transition hover:bg-[#14212d]"><i class="fas fa-phone-volume text-2xl"></i><div class="mt-1 text-lg font-bold leading-tight">Order by phone</div><div class="text-sm text-white/90">{{ \App\Models\Setting::get('phone') }}</div></a>
             @endif
             @if($wa)
                 <a href="https://wa.me/{{ $wa }}" target="_blank" rel="noopener" class="flex flex-col justify-center rounded-xl bg-[#25a865] p-4 text-white transition hover:bg-[#1f9158]"><i class="fab fa-whatsapp text-2xl"></i><div class="mt-1 text-lg font-bold leading-tight">Chat on WhatsApp</div><div class="text-sm text-white/90">Ask about a style or size</div></a>
@@ -100,20 +103,6 @@
         </div>
     </div>
 
-    {{-- About --}}
-    <section class="grid items-center gap-5 rounded-xl bg-white p-6 md:grid-cols-3">
-        <div class="md:col-span-2">
-            <h2 class="text-xl font-bold">About {{ $S('business_name') }}</h2>
-            <p class="mt-2 text-[#535357]">{{ strtok((string) $S('about_text'), "\n") }}</p>
-            <a href="{{ route('site.about') }}" class="mt-3 inline-block text-sm font-bold uppercase text-jm-primary hover:underline">More about us</a>
-        </div>
-        <div class="space-y-1.5 rounded-lg bg-jm-bg p-4 text-sm">
-            <div class="font-bold">Visit or call us</div>
-            @foreach(\App\Models\Setting::phones() as [$disp, $digits])<a class="block text-jm-primary" href="tel:{{ $digits }}"><i class="fas fa-phone w-5"></i>{{ $disp }}</a>@endforeach
-            @if($S('address'))<div class="text-[#535357]"><i class="fas fa-location-dot w-5"></i>{{ $S('address') }}</div>@endif
-            <a class="block text-jm-primary" href="{{ route('site.contact') }}"><i class="fas fa-envelope w-5"></i>Send us a message</a>
-        </div>
-    </section>
 </div>
 @include('shop._seo')
 @endsection

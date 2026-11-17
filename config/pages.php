@@ -31,8 +31,6 @@ Phone: {phone} · Email: {email}
 MD,
 
     'delivery_text' => <<<'MD'
-# Delivery & payment
-
 ## How an order reaches you
 
 1. **Place your order** on this website, or call us on {phone}.
@@ -68,8 +66,6 @@ Call {phone} or [contact us]({contact}). We are happy to help.
 MD,
 
     'policy_returns' => <<<'MD'
-# Returns & exchanges
-
 We want you to love what you buy. If something is not right, this is how we put it right.
 
 ## Check your order on delivery
@@ -111,8 +107,6 @@ Questions? Call {phone} or [contact us]({contact}).
 MD,
 
     'policy_terms' => <<<'MD'
-# Terms & conditions
-
 By placing an order with **{business}** you agree to these terms. Please read them with our [delivery and payment]({delivery}) information and our [returns and exchanges policy]({returns}).
 
 ## 1. Orders
@@ -161,8 +155,6 @@ We may update these terms from time to time. The version on this page applies to
 MD,
 
     'policy_privacy' => <<<'MD'
-# Privacy policy
-
 **{business}** respects your privacy. This page explains what information we collect, why, and how we look after it.
 
 ## What we collect

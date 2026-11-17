@@ -9,7 +9,7 @@
     $cartCount = array_sum((array) session('cart', []));
     $staff = auth()->user();
     $staffHome = $staff ? route($staff->isManager() ? 'manager.dashboard' : 'rider.mine') : null;
-    $pageTitle = trim($__env->yieldContent('title')) ?: $biz . ' | ' . $S('tagline');
+    $pageTitle = trim($__env->yieldContent('title')) ?: e($biz . ' | ' . $S('tagline'));
     $pageDesc = trim($__env->yieldContent('description')) ?: $S('tagline') . '. Shop clothing, jeans, shirts, sneakers and accessories online and pay on delivery.';
     $ogImage = trim($__env->yieldContent('og_image')) ?: asset('images/logo.png');
     $socials = array_filter([
@@ -23,11 +23,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1c3041">
-    <title><?php echo e($pageTitle); ?></title>
+    <title><?php echo $pageTitle; ?></title>
     <meta name="description" content="<?php echo e($pageDesc); ?>">
     <link rel="canonical" href="<?php echo e(url()->current()); ?>">
     <meta property="og:type" content="website"><meta property="og:site_name" content="<?php echo e($biz); ?>">
-    <meta property="og:title" content="<?php echo e($pageTitle); ?>"><meta property="og:description" content="<?php echo e($pageDesc); ?>">
+    <meta property="og:title" content="<?php echo $pageTitle; ?>"><meta property="og:description" content="<?php echo e($pageDesc); ?>">
     <meta property="og:url" content="<?php echo e(url()->current()); ?>"><meta property="og:image" content="<?php echo e($ogImage); ?>">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/png" href="<?php echo e(asset('images/icon.png')); ?>">

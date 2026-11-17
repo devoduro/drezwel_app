@@ -9,7 +9,7 @@
     $cartCount = array_sum((array) session('cart', []));
     $staff = auth()->user();
     $staffHome = $staff ? route($staff->isManager() ? 'manager.dashboard' : 'rider.mine') : null;
-    $pageTitle = trim($__env->yieldContent('title')) ?: $biz . ' | ' . $S('tagline');
+    $pageTitle = trim($__env->yieldContent('title')) ?: e($biz . ' | ' . $S('tagline'));
     $pageDesc = trim($__env->yieldContent('description')) ?: $S('tagline') . '. Shop clothing, jeans, shirts, sneakers and accessories online and pay on delivery.';
     $ogImage = trim($__env->yieldContent('og_image')) ?: asset('images/logo.png');
     $socials = array_filter([
@@ -23,11 +23,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1c3041">
-    <title>{{ $pageTitle }}</title>
+    <title>{!! $pageTitle !!}</title>
     <meta name="description" content="{{ $pageDesc }}">
     <link rel="canonical" href="{{ url()->current() }}">
     <meta property="og:type" content="website"><meta property="og:site_name" content="{{ $biz }}">
-    <meta property="og:title" content="{{ $pageTitle }}"><meta property="og:description" content="{{ $pageDesc }}">
+    <meta property="og:title" content="{!! $pageTitle !!}"><meta property="og:description" content="{{ $pageDesc }}">
     <meta property="og:url" content="{{ url()->current() }}"><meta property="og:image" content="{{ $ogImage }}">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/png" href="{{ asset('images/icon.png') }}">

@@ -46,8 +46,11 @@
         </section>
 
         <div class="hidden lg:grid gap-3 grid-rows-3">
-            <?php if($tel): ?>
-                <a href="tel:<?php echo e($tel); ?>" class="flex flex-col justify-center rounded-xl bg-jm-primary p-4 text-white transition hover:bg-[#14212d]"><i class="fas fa-phone-volume text-2xl"></i><div class="mt-1 text-lg font-bold leading-tight">Order by phone</div><div class="text-sm text-white/90"><?php echo e($S('phone')); ?></div></a>
+            <?php $channel = \App\Models\Setting::get('whatsapp_channel'); ?>
+            <?php if($channel): ?>
+                <a href="<?php echo e($channel); ?>" target="_blank" rel="noopener" class="flex flex-col justify-center rounded-xl bg-jm-primary p-4 text-white transition hover:bg-[#14212d]"><i class="fab fa-whatsapp text-2xl text-[#25d366]"></i><div class="mt-1 text-lg font-bold leading-tight">Join our WhatsApp channel</div><div class="text-sm text-white/90">Get updates on new stock</div></a>
+            <?php elseif($tel): ?>
+                <a href="tel:<?php echo e($tel); ?>" class="flex flex-col justify-center rounded-xl bg-jm-primary p-4 text-white transition hover:bg-[#14212d]"><i class="fas fa-phone-volume text-2xl"></i><div class="mt-1 text-lg font-bold leading-tight">Order by phone</div><div class="text-sm text-white/90"><?php echo e(\App\Models\Setting::get('phone')); ?></div></a>
             <?php endif; ?>
             <?php if($wa): ?>
                 <a href="https://wa.me/<?php echo e($wa); ?>" target="_blank" rel="noopener" class="flex flex-col justify-center rounded-xl bg-[#25a865] p-4 text-white transition hover:bg-[#1f9158]"><i class="fab fa-whatsapp text-2xl"></i><div class="mt-1 text-lg font-bold leading-tight">Chat on WhatsApp</div><div class="text-sm text-white/90">Ask about a style or size</div></a>
@@ -100,20 +103,6 @@
         </div>
     </div>
 
-    
-    <section class="grid items-center gap-5 rounded-xl bg-white p-6 md:grid-cols-3">
-        <div class="md:col-span-2">
-            <h2 class="text-xl font-bold">About <?php echo e($S('business_name')); ?></h2>
-            <p class="mt-2 text-[#535357]"><?php echo e(strtok((string) $S('about_text'), "\n")); ?></p>
-            <a href="<?php echo e(route('site.about')); ?>" class="mt-3 inline-block text-sm font-bold uppercase text-jm-primary hover:underline">More about us</a>
-        </div>
-        <div class="space-y-1.5 rounded-lg bg-jm-bg p-4 text-sm">
-            <div class="font-bold">Visit or call us</div>
-            <?php $__currentLoopData = \App\Models\Setting::phones(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as [$disp, $digits]): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><a class="block text-jm-primary" href="tel:<?php echo e($digits); ?>"><i class="fas fa-phone w-5"></i><?php echo e($disp); ?></a><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            <?php if($S('address')): ?><div class="text-[#535357]"><i class="fas fa-location-dot w-5"></i><?php echo e($S('address')); ?></div><?php endif; ?>
-            <a class="block text-jm-primary" href="<?php echo e(route('site.contact')); ?>"><i class="fas fa-envelope w-5"></i>Send us a message</a>
-        </div>
-    </section>
 </div>
 <?php echo $__env->make('shop._seo', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <?php $__env->stopSection(); ?>
