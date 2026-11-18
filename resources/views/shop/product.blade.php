@@ -64,7 +64,7 @@
                         <div class="mb-4">
                             <div class="mb-1.5 text-sm">Size: <span id="sizeName" class="font-bold"></span></div>
                             <div class="flex flex-wrap gap-2" id="sizeBtns">
-                                @foreach($sizes as $s)<button type="button" data-size="{{ $s }}" class="opt-size min-w-14 rounded border-2 border-slate-200 bg-white px-3 py-1.5 text-sm font-medium transition" data-label="{{ $s }}"><span class="block leading-tight">{{ $s }}</span><span class="left block text-[11px] font-normal leading-tight"></span></button>@endforeach
+                                @foreach($sizes as $s)<button type="button" data-size="{{ $s }}" class="opt-size min-w-12 rounded border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium transition" data-label="{{ $s }}">{{ $s }}</button>@endforeach
                             </div>
                         </div>
                     @endif
@@ -72,7 +72,7 @@
                         <div class="mb-4">
                             <div class="mb-1.5 text-sm">Colour: <span id="colorName" class="font-bold"></span></div>
                             <div class="flex flex-wrap gap-2" id="colorBtns">
-                                @foreach($colors as $c)<button type="button" data-color="{{ $c }}" class="opt-color rounded border-2 border-slate-200 bg-white px-3 py-1.5 text-sm font-medium transition" data-label="{{ $c }}"><span class="block leading-tight">{{ $c }}</span><span class="left block text-[11px] font-normal leading-tight"></span></button>@endforeach
+                                @foreach($colors as $c)<button type="button" data-color="{{ $c }}" class="opt-color rounded border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium transition" data-label="{{ $c }}">{{ $c }}</button>@endforeach
                             </div>
                         </div>
                     @endif
@@ -183,31 +183,30 @@
     const hasSizes = variants.some(v => v.size), hasColors = variants.some(v => v.color);
     // Is any variant with these options in stock?
     const available = (s, c) => variants.some(v => (s === undefined || (v.size || null) === s) && (c === undefined || (v.color || null) === c) && v.stock > 0);
-    const chip = 'rounded border-2 px-3 py-1.5 text-sm font-medium transition ';
-    // Units left for a size and/or colour (undefined = any), shown to the buyer on every option.
-    const unitsLeft = (s, c) => variants.filter(v => (s === undefined || (v.size || null) === s) && (c === undefined || (v.color || null) === c)).reduce((n, v) => n + Math.max(v.stock, 0), 0);
-    const leftText = n => n <= 0 ? 'Sold out' : n <= 5 ? 'Only ' + n + ' left' : n + ' left';
-    const leftClass = (n, on) => 'left block text-[11px] font-normal leading-tight ' + (n <= 0 ? 'text-slate-400' : n <= 5 ? 'text-jm-red font-medium' : on ? 'text-jm-primary' : 'text-jm-grey');
+    const chip = 'rounded border-2 px-3 py-2 text-sm font-medium transition ';
 
     function paint() {
         document.querySelectorAll('.opt-size').forEach(b => {
             const on = b.dataset.size === size, ok = available(b.dataset.size, hasColors ? color ?? undefined : undefined);
-            const n = unitsLeft(b.dataset.size, hasColors ? color ?? undefined : undefined), l = b.querySelector('.left');
             b.className = 'opt-size min-w-12 ' + chip + (on ? 'border-jm-primary bg-[#e4eaf0] text-jm-primary' : ok ? 'border-slate-200 bg-white hover:border-jm-primary' : 'border-slate-100 bg-slate-50 text-slate-300 line-through');
-            l.textContent = leftText(n); l.className = leftClass(n, on);
         });
         document.querySelectorAll('.opt-color').forEach(b => {
             const on = b.dataset.color === color, ok = available(hasSizes ? size ?? undefined : undefined, b.dataset.color);
-            const n = unitsLeft(hasSizes ? size ?? undefined : undefined, b.dataset.color), l = b.querySelector('.left');
             b.className = 'opt-color ' + chip + (on ? 'border-jm-primary bg-[#e4eaf0] text-jm-primary' : ok ? 'border-slate-200 bg-white hover:border-jm-primary' : 'border-slate-100 bg-slate-50 text-slate-300 line-through');
-            l.textContent = leftText(n); l.className = leftClass(n, on);
         });
         if (el('sizeName')) el('sizeName').textContent = size || '';
         if (el('colorName')) el('colorName').textContent = color || '';
 
         const v = hasOptions ? ((hasSizes ? size : true) !== null && (hasColors ? color : true) !== null ? find() : null) : variants[0];
         const note = el('stockNote'), btn = el('addBtn');
-        if (hasOptions && !v) { el('variantId').value = ''; note.textContent = (hasSizes && !size) ? 'Choose a size' + (hasColors ? ' and colour' : '') : 'Choose a colour'; note.className = 'mt-2 text-sm text-jm-grey'; btn.disabled = true; return; }
+        if (hasOptions && !v) {
+            // nothing chosen yet: show what is left in total; it changes as soon as a size / colour is picked
+            const left = variants.reduce((a, x) => a + Math.max(x.stock, 0), 0);
+            el('variantId').value = '';
+            note.textContent = left <= 0 ? 'Sold out' : left <= 5 ? 'Few units left: only ' + left : 'In stock';
+            note.className = 'mt-2 text-sm font-medium ' + (left <= 0 ? 'text-jm-red' : left <= 5 ? 'text-jm-red' : 'text-green-700');
+            btn.disabled = true; return;
+        }
         if (!v) { btn.disabled = true; return; }
         el('variantId').value = v.id; el('price').textContent = fmt(v.price); qty.max = Math.min(20, v.stock);
         if (+qty.value > v.stock) qty.value = Math.max(1, v.stock);

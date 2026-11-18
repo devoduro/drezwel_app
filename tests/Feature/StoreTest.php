@@ -495,12 +495,13 @@ class StoreTest extends TestCase
             ->assertSee('id="lightbox"', false)->assertSee('id="zoomBtn"', false);
     }
 
-    public function test_product_page_shows_units_left_on_each_size_option(): void
+    public function test_product_page_has_one_stock_counter_that_follows_the_selection_not_a_count_on_every_size(): void
     {
         $p = $this->jeans();
-        $this->get(route('shop.product', $p->slug))->assertOk()
-            ->assertSee('class="left block', false)                     // the "N left" line under every size and colour chip
-            ->assertSee('"stock":5', false);                            // and the numbers it is computed from
+        $html = $this->get(route('shop.product', $p->slug))->assertOk()->assertSee('id="stockNote"', false)->assertSee('"stock":5', false)->getContent();
+        $this->assertStringNotContainsString('class="left block', $html);          // no "N left" line under each size / colour
+        $this->assertStringContainsString("Few units left: only ", $html);          // the single counter wording
+        $this->assertStringNotContainsString('unitsLeft', $html);
     }
 
     public function test_manager_picks_todays_deals_regardless_of_price_reductions(): void
