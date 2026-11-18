@@ -11,14 +11,14 @@
 <?php $__env->startSection('content'); ?>
 <?php if (isset($component)) { $__componentOriginalb08eb6e359b0cda244088e0d0db6136c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalb08eb6e359b0cda244088e0d0db6136c = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.dashboard-hero','data' => ['class' => 'mb-6','eyebrow' => $range,'title' => 'Sales','subtitle' => 'Orders appear here once a payment has been recorded against them.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.dashboard-hero','data' => ['class' => 'mb-6','eyebrow' => $range,'title' => 'Sales','subtitle' => 'Only delivered orders that have brought in money appear here.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('dashboard-hero'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['class' => 'mb-6','eyebrow' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($range),'title' => 'Sales','subtitle' => 'Orders appear here once a payment has been recorded against them.']); ?>
+<?php $component->withAttributes(['class' => 'mb-6','eyebrow' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($range),'title' => 'Sales','subtitle' => 'Only delivered orders that have brought in money appear here.']); ?>
      <?php $__env->slot('chips', null, []); ?> 
         <span><i class="fas fa-calendar-days"></i> <?php echo e($periods[$period] ?? 'Last 30 days'); ?></span>
         <span><i class="fas fa-receipt"></i> <?php echo e($kpi['orders']); ?> sales</span>
@@ -177,7 +177,7 @@
                     <?php echo $__env->make('manager._delete-delivery', ['d' => $s], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 </td>
             </tr>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="10" class="p-10 text-center text-slate-400"><i class="fas fa-receipt text-3xl mb-2 block"></i>No paid sales in this period.</td></tr> <?php endif; ?>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="10" class="p-10 text-center text-slate-400"><i class="fas fa-receipt text-3xl mb-2 block"></i>No delivered and paid sales in this period.</td></tr> <?php endif; ?>
     </table></div>
 </div>
 <div class="mt-4"><?php echo e($sales->links()); ?></div>

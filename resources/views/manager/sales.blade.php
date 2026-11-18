@@ -9,7 +9,7 @@
     $badge = ['online' => 'bg-purple-100 text-purple-700', 'phone' => 'bg-sky-100 text-sky-700', 'pos' => 'bg-emerald-100 text-emerald-700', 'manager' => 'bg-slate-100 text-slate-600'];
 @endphp
 @section('content')
-<x-dashboard-hero class="mb-6" :eyebrow="$range" title="Sales" subtitle="Orders appear here once a payment has been recorded against them.">
+<x-dashboard-hero class="mb-6" :eyebrow="$range" title="Sales" subtitle="Only delivered orders that have brought in money appear here.">
     <x-slot:chips>
         <span><i class="fas fa-calendar-days"></i> {{ $periods[$period] ?? 'Last 30 days' }}</span>
         <span><i class="fas fa-receipt"></i> {{ $kpi['orders'] }} sales</span>
@@ -83,7 +83,7 @@
                     @include('manager._delete-delivery', ['d' => $s])
                 </td>
             </tr>
-        @empty <tr><td colspan="10" class="p-10 text-center text-slate-400"><i class="fas fa-receipt text-3xl mb-2 block"></i>No paid sales in this period.</td></tr> @endforelse
+        @empty <tr><td colspan="10" class="p-10 text-center text-slate-400"><i class="fas fa-receipt text-3xl mb-2 block"></i>No delivered and paid sales in this period.</td></tr> @endforelse
     </table></div>
 </div>
 <div class="mt-4">{{ $sales->links() }}</div>

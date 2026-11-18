@@ -158,19 +158,50 @@ class OrdersSalesTest extends TestCase
         $this->assertStringNotContainsString('aria-label="Open menu"', $html);                              // the old hamburger is gone
     }
 
-    public function test_an_order_only_becomes_a_sale_once_a_payment_is_recorded_and_the_page_shows_location(): void
+    public function test_only_delivered_orders_that_brought_in_money_are_sales_and_the_page_shows_location(): void
     {
         $m = $this->manager();
         $order = $this->order('Waiting Ama', ['source' => 'phone', 'status' => 'pending', 'total_amount' => 200, 'location' => 'Madina Estate']);
+        $sales = fn () => $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertOk();
 
-        $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertOk()->assertDontSee($order->reference)->assertSee('No paid sales');
+        $sales()->assertDontSee($order->reference)->assertSee('No delivered and paid sales');
         $this->actingAs($m)->get(route('manager.orders'))->assertSee($order->reference);                    // still an order
+        $this->actingAs($m)->get(route('manager.deliveries.index'))->assertSee($order->reference);          // and still on the Deliveries page
 
+        // money recorded, but it has not been delivered yet: not a sale
         $this->actingAs($m)->post(route('manager.deliveries.payment', $order), ['amount' => 50, 'method' => 'cash'])->assertSessionHas('success');
-        $html = $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertOk()->assertSee($order->reference)->assertSee('Madina Estate')
-            ->assertSee('GH₵ 150.00')                                                                      // still owed on the part payment
-            ->getContent();
+        $sales()->assertDontSee($order->reference);
+
+        // out for delivery, undelivered or cancelled: still not sales, even with money recorded
+        foreach (['out_for_delivery', 'undelivered', 'cancelled'] as $status) {
+            $order->update(['status' => $status]);
+            $sales()->assertDontSee($order->reference);
+        }
+
+        // delivered and paid (part payment): now it is a sale
+        $order->update(['status' => 'delivered']);
+        $html = $sales()->assertSee($order->reference)->assertSee('Madina Estate')->assertSee('GH₵ 150.00')->getContent();   // GH₵ 150 still owed
         $this->assertStringContainsString('<th>Location</th>', $html);
         $this->assertStringNotContainsString('<th>Channel</th>', $html);
+
+        // delivered but nothing paid: not a sale
+        $unpaid = $this->order('Unpaid Kojo', ['status' => 'delivered', 'total_amount' => 90]);
+        $sales()->assertDontSee($unpaid->reference);
+    }
+
+    public function test_deliveries_dashboard_shows_expected_revenue_while_sales_shows_only_actual_sales(): void
+    {
+        $m = $this->manager();
+        $this->order('Open A', ['status' => 'pending', 'total_amount' => 300, 'delivery_fee' => 20]);                       // expected 320
+        $this->order('Open B', ['status' => 'out_for_delivery', 'total_amount' => 200, 'amount_paid' => 50]);               // expected 150 more
+        $this->order('Failed', ['status' => 'undelivered', 'total_amount' => 999]);                                          // not expected
+        $this->order('Gone', ['status' => 'cancelled', 'total_amount' => 888]);
+        $this->order('Done', ['status' => 'delivered', 'total_amount' => 400, 'amount_paid' => 400]);                       // actual 400
+
+        $res = $this->actingAs($m)->get(route('manager.deliveries.index'))->assertOk();
+        $res->assertSee('Expected revenue')->assertSee('GH₵ 470.00')    // 320 + 150 still to collect
+            ->assertSee('GH₵ 520.00')                                    // value of the open deliveries: 320 + 200
+            ->assertSee('GH₵ 400.00')                                    // actual sales
+            ->assertDontSee('GH₵ 999.00')->assertDontSee('GH₵ 888.00')->assertDontSee('GH₵ 1,');   // undelivered and cancelled orders are not counted
     }
 }

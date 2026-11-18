@@ -9,6 +9,12 @@
     <a href="{{ route('manager.deliveries.create') }}" class="primary"><i class="fas fa-plus"></i> New delivery</a>
 </x-dashboard-hero>
 
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+    <x-stat-tile color="purple" icon="fa-hourglass-half" title="Expected revenue" :value="'GH₵ ' . number_format($money['expected'], 2)" :sub="'Still to collect on ' . $money['open'] . ' open deliveries'" />
+    <x-stat-tile color="blue" icon="fa-receipt" title="Value of open deliveries" :value="'GH₵ ' . number_format($money['billed'], 2)" :sub="'GH₵ ' . number_format($money['deposits'], 2) . ' already paid in advance'" />
+    <x-stat-tile color="green" icon="fa-sack-dollar" title="Actual sales" :value="'GH₵ ' . number_format($money['actual'], 2)" sub="Delivered and paid: see the Sales page" :href="route('manager.sales', ['period' => 'all'])" />
+</div>
+
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
     <x-stat-tile color="orange" icon="fa-hourglass-half" title="Pending" :value="$counts['pending'] ?? 0" sub="Waiting for a rider" :href="route('manager.deliveries.index', ['status' => 'pending'])" />
     <x-stat-tile color="blue" icon="fa-motorcycle" title="On the road" :value="($counts['assigned'] ?? 0) + ($counts['out_for_delivery'] ?? 0)" :sub="($counts['out_for_delivery'] ?? 0) . ' out · ' . ($counts['assigned'] ?? 0) . ' assigned'" :href="route('manager.deliveries.index', ['status' => 'out_for_delivery'])" />

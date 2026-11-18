@@ -31,8 +31,23 @@ class DeliveryController extends Controller
         return view('manager.deliveries.index', [
             'deliveries' => $deliveries,
             'counts' => Delivery::selectRaw('status, COUNT(*) as n')->groupBy('status')->pluck('n', 'status'),
+            'money' => $this->expectedMoney(),
             'riders' => User::where('role', 'rider')->orderBy('name')->get(),
         ]);
+    }
+
+    /**
+     * What the deliveries board is worth. Expected revenue is what open deliveries (waiting, assigned or on the road) will bring in
+     * once they are delivered and paid; actual sales are the delivered orders that have really brought money in (the Sales page).
+     */
+    private function expectedMoney(): array
+    {
+        $open = Delivery::whereIn('status', ['pending', 'assigned', 'out_for_delivery']);
+        $billed = (float) (clone $open)->sum(\Illuminate\Support\Facades\DB::raw('total_amount + delivery_fee'));
+        $deposits = (float) (clone $open)->sum('amount_paid');
+        $actual = (float) Delivery::where('status', 'delivered')->where('amount_paid', '>', 0)->sum('amount_paid');
+
+        return ['open' => (clone $open)->count(), 'expected' => max($billed - $deposits, 0), 'billed' => $billed, 'deposits' => $deposits, 'actual' => $actual];
     }
 
     public function create()

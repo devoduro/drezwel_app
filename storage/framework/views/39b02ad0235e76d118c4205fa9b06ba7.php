@@ -27,6 +27,69 @@
 <?php unset($__componentOriginalb08eb6e359b0cda244088e0d0db6136c); ?>
 <?php endif; ?>
 
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+    <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'purple','icon' => 'fa-hourglass-half','title' => 'Expected revenue','value' => 'GH₵ ' . number_format($money['expected'], 2),'sub' => 'Still to collect on ' . $money['open'] . ' open deliveries']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('stat-tile'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['color' => 'purple','icon' => 'fa-hourglass-half','title' => 'Expected revenue','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute('GH₵ ' . number_format($money['expected'], 2)),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute('Still to collect on ' . $money['open'] . ' open deliveries')]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $attributes = $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $component = $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+    <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'blue','icon' => 'fa-receipt','title' => 'Value of open deliveries','value' => 'GH₵ ' . number_format($money['billed'], 2),'sub' => 'GH₵ ' . number_format($money['deposits'], 2) . ' already paid in advance']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('stat-tile'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['color' => 'blue','icon' => 'fa-receipt','title' => 'Value of open deliveries','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute('GH₵ ' . number_format($money['billed'], 2)),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute('GH₵ ' . number_format($money['deposits'], 2) . ' already paid in advance')]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $attributes = $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $component = $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+    <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'green','icon' => 'fa-sack-dollar','title' => 'Actual sales','value' => 'GH₵ ' . number_format($money['actual'], 2),'sub' => 'Delivered and paid: see the Sales page','href' => route('manager.sales', ['period' => 'all'])]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('stat-tile'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['color' => 'green','icon' => 'fa-sack-dollar','title' => 'Actual sales','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute('GH₵ ' . number_format($money['actual'], 2)),'sub' => 'Delivered and paid: see the Sales page','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('manager.sales', ['period' => 'all']))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $attributes = $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $component = $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+</div>
+
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
