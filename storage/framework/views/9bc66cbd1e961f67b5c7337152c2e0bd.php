@@ -21,7 +21,7 @@
             <?php if($soldOut): ?><span class="absolute left-0 top-2 rounded-r bg-jm-dark px-2 py-0.5 text-[11px] font-bold text-white">SOLD OUT</span><?php endif; ?>
         </div>
         <div class="mt-2 line-clamp-2 min-h-[2.5rem] text-[14px] leading-5 text-[#535357]"><?php echo e($p->name); ?></div>
-        <div class="mt-1 text-[18px] font-medium leading-tight text-jm-dark"><?php echo e($min == $max ? 'GH₵ ' . number_format($min, 2) : 'GH₵ ' . number_format($min, 2) . '+'); ?></div>
+        <div class="mt-1 text-[18px] font-medium leading-tight text-jm-dark"><?php echo e('GH₵ ' . number_format((float) $p->selling_price, 2)); ?></div>
         <?php if($off): ?>
             <div class="mt-0.5 flex items-center gap-2"><span class="text-[12px] text-jm-grey line-through">GH₵ <?php echo e(number_format($p->compare_at_price, 2)); ?></span><span class="rounded bg-[#e4eaf0] px-1.5 py-0.5 text-[12px] font-bold text-jm-primary">-<?php echo e($off); ?>%</span></div>
         <?php endif; ?>

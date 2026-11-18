@@ -46,7 +46,7 @@
                 @if($product->category)<div class="mt-1 text-sm"><a class="text-jm-primary hover:underline" href="{{ route('shop.index', ['category' => $product->category]) }}">Similar products from {{ $product->category }}</a></div>@endif
                 <hr class="my-3 border-slate-200">
 
-                <div class="text-[26px] sm:text-[28px] font-medium leading-tight text-jm-dark" id="price">{{ $min == $max ? 'GH₵ ' . number_format($min, 2) : 'GH₵ ' . number_format($min, 2) . ' – ' . number_format($max, 2) }}</div>
+                <div class="text-[26px] sm:text-[28px] font-medium leading-tight text-jm-dark" id="price">{{ 'GH₵ ' . number_format((float) $product->selling_price, 2) }}</div>
                 @if($off)
                     <div class="mt-1 flex items-center gap-2"><span class="text-base text-jm-grey line-through">GH₵ {{ number_format($product->compare_at_price, 2) }}</span><span class="rounded bg-[#e4eaf0] px-2 py-0.5 text-sm font-bold text-jm-primary">-{{ $off }}%</span></div>
                 @endif
@@ -202,7 +202,7 @@
         if (hasOptions && !v) {
             // nothing chosen yet: show what is left in total; it changes as soon as a size / colour is picked
             const left = variants.reduce((a, x) => a + Math.max(x.stock, 0), 0);
-            el('variantId').value = '';
+            el('variantId').value = ''; el('price').textContent = fmt({{ (float) $product->selling_price }});   // back to the main price until a full choice is made
             note.textContent = left <= 0 ? 'Sold out' : left <= 5 ? 'Few units left: only ' + left : 'In stock';
             note.className = 'mt-2 text-sm font-medium ' + (left <= 0 ? 'text-jm-red' : left <= 5 ? 'text-jm-red' : 'text-green-700');
             btn.disabled = true; return;

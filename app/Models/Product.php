@@ -91,7 +91,7 @@ class Product extends Model
     public function getDiscountPercentAttribute(): ?int
     {
         $was = (float) $this->compare_at_price;
-        $now = $this->relationLoaded('variants') ? $this->priceRange()[0] : (float) $this->selling_price;
+        $now = (float) $this->selling_price;
 
         return $was > 0 && $was > $now ? (int) round((1 - $now / $was) * 100) : null;
     }

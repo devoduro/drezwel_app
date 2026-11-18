@@ -533,4 +533,18 @@ class StoreTest extends TestCase
         $this->app['auth']->forgetGuards();
         $this->post(route('manager.products.deal', $shirt))->assertRedirect('/login');
     }
+
+    public function test_a_product_with_different_variant_prices_shows_its_main_price_not_a_range(): void
+    {
+        $p = Product::create(['name' => 'Two tone jeans', 'slug' => 'two-tone-jeans', 'category' => 'Jeans', 'cost_price' => 100, 'selling_price' => 250, 'compare_at_price' => 280, 'show_in_store' => true, 'stock_qty' => 10]);
+        $p->variants()->create(['size' => '32', 'color' => 'Blue', 'stock_qty' => 5]);                       // uses the main price, 250
+        $p->variants()->create(['size' => '32', 'color' => 'Black', 'price' => 220, 'stock_qty' => 5]);      // its own, lower price
+
+        $html = $this->get(route('shop.product', $p->slug))->assertOk()->assertSee('GH₵ 250.00')->getContent();
+        $this->assertStringNotContainsString('250.00 –', $html);
+        $this->assertStringNotContainsString('220.00 –', $html);
+        $this->assertStringContainsString('"price":220', $html);                                            // the black price is still used once black is chosen
+        $this->get('/shop')->assertSee('GH₵ 250.00')->assertDontSee('GH₵ 220.00+');                       // cards show the main price too
+        $this->assertSame(11, $p->fresh('variants')->discount_percent);                                      // 280 -> 250
+    }
 }
