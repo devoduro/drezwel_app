@@ -16,7 +16,11 @@ class RemittanceController extends Controller
 {
     public function index()
     {
-        $riders = User::where('role', 'rider')->orderBy('name')->get()->map(fn ($r) => (object) ['rider' => $r, 'c' => $r->custody()]);
+        // each rider with what they hold, and the deliveries still on their hands (assigned or on the road) so they can be cleared one by one
+        $riders = User::where('role', 'rider')->orderBy('name')->get()->map(fn ($r) => (object) [
+            'rider' => $r, 'c' => $r->custody(),
+            'open' => $r->deliveries()->whereIn('status', ['assigned', 'out_for_delivery'])->with('customer')->orderBy('delivery_date')->orderBy('id')->get(),
+        ]);
 
         return view('manager.remittances', [
             'riders' => $riders,

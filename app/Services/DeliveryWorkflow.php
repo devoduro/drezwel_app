@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Delivery;
 use App\Models\Payment;
-use App\Models\Setting;
+use App\Support\CustomerSms;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -173,7 +173,7 @@ class DeliveryWorkflow
         if ($complete && $d->refresh()->is_open && $d->balance <= 0.001) {
             $d->update(['status' => 'delivered', 'delivered_at' => now(), 'code_hash' => null, 'items_kept' => $d->items_sent]);
             $d->logEvent('delivered', 'Completed: paid in full and recorded by ' . $by->name . ($d->rider_id ? '' : ' (no rider needed)'), $by->id);
-            $this->sms->send($d->customer->phone, "Drezwel Go: Payment received for order {$d->reference}. Thank you!", $d->id, 'delivered');
+            $this->sms->send($d->customer->phone, CustomerSms::paymentReceived($d, $amount), $d->id, 'delivered');
         }
 
         return $p;
@@ -200,23 +200,12 @@ class DeliveryWorkflow
         $d->logEvent('delivered', $note . ($cash > 0 ? ' - cash collected GH₵ ' . number_format($cash, 2) : ''), $actor->id);
 
         $d->loadMissing('customer');
-        $this->sms->send($d->customer->phone, $this->deliveredMessage($d), $d->id, 'delivered');
-    }
-
-    /** Short and to the point: it was delivered, and who to call if it was not. */
-    private function deliveredMessage(Delivery $d): string
-    {
-        $phones = collect(Setting::phones())->map(fn ($p) => $p[0])->implode(' / ') ?: '0200680701 / 0203264474';
-
-        return "Drezwel: Your order {$d->reference} has been delivered. Not received? Call {$phones}.";
+        $this->sms->send($d->customer->phone, CustomerSms::delivered($d), $d->id, 'delivered');
     }
 
     private function notifyAssigned(Delivery $d): void
     {
-        $this->sms->send($d->customer->phone,
-            "Drezwel Go: Your order {$d->reference} has been assigned to rider {$d->rider->name}" . ($d->rider->phone ? " ({$d->rider->phone})" : '')
-            . '. Track it at ' . route('track', ['ref' => $d->reference, 'phone' => $d->customer->phone]),
-            $d->id, 'assigned');
+        $this->sms->send($d->customer->phone, CustomerSms::assigned($d), $d->id, 'assigned');
     }
 
 

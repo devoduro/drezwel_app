@@ -365,4 +365,14 @@ class SpesoPaymentTest extends TestCase
         $this->post(route('shop.order.cod', $d->reference))->assertForbidden();
         $this->post(route('shop.order.pay', $d->reference), ['momo_number' => '0201234567', 'network' => 'MTN'])->assertForbidden();
     }
+
+    public function test_the_payment_received_text_is_short_and_gives_one_contact_number(): void
+    {
+        Setting::set('phone', '0200680701 / 0203264474');
+        $d = $this->payNow($this->variant());
+        $this->webhook(['order_id' => $d->reference . '-1', 'speso_reference' => 'SP-9', 'status' => 'completed', 'amount' => 270, 'network' => 'MTN'])->assertOk();
+
+        $msg = SmsLog::where('delivery_id', $d->id)->where('purpose', 'order_received')->firstOrFail()->message;
+        $this->assertSame("Thank you Ama Mensah! Payment of GH₵ 270.00 received for order {$d->reference}. Contact us: 0200680701", $msg);
+    }
 }

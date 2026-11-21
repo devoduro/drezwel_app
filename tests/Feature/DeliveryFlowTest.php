@@ -45,6 +45,8 @@ class DeliveryFlowTest extends TestCase
         // rider picks it and sets off: no code is texted to the customer any more
         $this->actingAs($rider)->post(route('rider.claim', $d))->assertRedirect();
         $this->assertSame('assigned', $d->fresh()->status);
+        $assigned = SmsLog::where('delivery_id', $d->id)->where('purpose', 'assigned')->firstOrFail()->message;
+        $this->assertSame("Hello Ernest! Order {$d->reference} is with rider Joe ({$rider->phone}). Contact us: 0200680701", $assigned);
         $this->actingAs($rider)->post(route('rider.start', $d))->assertSessionHas('success');
         $this->assertSame('out_for_delivery', $d->fresh()->status);
         $this->assertFalse(SmsLog::where('message', 'like', '%code%')->exists());
@@ -62,7 +64,7 @@ class DeliveryFlowTest extends TestCase
         // the customer gets one short text, with the numbers to call if it did not arrive
         $sms = SmsLog::where('delivery_id', $d->id)->where('purpose', 'delivered')->get();
         $this->assertCount(1, $sms);
-        $this->assertSame("Drezwel: Your order {$d->reference} has been delivered. Not received? Call 0200680701 / 0203264474.", $sms->first()->message);
+        $this->assertSame("Thank you Ernest! Order {$d->reference} has been delivered. Not received? Contact us: 0200680701 / 0203264474", $sms->first()->message);
         $this->assertLessThanOrEqual(160, mb_strlen($sms->first()->message));                        // a single SMS
 
         // rider now holds 300 cash and 1 item

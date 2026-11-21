@@ -396,4 +396,27 @@ class OrdersSalesTest extends TestCase
         }
         $this->assertGreaterThanOrEqual(2, substr_count($html, 'href="' . route('manager.sales', ['period' => '7d']) . '"'));
     }
+
+    public function test_cash_and_items_page_lists_each_riders_assigned_deliveries_with_location_and_clears_them_one_by_one(): void
+    {
+        $m = $this->manager();
+        $rider = User::factory()->create(['role' => 'rider', 'name' => 'Daniel Rider']);
+        $a = $this->order('Ama', ['source' => 'phone', 'status' => 'assigned', 'rider_id' => $rider->id, 'location' => 'Weija, Accra', 'total_amount' => 150]);
+        $b = $this->order('Kofi', ['source' => 'phone', 'status' => 'out_for_delivery', 'rider_id' => $rider->id, 'location' => 'Dzorwulu', 'total_amount' => 90]);
+        $done = $this->order('Esi', ['source' => 'phone', 'status' => 'delivered', 'rider_id' => $rider->id, 'location' => 'Osu Not Listed']);
+
+        $this->actingAs($m)->get(route('manager.remittances'))->assertOk()->assertSee('Assigned deliveries')
+            ->assertSee($a->reference)->assertSee('Weija, Accra')->assertSee($b->reference)->assertSee('Dzorwulu')->assertSee('On the road')
+            ->assertDontSee('Osu Not Listed')                                           // delivered ones are not "assigned"
+            ->assertSee(route('manager.deliveries.confirm', $a), false);
+
+        // clearing one marks it delivered with the cash the rider collected, and leaves the other open
+        $this->actingAs($m)->post(route('manager.deliveries.confirm', $a), ['cash' => 150])->assertSessionHasNoErrors();
+        $this->assertSame('delivered', $a->fresh()->status);
+        $this->assertSame('assigned', $b->fresh()->status === 'out_for_delivery' ? 'assigned' : 'x');
+        $c = $rider->fresh()->custody();
+        $this->assertSame(1, $c['open_runs']);
+        $this->assertEquals(150.0, $c['cash_held']);                                    // the rider now holds what they collected
+        $this->actingAs($m)->get(route('manager.remittances'))->assertDontSee('Weija, Accra');
+    }
 }

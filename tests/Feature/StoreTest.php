@@ -576,4 +576,35 @@ class StoreTest extends TestCase
         $this->actingAs($m)->put(route('manager.products.update', $p), $payload)->assertSessionHasErrors();
         $this->assertSame(12, $a->fresh()->stock_qty);
     }
+
+    public function test_order_received_text_is_short_and_gives_the_contact_number(): void
+    {
+        Http::fake();
+        config(['services.speso_sms.api_key' => 'k']);
+        Setting::set('phone', '0200680701 / 0203264474');
+        Setting::set('store_open', '1');
+        $p = $this->jeans();
+
+        $this->withSession(['cart' => [$p->variants->first()->id => 1]])->post(route('shop.checkout.place'), [
+            'name' => 'John Oduro', 'phone' => '0241234567', 'location' => 'Osu, Accra', 'pay_method' => 'cod',
+        ])->assertRedirect();
+        $d = Delivery::firstOrFail();
+
+        $msg = SmsLog::where('delivery_id', $d->id)->where('purpose', 'order_received')->firstOrFail()->message;
+        $this->assertSame("Thank you John Oduro! Order {$d->reference} for GH₵ " . number_format($d->amount_due, 2) . ' received. Contact us: 0200680701', $msg);
+    }
+
+    public function test_taking_an_item_out_of_the_cart_asks_the_customer_first(): void
+    {
+        $p = $this->jeans();
+        $v = $p->variants->first();
+
+        // one unit: both "Remove" and the "-" button ask first
+        $one = $this->withSession(['cart' => [$v->id => 1]])->get(route('shop.cart'))->assertOk()->getContent();
+        $this->assertSame(2, substr_count($one, 'data-confirm="Remove Baggy jeans from your cart?"'));
+
+        // several units: only "Remove" asks; "-" just lowers the quantity
+        $three = $this->withSession(['cart' => [$v->id => 3]])->get(route('shop.cart'))->assertOk()->getContent();
+        $this->assertSame(1, substr_count($three, 'data-confirm="Remove Baggy jeans from your cart?"'));
+    }
 }

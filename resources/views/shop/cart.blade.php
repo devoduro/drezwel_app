@@ -43,11 +43,11 @@
 
                         <div class="mt-3 flex items-center justify-between">
                             <form method="POST" action="{{ route('shop.cart.update') }}">@csrf<input type="hidden" name="variant_id" value="{{ $l->variant->id }}"><input type="hidden" name="qty" value="0">
-                                <button class="inline-flex items-center gap-1.5 text-[13px] font-bold uppercase text-jm-primary hover:underline"><i class="far fa-trash-can"></i> Remove</button>
+                                <button data-confirm="Remove {{ $l->variant->product->name }} from your cart?" class="inline-flex items-center gap-1.5 text-[13px] font-bold uppercase text-jm-primary hover:underline"><i class="far fa-trash-can"></i> Remove</button>
                             </form>
                             {{-- Quantity stepper: each button sends the new quantity --}}
                             <form method="POST" action="{{ route('shop.cart.update') }}" class="flex items-center gap-3">@csrf<input type="hidden" name="variant_id" value="{{ $l->variant->id }}">
-                                <button name="qty" value="{{ $l->qty - 1 }}" class="grid h-9 w-9 place-items-center rounded bg-jm-primary text-lg font-bold text-white transition hover:bg-[#14212d]" aria-label="Decrease">−</button>
+                                <button name="qty" value="{{ $l->qty - 1 }}" @if($l->qty <= 1) data-confirm="Remove {{ $l->variant->product->name }} from your cart?" @endif class="grid h-9 w-9 place-items-center rounded bg-jm-primary text-lg font-bold text-white transition hover:bg-[#14212d]" aria-label="Decrease">−</button>
                                 <span class="w-6 text-center font-medium">{{ $l->qty }}</span>
                                 <button name="qty" value="{{ $l->qty + 1 }}" @disabled($l->qty >= min(20, $l->variant->stock_qty)) class="grid h-9 w-9 place-items-center rounded bg-jm-primary text-lg font-bold text-white transition hover:bg-[#14212d] disabled:cursor-not-allowed disabled:opacity-30" aria-label="Increase">+</button>
                             </form>
@@ -78,4 +78,11 @@
     </div>
 @endif
 </div>
+<script>
+    // asks the customer before an item is taken out of the cart (the Remove link, or "-" on the last unit)
+    document.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-confirm]');
+        if (b && !confirm(b.getAttribute('data-confirm'))) e.preventDefault();
+    });
+</script>
 @endsection

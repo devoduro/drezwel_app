@@ -43,11 +43,11 @@
 
                         <div class="mt-3 flex items-center justify-between">
                             <form method="POST" action="<?php echo e(route('shop.cart.update')); ?>"><?php echo csrf_field(); ?><input type="hidden" name="variant_id" value="<?php echo e($l->variant->id); ?>"><input type="hidden" name="qty" value="0">
-                                <button class="inline-flex items-center gap-1.5 text-[13px] font-bold uppercase text-jm-primary hover:underline"><i class="far fa-trash-can"></i> Remove</button>
+                                <button data-confirm="Remove <?php echo e($l->variant->product->name); ?> from your cart?" class="inline-flex items-center gap-1.5 text-[13px] font-bold uppercase text-jm-primary hover:underline"><i class="far fa-trash-can"></i> Remove</button>
                             </form>
                             
                             <form method="POST" action="<?php echo e(route('shop.cart.update')); ?>" class="flex items-center gap-3"><?php echo csrf_field(); ?><input type="hidden" name="variant_id" value="<?php echo e($l->variant->id); ?>">
-                                <button name="qty" value="<?php echo e($l->qty - 1); ?>" class="grid h-9 w-9 place-items-center rounded bg-jm-primary text-lg font-bold text-white transition hover:bg-[#14212d]" aria-label="Decrease">−</button>
+                                <button name="qty" value="<?php echo e($l->qty - 1); ?>" <?php if($l->qty <= 1): ?> data-confirm="Remove <?php echo e($l->variant->product->name); ?> from your cart?" <?php endif; ?> class="grid h-9 w-9 place-items-center rounded bg-jm-primary text-lg font-bold text-white transition hover:bg-[#14212d]" aria-label="Decrease">−</button>
                                 <span class="w-6 text-center font-medium"><?php echo e($l->qty); ?></span>
                                 <button name="qty" value="<?php echo e($l->qty + 1); ?>" <?php if($l->qty >= min(20, $l->variant->stock_qty)): echo 'disabled'; endif; ?> class="grid h-9 w-9 place-items-center rounded bg-jm-primary text-lg font-bold text-white transition hover:bg-[#14212d] disabled:cursor-not-allowed disabled:opacity-30" aria-label="Increase">+</button>
                             </form>
@@ -78,6 +78,13 @@
     </div>
 <?php endif; ?>
 </div>
+<script>
+    // asks the customer before an item is taken out of the cart (the Remove link, or "-" on the last unit)
+    document.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-confirm]');
+        if (b && !confirm(b.getAttribute('data-confirm'))) e.preventDefault();
+    });
+</script>
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.shop', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\drezwel_app\resources\views/shop/cart.blade.php ENDPATH**/ ?>
