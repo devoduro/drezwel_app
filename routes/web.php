@@ -88,7 +88,6 @@ Route::middleware(['auth', 'role:manager'])->prefix('manager')->name('manager.')
     Route::resource('deliveries', Manager\DeliveryController::class);
     Route::controller(Manager\DeliveryController::class)->prefix('deliveries/{delivery}')->name('deliveries.')->group(function () {
         Route::post('assign', 'assign')->name('assign');
-        Route::post('resend-code', 'resendCode')->name('resend');
         Route::post('confirm', 'confirm')->name('confirm');
         Route::post('undeliver', 'undeliver')->name('undeliver');
         Route::post('reopen', 'reopen')->name('reopen');
@@ -165,7 +164,6 @@ Route::middleware(['auth', 'role:rider'])->prefix('rider')->name('rider.')->grou
     Route::post('deliveries/{delivery}/claim', [RiderAppController::class, 'claim'])->name('claim');
     Route::post('deliveries/{delivery}/release', [RiderAppController::class, 'release'])->name('release');
     Route::post('deliveries/{delivery}/start', [RiderAppController::class, 'start'])->name('start');
-    Route::post('deliveries/{delivery}/resend', [RiderAppController::class, 'resend'])->name('resend');
-    Route::post('deliveries/{delivery}/confirm', [RiderAppController::class, 'confirm'])->name('confirm');
+    Route::post('deliveries/{delivery}/deliver', [RiderAppController::class, 'deliver'])->name('deliver');
     Route::post('deliveries/{delivery}/undeliver', [RiderAppController::class, 'undeliver'])->name('undeliver');
 });

@@ -62,6 +62,7 @@ class User extends Authenticatable
 
         $cashHeld = round($cashCollected - $cashRemitted, 2);
         $itemsPending = max($due - $itemsRemitted, 0);
+        $openRuns = $this->deliveries()->whereIn('status', ['assigned', 'out_for_delivery'])->count();
 
         return [
             'cash_collected' => $cashCollected,
@@ -72,8 +73,9 @@ class User extends Authenticatable
             'items_due' => $due,
             'items_remitted' => $itemsRemitted,
             'items_pending' => $itemsPending,
-            'open_runs' => $this->deliveries()->whereIn('status', ['assigned', 'out_for_delivery'])->count(),
+            'open_runs' => $openRuns,
             'cleared' => $cashHeld <= 0 && $itemsPending === 0,
+            'settled' => $cashHeld <= 0 && $itemsPending === 0 && $openRuns === 0,
         ];
     }
 }

@@ -79,28 +79,19 @@ class RiderAppController extends Controller
     public function start(Request $request, Delivery $delivery)
     {
         abort_unless($delivery->rider_id === $request->user()->id, 403);
-        $result = $this->flow->start($delivery, $request->user());
+        $this->flow->start($delivery, $request->user());
 
-        return back()->with($result['success'] ? 'success' : 'error', $result['success']
-            ? 'On the way. The customer has been sent a 4-digit code - ask for it when you hand over the order.'
-            : 'Delivery started but the code SMS failed (' . $result['message'] . '). Tap "Resend code" or ask the manager.');
+        return back()->with('success', 'On the way. Tap "Delivered" when the customer has received the order.');
     }
 
-    public function resend(Request $request, Delivery $delivery)
+    /** "Delivered": no code needed. The customer is texted that it was delivered. */
+    public function deliver(Request $request, Delivery $delivery)
     {
         abort_unless($delivery->rider_id === $request->user()->id, 403);
-        $result = $this->flow->sendCode($delivery, $request->user());
+        $data = $request->validate(['items_kept' => 'nullable|integer|min:0', 'cash' => 'nullable|numeric|min:0']);
+        $this->flow->deliver($delivery, $request->user(), isset($data['items_kept']) ? (int) $data['items_kept'] : null, isset($data['cash']) ? (float) $data['cash'] : null);
 
-        return back()->with($result['success'] ? 'success' : 'error', $result['success'] ? 'A new code was sent to the customer.' : 'SMS failed: ' . $result['message']);
-    }
-
-    public function confirm(Request $request, Delivery $delivery)
-    {
-        abort_unless($delivery->rider_id === $request->user()->id, 403);
-        $data = $request->validate(['code' => 'required|digits:4', 'items_kept' => 'nullable|integer|min:0', 'cash' => 'nullable|numeric|min:0']);
-        $this->flow->confirm($delivery, $request->user(), $data['code'], isset($data['items_kept']) ? (int) $data['items_kept'] : null, isset($data['cash']) ? (float) $data['cash'] : null);
-
-        return redirect()->route('rider.mine')->with('success', "Delivery {$delivery->reference} confirmed. Well done!");
+        return redirect()->route('rider.mine')->with('success', "Delivery {$delivery->reference} marked as delivered. The customer has been texted. Well done!");
     }
 
     public function undeliver(Request $request, Delivery $delivery)

@@ -5,7 +5,7 @@
     $input = 'rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-sm';
     $held = $riders->sum(fn ($r) => max($r->c['cash_held'], 0));
     $items = $riders->sum(fn ($r) => $r->c['items_pending']);
-    $outstanding = $riders->where('c.cleared', false)->count();
+    $outstanding = $riders->where('c.settled', false)->count();
     $feesOwed = $riders->sum(fn ($r) => $r->c['fees_owed']);
 ?>
 <?php $__env->startSection('content'); ?>
@@ -120,14 +120,13 @@
 <div class="grid lg:grid-cols-2 gap-4">
     <?php $__currentLoopData = $riders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
         <?php $c = $r->c; ?>
-        <section class="bg-white rounded-xl p-4 border-l-4 <?php echo e($c['cleared'] ? 'border-l-[#8cc152]' : 'border-l-[#1c3041]'); ?> <?php echo e($r->rider->is_active ? '' : 'opacity-60'); ?>">
+        <section class="bg-white rounded-xl p-4 border-l-4 <?php echo e($c['settled'] ? 'border-l-[#8cc152]' : 'border-l-[#1c3041]'); ?> <?php echo e($r->rider->is_active ? '' : 'opacity-60'); ?>">
             <div class="flex items-start justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0">
                     <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#1c3041] to-[#1c3041] font-bold text-white"><?php echo e(mb_strtoupper(mb_substr($r->rider->name, 0, 1))); ?></span>
                     <div class="min-w-0">
-                        <div class="font-semibold truncate"><?php echo e($r->rider->name); ?>
-
-                            <span class="ml-1 text-xs rounded-full px-2 py-0.5 <?php echo e($c['cleared'] ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'); ?>"><?php echo e($c['cleared'] ? 'Cleared' : 'Outstanding'); ?></span></div>
+                        <div class="font-semibold truncate"><a href="<?php echo e(route('manager.riders.show', $r->rider)); ?>" class="text-[#1c3041] hover:underline" title="See <?php echo e($r->rider->name); ?>'s orders and deliveries"><?php echo e($r->rider->name); ?></a>
+                            <span class="ml-1 text-xs rounded-full px-2 py-0.5 <?php echo e($c['settled'] ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'); ?>"><?php echo e($c['settled'] ? 'Cleared' : ($c['cleared'] ? 'Has open orders' : 'Outstanding')); ?></span></div>
                         <div class="text-xs text-slate-500"><?php echo e($c['open_runs']); ?> open run(s)</div>
                     </div>
                 </div>
@@ -168,7 +167,7 @@
     <div class="overflow-x-auto"><table class="w-full text-sm">
         <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">When</th><th>Rider</th><th class="text-right">Cash</th><th class="text-right">Items</th><th>Method</th><th>Received by</th><th class="p-3">Notes</th></tr></thead>
         <?php $__empty_1 = true; $__currentLoopData = $history; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $h): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-            <tr class="border-t border-slate-100 hover:bg-sky-50/50"><td class="p-3 whitespace-nowrap"><?php echo e($h->remitted_at->format('d M, g:ia')); ?></td><td class="font-medium"><?php echo e($h->rider->name); ?></td><td class="text-right"><?php echo e($m($h->cash)); ?></td><td class="text-right"><?php echo e($h->items); ?></td><td><?php echo e(\App\Models\Remittance::METHODS[$h->method] ?? $h->method); ?></td><td><?php echo e($h->recorder?->name); ?></td><td class="p-3 text-slate-500"><?php echo e($h->notes); ?></td></tr>
+            <tr class="border-t border-slate-100 hover:bg-sky-50/50"><td class="p-3 whitespace-nowrap"><?php echo e($h->remitted_at->format('d M, g:ia')); ?></td><td class="font-medium"><a href="<?php echo e(route('manager.riders.show', $h->rider)); ?>" class="text-[#1c3041] hover:underline"><?php echo e($h->rider->name); ?></a></td><td class="text-right"><?php echo e($m($h->cash)); ?></td><td class="text-right"><?php echo e($h->items); ?></td><td><?php echo e(\App\Models\Remittance::METHODS[$h->method] ?? $h->method); ?></td><td><?php echo e($h->recorder?->name); ?></td><td class="p-3 text-slate-500"><?php echo e($h->notes); ?></td></tr>
         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="7" class="p-8 text-center text-slate-400">Nothing recorded yet.</td></tr> <?php endif; ?>
     </table></div>
 </div>

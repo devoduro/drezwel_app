@@ -22,6 +22,7 @@ class DeliveryFeeTest extends TestCase
         Http::fake();
         Setting::set('store_open', '1');
         Setting::set('default_delivery_fee', '15');
+        config(['services.speso.api_key' => 'sk_test_x', 'services.speso_sms.api_key' => 'sk_test_x']);   // orders outside Accra are paid now with Mobile Money
     }
 
     private function manager(): User
@@ -46,7 +47,7 @@ class DeliveryFeeTest extends TestCase
         $v = $variant ?? $this->item();
 
         return $this->withSession(['cart' => [$v->id => 1]])->post(route('shop.checkout.place'), $extra + [
-            'name' => 'Ama', 'phone' => '0241234567', 'pay_method' => 'cod', 'address' => 'House 5, Near the market',
+            'name' => 'Ama', 'phone' => '0241234567', 'pay_method' => 'speso', 'momo_number' => '0551234567', 'network' => 'MTN', 'address' => 'House 5, Near the market',
         ]);
     }
 
@@ -122,7 +123,7 @@ class DeliveryFeeTest extends TestCase
     public function test_the_fees_page_lists_regions_and_towns_and_only_managers_can_use_it(): void
     {
         $m = $this->manager();
-        $this->actingAs($m)->get(route('manager.fees'))->assertOk()->assertSee('Greater Accra')->assertSee('Upper West')->assertSee('NOT PRICED');
+        $this->actingAs($m)->get(route('manager.fees'))->assertOk()->assertSee('Greater Accra')->assertSee('Upper West')->assertSee('REGION FEE');
         $this->actingAs($m)->get(route('manager.fees', ['region' => $this->region('Ashanti')->id]))->assertOk()->assertSee('Kumasi');
         $this->actingAs($m)->get(route('manager.dashboard'))->assertSee('Delivery fees');
 
@@ -135,7 +136,7 @@ class DeliveryFeeTest extends TestCase
     public function test_checkout_only_offers_priced_active_towns_and_the_fee_follows_the_choice(): void
     {
         $ashanti = $this->region('Ashanti');
-        $ashanti->zones()->where('name', 'Kumasi')->update(['fee' => 40]);
+        $ashanti->zones()->where('name', 'Kumasi')->update(['fee' => 40, 'is_active' => true]);
         $ashanti->zones()->where('name', 'Obuasi')->update(['fee' => 55, 'is_active' => false]);
         $ashanti->update(['default_fee' => 70]);
         $v = $this->item();
@@ -143,7 +144,7 @@ class DeliveryFeeTest extends TestCase
         $page = $this->withSession(['cart' => [$v->id => 1]])->get(route('shop.checkout'))->assertOk()->assertSee('Region')->assertSee('City / town')->assertSee('Greater Accra')->getContent();
         $this->assertStringContainsString('"name":"Kumasi","fee":40', $page);          // priced + on: offered
         $this->assertStringNotContainsString('"name":"Obuasi"', $page);                // switched off
-        $this->assertStringNotContainsString('"name":"Mampong"', $page);               // not priced
+        $this->assertStringContainsString('"name":"Mampong","fee":70', $page);         // no fee of its own: offered at the region's fee (70)
 
         $this->checkout(['region_id' => $ashanti->id, 'zone_id' => $ashanti->zones()->where('name', 'Kumasi')->value('id')], $v)->assertRedirect();
         $d = Delivery::firstOrFail();
@@ -170,9 +171,9 @@ class DeliveryFeeTest extends TestCase
     public function test_a_customer_cannot_choose_their_own_fee_or_a_town_from_another_region(): void
     {
         $ga = $this->region('Greater Accra');
-        $ga->zones()->where('name', 'Tema')->update(['fee' => 30]);
+        $ga->zones()->where('name', 'Tema')->update(['fee' => 30, 'is_active' => true]);
         $ashanti = $this->region('Ashanti');
-        $ashanti->zones()->where('name', 'Kumasi')->update(['fee' => 40]);
+        $ashanti->zones()->where('name', 'Kumasi')->update(['fee' => 40, 'is_active' => true]);
         $unpriced = $ashanti->zones()->where('name', 'Obuasi')->first();
         $v = $this->item();
 
@@ -180,7 +181,8 @@ class DeliveryFeeTest extends TestCase
         $this->assertEquals(30.0, (float) Delivery::firstOrFail()->delivery_fee);       // a forged delivery_fee field is ignored
 
         $this->checkout(['region_id' => $ga->id, 'zone_id' => $ashanti->zones()->where('name', 'Kumasi')->value('id')], $v)->assertSessionHasErrors('zone_id');   // wrong region
-        $this->checkout(['region_id' => $ashanti->id, 'zone_id' => $unpriced->id], $v)->assertSessionHasErrors('zone_id');                                      // not priced
+        $unpriced->update(['is_active' => false]);
+        $this->checkout(['region_id' => $ashanti->id, 'zone_id' => $unpriced->id], $v)->assertSessionHasErrors('zone_id');                                    // switched off
         $this->checkout(['region_id' => $ashanti->id, 'zone_id' => 'other', 'address' => ''], $v)->assertSessionHasErrors('address');
         $this->assertSame(1, Delivery::count());
     }
@@ -190,7 +192,34 @@ class DeliveryFeeTest extends TestCase
         $v = $this->item();
         $this->withSession(['cart' => [$v->id => 1]])->get(route('shop.cart'))->assertOk()->assertSee('Worked out at checkout');
 
-        $this->region('Volta')->zones()->where('name', 'Ho')->update(['fee' => 35]);
+        $this->region('Volta')->zones()->where('name', 'Ho')->update(['fee' => 35, 'is_active' => true]);
         $this->actingAs($this->manager())->get(route('manager.deliveries.create'))->assertOk()->assertSee('Fill the delivery fee from the price list')->assertSee('"name":"Ho","fee":35', false);
+    }
+
+    public function test_towns_in_other_regions_are_offered_at_the_region_fee_until_they_are_priced(): void
+    {
+        $ashanti = Region::where('name', 'Ashanti')->first();
+        $ashanti->update(['default_fee' => 70]);
+        $v = $this->item();
+
+        // every town is there to pick, including the ones added later
+        $this->assertTrue($ashanti->zones()->where('name', 'Kumasi')->exists());
+        $this->assertTrue($ashanti->zones()->where('name', 'Asokwa')->exists());
+        $this->assertSame(16, Region::count());
+        foreach (Region::where('name', '!=', 'Greater Accra')->get() as $r) {
+            $this->assertGreaterThanOrEqual(5, $r->zones()->where('is_active', true)->count(), $r->name);
+        }
+        $page = $this->withSession(['cart' => [$v->id => 1]])->get(route('shop.checkout'))->getContent();
+        $this->assertStringContainsString('"name":"Asokwa","fee":70', $page);          // unpriced: the region's fee
+
+        $this->checkout(['region_id' => $ashanti->id, 'zone_id' => $ashanti->zones()->where('name', 'Asokwa')->value('id')], $v)->assertSessionHasNoErrors();
+        $this->assertEquals(70.0, (float) Delivery::firstOrFail()->delivery_fee);
+
+        // Greater Accra is priced town by town: a town with no price there stays off until it is priced, then it switches itself on
+        $ga = Region::where('name', 'Greater Accra')->first();
+        $ada = $ga->zones()->where('name', 'Ada')->first();
+        $this->assertFalse($ada->is_active);
+        $ada->update(['fee' => 80]);
+        $this->assertTrue($ada->fresh()->is_active);
     }
 }

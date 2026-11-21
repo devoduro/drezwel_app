@@ -5,7 +5,7 @@
     $input = 'rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-sm';
     $held = $riders->sum(fn ($r) => max($r->c['cash_held'], 0));
     $items = $riders->sum(fn ($r) => $r->c['items_pending']);
-    $outstanding = $riders->where('c.cleared', false)->count();
+    $outstanding = $riders->where('c.settled', false)->count();
     $feesOwed = $riders->sum(fn ($r) => $r->c['fees_owed']);
 @endphp
 @section('content')
@@ -26,13 +26,13 @@
 <div class="grid lg:grid-cols-2 gap-4">
     @foreach($riders as $r)
         @php $c = $r->c; @endphp
-        <section class="bg-white rounded-xl p-4 border-l-4 {{ $c['cleared'] ? 'border-l-[#8cc152]' : 'border-l-[#1c3041]' }} {{ $r->rider->is_active ? '' : 'opacity-60' }}">
+        <section class="bg-white rounded-xl p-4 border-l-4 {{ $c['settled'] ? 'border-l-[#8cc152]' : 'border-l-[#1c3041]' }} {{ $r->rider->is_active ? '' : 'opacity-60' }}">
             <div class="flex items-start justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0">
                     <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#1c3041] to-[#1c3041] font-bold text-white">{{ mb_strtoupper(mb_substr($r->rider->name, 0, 1)) }}</span>
                     <div class="min-w-0">
-                        <div class="font-semibold truncate">{{ $r->rider->name }}
-                            <span class="ml-1 text-xs rounded-full px-2 py-0.5 {{ $c['cleared'] ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">{{ $c['cleared'] ? 'Cleared' : 'Outstanding' }}</span></div>
+                        <div class="font-semibold truncate"><a href="{{ route('manager.riders.show', $r->rider) }}" class="text-[#1c3041] hover:underline" title="See {{ $r->rider->name }}'s orders and deliveries">{{ $r->rider->name }}</a>
+                            <span class="ml-1 text-xs rounded-full px-2 py-0.5 {{ $c['settled'] ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">{{ $c['settled'] ? 'Cleared' : ($c['cleared'] ? 'Has open orders' : 'Outstanding') }}</span></div>
                         <div class="text-xs text-slate-500">{{ $c['open_runs'] }} open run(s)</div>
                     </div>
                 </div>
@@ -73,7 +73,7 @@
     <div class="overflow-x-auto"><table class="w-full text-sm">
         <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">When</th><th>Rider</th><th class="text-right">Cash</th><th class="text-right">Items</th><th>Method</th><th>Received by</th><th class="p-3">Notes</th></tr></thead>
         @forelse($history as $h)
-            <tr class="border-t border-slate-100 hover:bg-sky-50/50"><td class="p-3 whitespace-nowrap">{{ $h->remitted_at->format('d M, g:ia') }}</td><td class="font-medium">{{ $h->rider->name }}</td><td class="text-right">{{ $m($h->cash) }}</td><td class="text-right">{{ $h->items }}</td><td>{{ \App\Models\Remittance::METHODS[$h->method] ?? $h->method }}</td><td>{{ $h->recorder?->name }}</td><td class="p-3 text-slate-500">{{ $h->notes }}</td></tr>
+            <tr class="border-t border-slate-100 hover:bg-sky-50/50"><td class="p-3 whitespace-nowrap">{{ $h->remitted_at->format('d M, g:ia') }}</td><td class="font-medium"><a href="{{ route('manager.riders.show', $h->rider) }}" class="text-[#1c3041] hover:underline">{{ $h->rider->name }}</a></td><td class="text-right">{{ $m($h->cash) }}</td><td class="text-right">{{ $h->items }}</td><td>{{ \App\Models\Remittance::METHODS[$h->method] ?? $h->method }}</td><td>{{ $h->recorder?->name }}</td><td class="p-3 text-slate-500">{{ $h->notes }}</td></tr>
         @empty <tr><td colspan="7" class="p-8 text-center text-slate-400">Nothing recorded yet.</td></tr> @endforelse
     </table></div>
 </div>

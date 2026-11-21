@@ -156,7 +156,7 @@ class SpesoPayments
     {
         $done = DB::transaction(function () use ($d) {
             $row = Delivery::lockForUpdate()->find($d->id);
-            if (! in_array($row->payment_status, ['failed', 'awaiting'], true) || $row->status !== 'pending') {
+            if (! in_array($row->payment_status, ['failed', 'awaiting'], true) || $row->status !== 'pending' || $row->pay_now_only) {
                 return false;
             }
             $row->update(['payment_method' => 'cod', 'payment_status' => null]);

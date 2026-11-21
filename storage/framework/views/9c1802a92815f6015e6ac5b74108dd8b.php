@@ -1,4 +1,3 @@
-
 <?php $__env->startSection('title', 'Sales · Drezwel Go'); ?>
 <?php
     $m = fn ($v) => 'GH₵ ' . number_format((float) $v, 2);
@@ -11,14 +10,14 @@
 <?php $__env->startSection('content'); ?>
 <?php if (isset($component)) { $__componentOriginalb08eb6e359b0cda244088e0d0db6136c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalb08eb6e359b0cda244088e0d0db6136c = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.dashboard-hero','data' => ['class' => 'mb-6','eyebrow' => $range,'title' => 'Sales','subtitle' => 'Only delivered orders that have brought in money appear here.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.dashboard-hero','data' => ['class' => 'mb-6','eyebrow' => $range,'title' => 'Sales','subtitle' => 'Only delivered orders that have brought in money appear here. Figures are for the goods sold; delivery fees go to the riders and are shown separately.']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('dashboard-hero'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['class' => 'mb-6','eyebrow' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($range),'title' => 'Sales','subtitle' => 'Only delivered orders that have brought in money appear here.']); ?>
+<?php $component->withAttributes(['class' => 'mb-6','eyebrow' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($range),'title' => 'Sales','subtitle' => 'Only delivered orders that have brought in money appear here. Figures are for the goods sold; delivery fees go to the riders and are shown separately.']); ?>
      <?php $__env->slot('chips', null, []); ?> 
         <span><i class="fas fa-calendar-days"></i> <?php echo e($periods[$period] ?? 'Last 30 days'); ?></span>
         <span><i class="fas fa-receipt"></i> <?php echo e($kpi['orders']); ?> sales</span>
@@ -49,17 +48,17 @@
 <?php unset($__componentOriginalb08eb6e359b0cda244088e0d0db6136c); ?>
 <?php endif; ?>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mb-6">
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'blue','icon' => 'fa-receipt','title' => 'Total sales','value' => $m($kpi['billed']),'sub' => $kpi['orders'] . ' orders · avg ' . $m($kpi['average'])]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'blue','icon' => 'fa-receipt','title' => 'Total sales (goods)','value' => $m($kpi['billed']),'sub' => $kpi['orders'] . ' orders · avg ' . $m($kpi['average'])]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'blue','icon' => 'fa-receipt','title' => 'Total sales','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['billed'])),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($kpi['orders'] . ' orders · avg ' . $m($kpi['average']))]); ?>
+<?php $component->withAttributes(['color' => 'blue','icon' => 'fa-receipt','title' => 'Total sales (goods)','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['billed'])),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($kpi['orders'] . ' orders · avg ' . $m($kpi['average']))]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -72,14 +71,14 @@
 <?php endif; ?>
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Money received','value' => $m($kpi['collected']),'sub' => 'Paid so far']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Money received','value' => $m($kpi['collected']),'sub' => 'For the goods, delivery fees excluded']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Money received','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['collected'])),'sub' => 'Paid so far']); ?>
+<?php $component->withAttributes(['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Money received','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['collected'])),'sub' => 'For the goods, delivery fees excluded']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -100,6 +99,26 @@
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['color' => 'red','icon' => 'fa-hand-holding-dollar','title' => 'Still owed','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['outstanding'])),'sub' => 'Unpaid balances','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('manager.debtors'))]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $attributes = $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
+<?php $component = $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b; ?>
+<?php unset($__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b); ?>
+<?php endif; ?>
+    <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'orange','icon' => 'fa-motorcycle','title' => 'Delivery fees','value' => $m($kpi['fees']),'sub' => 'Collected for riders, not company sales']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('stat-tile'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['color' => 'orange','icon' => 'fa-motorcycle','title' => 'Delivery fees','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['fees'])),'sub' => 'Collected for riders, not company sales']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -159,7 +178,7 @@
 <div class="bg-white rounded-xl overflow-hidden">
     <div class="<?php echo e($head); ?>">Sales (<?php echo e($sales->total()); ?>)</div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
-        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Date</th><th>Invoice</th><th>Customer</th><th>Location</th><th>What was sold</th><th class="text-right">Total</th><th class="text-right">Paid</th><th>Paid by</th><th class="text-right">Balance</th><th class="p-3"></th></tr></thead>
+        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Date</th><th>Invoice</th><th>Customer</th><th>Location</th><th>What was sold</th><th class="text-right">Goods total</th><th class="text-right">Delivery fee</th><th class="text-right">Total received</th><th class="pl-5">Paid by</th><th class="text-right">Balance</th><th class="p-3"></th></tr></thead>
         <?php $__empty_1 = true; $__currentLoopData = $sales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <tr class="border-t border-slate-100 hover:bg-sky-50/50 align-top">
                 <td class="p-3 whitespace-nowrap text-slate-600"><?php echo e($s->delivery_date->format('d M Y')); ?></td>
@@ -167,17 +186,18 @@
                 <td><?php echo e($s->customer->phone === \App\Services\SalesService::WALK_IN_PHONE ? 'Walk-in customer' : $s->customer->name); ?></td>
                 <td class="max-w-[180px] truncate text-slate-600" title="<?php echo e($s->location); ?>"><?php echo e($s->location); ?></td>
                 <td class="max-w-[240px] truncate text-slate-600" title="<?php echo e($s->package_description); ?>"><?php echo e($s->package_description); ?></td>
-                <td class="text-right"><?php echo e(number_format($s->amount_due, 2)); ?></td>
-                <td class="text-right text-slate-600"><?php echo e(number_format($s->amount_paid, 2)); ?></td>
-                <td class="text-xs text-slate-500"><?php echo e($s->payments->map(fn ($p) => \App\Models\Payment::METHODS[$p->method] ?? $p->method)->unique()->implode(', ') ?: '—'); ?></td>
-                <td class="text-right p-3 <?php echo e($s->balance > 0 ? 'text-red-600 font-medium' : 'text-green-600'); ?>"><?php echo e(number_format($s->balance, 2)); ?></td>
+                <td class="text-right font-medium"><?php echo e(number_format($s->total_amount, 2)); ?></td>
+                <td class="text-right text-xs text-slate-400" title="Handed to the rider: not part of the sale"><?php echo e(number_format($s->delivery_fee, 2)); ?></td>
+                <td class="text-right font-medium text-slate-700" title="Everything the customer paid: goods plus delivery fee"><?php echo e(number_format($s->amount_paid, 2)); ?></td>
+                <td class="pl-5 text-xs text-slate-500"><?php echo e($s->payments->map(fn ($p) => \App\Models\Payment::METHODS[$p->method] ?? $p->method)->unique()->implode(', ') ?: '—'); ?></td>
+                <td class="text-right p-3 <?php echo e($s->goods_balance > 0 ? 'text-red-600 font-medium' : 'text-green-600'); ?>"><?php echo e(number_format($s->goods_balance, 2)); ?></td>
                 <td class="p-3 whitespace-nowrap text-right text-xs">
                     <?php if($s->status === 'delivered' && $s->order_type !== 'exchange'): ?><a class="text-amber-700 hover:underline" href="<?php echo e(route('manager.deliveries.create', ['exchange_of' => $s->id])); ?>">Return</a> ·<?php endif; ?>
                     <?php if($s->status !== 'cancelled'): ?><a class="text-[#1c3041] hover:underline" href="<?php echo e(route('manager.deliveries.edit', $s)); ?>">Edit</a> ·<?php endif; ?>
                     <?php echo $__env->make('manager._delete-delivery', ['d' => $s], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 </td>
             </tr>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="10" class="p-10 text-center text-slate-400"><i class="fas fa-receipt text-3xl mb-2 block"></i>No delivered and paid sales in this period.</td></tr> <?php endif; ?>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="11" class="p-10 text-center text-slate-400"><i class="fas fa-receipt text-3xl mb-2 block"></i>No delivered and paid sales in this period.</td></tr> <?php endif; ?>
     </table></div>
 </div>
 <div class="mt-4"><?php echo e($sales->links()); ?></div>

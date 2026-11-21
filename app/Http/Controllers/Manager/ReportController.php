@@ -73,8 +73,11 @@ class ReportController extends Controller
         $delivered = (int) ($byStatus['delivered'] ?? 0);
         $goods = (float) $scope()->sum('total_amount');
         $feesCharged = (float) $scope()->sum('delivery_fee');
-        $revenue = $goods + $feesCharged; // what customers are billed: goods + delivery fee
-        $collected = (float) $scope()->sum('amount_paid');
+        // Sales are the goods only. The delivery fee is collected with them but handed to the rider, so it is reported
+        // on its own and kept out of revenue, collected money and what customers still owe.
+        $revenue = $goods;
+        $collected = (float) $scope()->sum(DB::raw(Delivery::GOODS_RECEIVED_SQL));
+        $owed = (float) $scope()->sum(DB::raw('GREATEST(total_amount - (' . Delivery::GOODS_RECEIVED_SQL . '), 0)'));
 
         // ---- Product-line profit (orders without product lines have no known cost)
         $lineRevenue = (float) $this->lines($from, $to)->sum(DB::raw('delivery_items.qty * delivery_items.unit_price'));
@@ -92,7 +95,7 @@ class ReportController extends Controller
         $cashbookCategories = $book()->selectRaw('category, type, COUNT(*) n, SUM(amount) total')->groupBy('category', 'type')->orderByDesc('total')->get();
 
         $finance = [
-            'revenue' => $revenue, 'collected' => $collected, 'outstanding' => max($revenue - $collected, 0),
+            'revenue' => $revenue, 'collected' => $collected, 'outstanding' => $owed,
             'collection_rate' => $revenue > 0 ? round($collected / $revenue * 100, 1) : 0,
             'line_revenue' => $lineRevenue, 'cogs' => $cogs, 'gross' => $gross,
             'margin' => $lineRevenue > 0 ? round($gross / $lineRevenue * 100, 1) : 0,
@@ -111,14 +114,14 @@ class ReportController extends Controller
             ->when($to, fn ($q) => $q->whereDate('paid_at', '<=', $to))
             ->selectRaw('method, COUNT(*) n, SUM(amount) total')->groupBy('method')->get()->keyBy('method');
 
-        $daily = $scope()->selectRaw("delivery_date day, COUNT(*) orders, SUM(status='delivered') delivered, SUM(total_amount + delivery_fee) revenue, SUM(amount_paid) paid")
+        $daily = $scope()->selectRaw("delivery_date day, COUNT(*) orders, SUM(status='delivered') delivered, SUM(total_amount) revenue, SUM(" . Delivery::GOODS_RECEIVED_SQL . ") paid")
             ->groupBy('delivery_date')->orderBy('delivery_date')->get();
 
         // ---- Orders detail
-        $modes = $scope()->selectRaw('delivery_mode k, COUNT(*) n, SUM(total_amount + delivery_fee) revenue')->groupBy('delivery_mode')->get()->keyBy('k');
-        $types = $scope()->selectRaw('order_type k, COUNT(*) n, SUM(total_amount + delivery_fee) revenue')->groupBy('order_type')->get()->keyBy('k');
+        $modes = $scope()->selectRaw('delivery_mode k, COUNT(*) n, SUM(total_amount) revenue')->groupBy('delivery_mode')->get()->keyBy('k');
+        $types = $scope()->selectRaw('order_type k, COUNT(*) n, SUM(total_amount) revenue')->groupBy('order_type')->get()->keyBy('k');
         $topCustomers = $scope()->join('customers', 'customers.id', '=', 'deliveries.customer_id')
-            ->selectRaw('customers.id, customers.name, COUNT(*) orders, SUM(total_amount + delivery_fee) spend, SUM(amount_paid) paid')
+            ->selectRaw('customers.id, customers.name, COUNT(*) orders, SUM(total_amount) spend, SUM(' . Delivery::GOODS_RECEIVED_SQL . ') paid')
             ->groupBy('customers.id', 'customers.name')->orderByDesc('spend')->limit(8)->get();
         $riders = User::where('role', 'rider')->orderBy('name')->get()->map(function ($r) use ($scope) {
             $q = fn () => $scope()->where('rider_id', $r->id);
@@ -126,7 +129,7 @@ class ReportController extends Controller
             $done = $q()->where('status', 'delivered')->count();
 
             return (object) ['rider' => $r, 'assigned' => $assigned, 'delivered' => $done, 'undelivered' => $q()->where('status', 'undelivered')->count(),
-                'rate' => $assigned ? round($done / $assigned * 100, 1) : 0, 'value' => (float) $q()->where('status', 'delivered')->sum(\Illuminate\Support\Facades\DB::raw('total_amount + delivery_fee')),
+                'rate' => $assigned ? round($done / $assigned * 100, 1) : 0, 'value' => (float) $q()->where('status', 'delivered')->sum('total_amount'),
                 'fees' => (float) $q()->where('status', 'delivered')->sum('delivery_fee'), 'fees_owed' => (float) $q()->where('status', 'delivered')->where('rider_fee_status', 'pending')->sum('delivery_fee'), 'custody' => $r->custody()];
         })->filter(fn ($r) => $r->assigned > 0 || ! $r->custody['cleared']);
 

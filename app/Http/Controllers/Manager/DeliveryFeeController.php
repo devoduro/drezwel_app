@@ -67,7 +67,7 @@ class DeliveryFeeController extends Controller
                 break;
             case 'clear_fee':
                 DeliveryZone::whereIn("id", $targets->pluck("id"))->update(['fee' => null]);
-                $msg = "Fee cleared for {$towns}. Customers will not see them until they are priced again.";
+                $msg = "Fee cleared for {$towns}. They now use the region's fee.";
                 break;
             case 'activate':
                 DeliveryZone::whereIn("id", $targets->pluck("id"))->update(['is_active' => true]);

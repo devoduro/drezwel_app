@@ -173,7 +173,7 @@
 <?php endif; ?>
 </div>
 
-<form method="GET" class="bg-white rounded-xl p-3 grid grid-cols-2 md:grid-cols-5 gap-2 mb-4 text-sm">
+<form method="GET" class="bg-white rounded-xl p-3 grid grid-cols-2 md:grid-cols-6 gap-2 mb-4 text-sm">
     <div class="relative col-span-2">
         <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input name="q" value="<?php echo e(request('q')); ?>" placeholder="Search name, phone, reference…" class="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1c3041]">
@@ -182,6 +182,7 @@
         <?php $__currentLoopData = \App\Models\Delivery::STATUSES; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $l): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option value="<?php echo e($k); ?>" <?php if(request('status') === $k): echo 'selected'; endif; ?>><?php echo e($l); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></select>
     <select name="rider" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"><option value="">All riders</option>
         <?php $__currentLoopData = $riders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option value="<?php echo e($r->id); ?>" <?php if(request('rider') == $r->id): echo 'selected'; endif; ?>><?php echo e($r->name); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></select>
+    <select name="dir" onchange="this.form.submit()" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2" title="Order of the list"><option value="desc" <?php if($dir === 'desc'): echo 'selected'; endif; ?>>Newest first</option><option value="asc" <?php if($dir === 'asc'): echo 'selected'; endif; ?>>Oldest first</option></select>
     <div class="flex gap-2">
         <input type="date" name="date" value="<?php echo e(request('date')); ?>" class="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
         <button class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-4 font-semibold transition"><i class="fas fa-filter"></i></button>
@@ -192,11 +193,12 @@
     <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm text-slate-800">All deliveries</div>
     <div class="overflow-x-auto">
     <table class="w-full text-sm">
-        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Reference</th><th>Date</th><th>Customer</th><th>Location</th><th>Rider</th><th class="text-right">Total</th><th class="text-right">Balance</th><th class="p-3">Status</th><th class="p-3"></th></tr></thead>
+        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Reference</th><th><a href="<?php echo e(route('manager.deliveries.index', array_merge(request()->except('page'), ['dir' => $dir === 'asc' ? 'desc' : 'asc']))); ?>" class="inline-flex items-center gap-1 hover:text-[#1c3041]" title="Click to sort <?php echo e($dir === 'asc' ? 'newest' : 'oldest'); ?> first">Date <i class="fas <?php echo e($dir === 'asc' ? 'fa-arrow-up-short-wide' : 'fa-arrow-down-wide-short'); ?>"></i></a></th><th>Customer</th><th>Location</th><th>Rider</th><th class="text-right">Total</th><th class="text-right">Balance</th><th class="p-3">Status</th><th class="p-3"></th></tr></thead>
         <?php $__empty_1 = true; $__currentLoopData = $deliveries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <tr class="border-t border-slate-100 hover:bg-sky-50/50">
                 <td class="p-3"><a class="text-[#1c3041] font-semibold hover:underline" href="<?php echo e(route('manager.deliveries.show', $d)); ?>"><?php echo e($d->reference); ?></a>
-                    <?php if($d->source === 'online'): ?><span class="ml-1 rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700">WEB</span><?php elseif($d->source === 'pos'): ?><span class="ml-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">POS</span><?php elseif($d->source === 'phone'): ?><span class="ml-1 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700">PHONE</span><?php endif; ?></td>
+                    <?php if($d->source === 'online'): ?><span class="ml-1 rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700">WEB</span><?php elseif($d->source === 'pos'): ?><span class="ml-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">POS</span><?php elseif($d->source === 'phone'): ?><span class="ml-1 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700">PHONE</span><?php endif; ?>
+                    <?php if($d->service === 'express'): ?><span class="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">EXPRESS</span><?php elseif($d->service === 'pickup'): ?><span class="ml-1 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">PICK UP</span><?php endif; ?></td>
                 <td class="whitespace-nowrap text-slate-600"><?php echo e($d->delivery_date->format('d M')); ?></td>
                 <td><div class="font-medium"><?php echo e($d->customer->name); ?></div><div class="text-xs text-slate-400"><?php echo e($d->customer->phone); ?></div></td>
                 <td class="text-slate-600"><?php echo e($d->location); ?></td>

@@ -62,14 +62,19 @@ class DashboardController extends Controller
 
         $orders = $scope()->count();
         $delivered = $scope()->where('status', 'delivered')->count();
-        $revenue = (float) $scope()->sum(\Illuminate\Support\Facades\DB::raw('total_amount + delivery_fee'));
-        $collected = (float) $scope()->sum('amount_paid');
+        // Sales are the goods only: the delivery fee passes through to the riders, so it is shown separately and left out of
+        // revenue, money collected and what is owed.
+        $revenue = (float) $scope()->sum('total_amount');
+        $collected = (float) $scope()->sum(\Illuminate\Support\Facades\DB::raw(Delivery::GOODS_RECEIVED_SQL));
+        $owed = (float) $scope()->sum(\Illuminate\Support\Facades\DB::raw('GREATEST(total_amount - (' . Delivery::GOODS_RECEIVED_SQL . '), 0)'));
+        $fees = (float) $scope()->sum('delivery_fee');
 
         $kpi = [
             'orders' => $orders,
             'revenue' => $revenue,
             'collected' => $collected,
-            'outstanding' => max($revenue - $collected, 0),
+            'outstanding' => $owed,
+            'fees' => $fees,
             'delivered' => $delivered,
             'pending' => $scope()->whereIn('status', ['pending', 'assigned', 'out_for_delivery', 'undelivered'])->count(),
             'rate' => $orders ? round($delivered / $orders * 100, 1) : 0,
@@ -78,7 +83,7 @@ class DashboardController extends Controller
         ];
 
         $daily = $scope()->selectRaw("delivery_date as day, COUNT(*) as orders, SUM(status='delivered') as delivered,
-                SUM(status!='delivered') as pending, SUM(total_amount + delivery_fee) as revenue, SUM(amount_paid) as cash")
+                SUM(status!='delivered') as pending, SUM(total_amount) as revenue, SUM(" . Delivery::GOODS_RECEIVED_SQL . ") as cash")
             ->groupBy('delivery_date')->orderByDesc('delivery_date')->limit(14)->get();
 
         $riders = User::where('role', 'rider')->where('is_active', true)->orderBy('name')->get()->map(function ($r) use ($scope) {
@@ -89,18 +94,18 @@ class DashboardController extends Controller
             return (object) [
                 'rider' => $r, 'assigned' => $assigned, 'delivered' => $done, 'pending' => $assigned - $done,
                 'rate' => $assigned ? round($done / $assigned * 100, 1) : 0,
-                'revenue' => (float) $q()->sum(\Illuminate\Support\Facades\DB::raw('total_amount + delivery_fee')),
+                'revenue' => (float) $q()->sum('total_amount'),
                 'custody' => $r->custody(),
             ];
         });
 
-        $modes = $scope()->selectRaw('delivery_mode, COUNT(*) as orders, SUM(total_amount + delivery_fee) as revenue')->groupBy('delivery_mode')->get()->keyBy('delivery_mode');
+        $modes = $scope()->selectRaw('delivery_mode, COUNT(*) as orders, SUM(total_amount) as revenue')->groupBy('delivery_mode')->get()->keyBy('delivery_mode');
         $types = $scope()->selectRaw('order_type, COUNT(*) as orders, SUM(items_sent) as sent,
                 SUM(CASE WHEN status="delivered" THEN GREATEST(items_sent-COALESCE(items_kept,items_sent),0) ELSE 0 END) as returned')
             ->groupBy('order_type')->get()->keyBy('order_type');
 
         $topCustomers = $scope()->join('customers', 'customers.id', '=', 'deliveries.customer_id')
-            ->selectRaw('customers.id, customers.name, COUNT(*) as orders, SUM(total_amount + delivery_fee) as spend, SUM(amount_paid) as paid')
+            ->selectRaw('customers.id, customers.name, COUNT(*) as orders, SUM(total_amount) as spend, SUM(' . Delivery::GOODS_RECEIVED_SQL . ') as paid')
             ->groupBy('customers.id', 'customers.name')->orderByDesc('spend')->limit(8)->get();
 
         $todayQueue = Delivery::active()->with(['customer', 'rider'])->whereDate('delivery_date', today())

@@ -15,7 +15,7 @@ return [
     'delivery_text' => "How delivery works\n\n"
         . "1. Order on this website or call us. We confirm your order and delivery details by phone.\n"
         . "2. A rider delivers to your door in Accra. For other regions we send by station bus or parcel office, and you can also pick up from us.\n"
-        . "3. When your rider sets off, you get a 4-digit code by SMS. Give the code to the rider only after you have received your order. This is how we confirm that you got it.\n"
+        . "3. The rider marks your order as delivered when it reaches you, and we text you to confirm. If you did not receive it, call us straight away.\n"
         . "4. Pay on delivery, in cash or MoMo, to the rider.\n\n"
         . "Track your order any time with your order reference and phone number, or sign in with your phone number to see all your orders.",
 
@@ -37,8 +37,8 @@ return [
     'policy_privacy' => "Privacy policy\n\n"
         . "We respect your privacy. This is what we do with your information.\n\n"
         . "What we collect. When you order or contact us we collect your name, phone number, delivery address, and the details of your order or message.\n\n"
-        . "How we use it. To process and deliver your orders, to send you SMS updates and your delivery code, to reply to your messages, and to keep our sales records.\n\n"
+        . "How we use it. To process and deliver your orders, to send you SMS updates, to reply to your messages, and to keep our sales records.\n\n"
         . "Who sees it. Our team, and the rider who delivers your order, see your name, phone number and address. We use an SMS service to send you messages. We do not sell your information.\n\n"
-        . "Keeping it safe. Delivery codes are single-use and are never stored in readable form. Access to our systems is limited to our staff.\n\n"
+        . "Keeping it safe. Access to our systems is limited to our staff.\n\n"
         . "Your choices. You can ask us to correct or delete your information by calling or emailing us.",
 ];

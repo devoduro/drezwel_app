@@ -81,9 +81,10 @@ class OrdersSalesTest extends TestCase
         $this->order('Cancelled', ['status' => 'cancelled', 'total_amount' => 9999]);              // never counted
 
         $res = $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertOk();
-        $res->assertSee('GH₵ 520.00')                  // billed: 300+20 and 200
-            ->assertSee('GH₵ 320.00')                  // received: 120 and 200
-            ->assertSee('GH₵ 200.00')                  // still owed: 520 - 320
+        $res->assertSee('GH₵ 500.00')                  // goods sold: 300 and 200 (the GH₵ 20 delivery fee is not a sale)
+            ->assertSee('GH₵ 300.00')                  // received for the goods: 120 - 20 fee = 100, and 200
+            ->assertSee('GH₵ 200.00')                  // still owed for the goods: 500 - 300
+            ->assertSee('Delivery fees')->assertSee('GH₵ 20.00')   // the fee is shown separately
             ->assertSee('Sales by channel')->assertSee('Top performing products')->assertDontSee('9,999')->assertDontSee('9999');
         $res->assertSee($web->reference)->assertSee($pos->reference);
 
@@ -199,9 +200,200 @@ class OrdersSalesTest extends TestCase
         $this->order('Done', ['status' => 'delivered', 'total_amount' => 400, 'amount_paid' => 400]);                       // actual 400
 
         $res = $this->actingAs($m)->get(route('manager.deliveries.index'))->assertOk();
-        $res->assertSee('Expected revenue')->assertSee('GH₵ 470.00')    // 320 + 150 still to collect
-            ->assertSee('GH₵ 520.00')                                    // value of the open deliveries: 320 + 200
+        $res->assertSee('Expected revenue')->assertSee('GH₵ 450.00')    // goods still to collect: 300 + 150 (the GH₵ 20 fee goes to the rider)
+            ->assertSee('GH₵ 500.00')                                    // value of the open deliveries' goods: 300 + 200
             ->assertSee('GH₵ 400.00')                                    // actual sales
             ->assertDontSee('GH₵ 999.00')->assertDontSee('GH₵ 888.00')->assertDontSee('GH₵ 1,');   // undelivered and cancelled orders are not counted
+    }
+
+    public function test_counter_sales_do_not_appear_on_the_deliveries_page_but_phone_orders_do(): void
+    {
+        $m = $this->manager();
+        $counter = $this->order('Counter Joe', ['source' => 'pos', 'status' => 'delivered', 'total_amount' => 120, 'amount_paid' => 120]);
+        $phone = $this->order('Phone Ama', ['source' => 'phone', 'status' => 'pending', 'total_amount' => 80]);
+        $web = $this->order('Web Kojo', ['source' => 'online', 'status' => 'pending', 'total_amount' => 60]);
+
+        $this->actingAs($m)->get(route('manager.deliveries.index'))->assertOk()->assertSee($phone->reference)->assertSee($web->reference)->assertDontSee($counter->reference);
+        $this->actingAs($m)->get(route('manager.deliveries.index', ['status' => 'delivered']))->assertDontSee($counter->reference);
+        $this->actingAs($m)->get(route('manager.deliveries.index', ['q' => 'Counter Joe']))->assertDontSee($counter->reference);
+
+        // they are still sales and orders, and can still be opened directly
+        $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertSee($counter->reference);
+        $this->actingAs($m)->get(route('manager.orders'))->assertSee($counter->reference);
+        $this->actingAs($m)->get(route('manager.deliveries.show', $counter))->assertOk();
+    }
+
+    public function test_recording_the_full_payment_completes_the_delivery_without_a_rider_and_moves_it_to_sales(): void
+    {
+        $m = $this->manager();
+        $order = $this->order('Kingsley', ['source' => 'phone', 'status' => 'pending', 'total_amount' => 180, 'delivery_fee' => 0, 'items_sent' => 1]);
+        $sales = fn () => $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertOk();
+        $this->assertNull($order->rider_id);
+
+        $this->actingAs($m)->get(route('manager.deliveries.show', $order))->assertSee('complete the delivery and move it to Sales');
+
+        // a part payment records the money but does not finish anything
+        $this->actingAs($m)->post(route('manager.deliveries.payment', $order), ['amount' => 80, 'method' => 'cash', 'complete' => 1]);
+        $this->assertSame('pending', $order->fresh()->status);
+        $sales()->assertDontSee($order->reference);
+
+        // the rest of the money: delivered, even with no rider, and now a sale
+        $this->actingAs($m)->post(route('manager.deliveries.payment', $order), ['amount' => 100, 'method' => 'momo', 'complete' => 1])
+            ->assertSessionHas('success', 'Payment recorded. The order is complete and now shows in Sales.');
+        $order->refresh();
+        $this->assertSame('delivered', $order->status);
+        $this->assertNotNull($order->delivered_at);
+        $this->assertSame(1, (int) $order->items_kept);
+        $this->assertTrue($order->events()->where('type', 'delivered')->exists());
+        $sales()->assertSee($order->reference);
+    }
+
+    public function test_the_complete_tick_box_can_be_left_off_and_cancelled_orders_stay_cancelled(): void
+    {
+        $m = $this->manager();
+        $advance = $this->order('Prepaid', ['source' => 'phone', 'status' => 'pending', 'total_amount' => 100]);
+        $this->actingAs($m)->post(route('manager.deliveries.payment', $advance), ['amount' => 100, 'method' => 'cash', 'complete' => 0]);   // unticked: payment in advance
+        $this->assertSame('pending', $advance->fresh()->status);
+        $this->actingAs($m)->post(route('manager.deliveries.payment', $advance), ['amount' => 0.01, 'method' => 'cash'])->assertSessionHasErrors();   // nothing owing now
+
+        $out = $this->order('On the road', ['source' => 'phone', 'status' => 'out_for_delivery', 'total_amount' => 60, 'rider_id' => User::factory()->create(['role' => 'rider'])->id]);
+        $this->actingAs($m)->post(route('manager.deliveries.payment', $out), ['amount' => 60, 'method' => 'cash', 'complete' => 1]);
+        $this->assertSame('delivered', $out->fresh()->status);                                                  // a rider on the road: still completes
+
+        $gone = $this->order('Cancelled', ['source' => 'phone', 'status' => 'cancelled', 'total_amount' => 40]);
+        $this->actingAs($m)->post(route('manager.deliveries.payment', $gone), ['amount' => 40, 'method' => 'cash', 'complete' => 1]);
+        $this->assertSame('cancelled', $gone->fresh()->status);
+    }
+
+    public function test_rider_names_on_the_cash_and_items_page_link_to_their_orders_and_deliveries(): void
+    {
+        $m = $this->manager();
+        $rider = User::factory()->create(['role' => 'rider', 'name' => 'Daniel Rider']);
+
+        $this->actingAs($m)->get(route('manager.remittances'))->assertOk()->assertSee(route('manager.riders.show', $rider), false);
+        $this->actingAs($m)->get(route('manager.riders.show', $rider))->assertOk()->assertSee('Daniel Rider');
+    }
+
+    public function test_a_rider_with_assigned_orders_is_not_shown_as_cleared(): void
+    {
+        $m = $this->manager();
+        $rider = User::factory()->create(['role' => 'rider', 'name' => 'Busy Joe']);
+
+        // nothing held, nothing assigned: cleared
+        $this->assertTrue($rider->custody()['settled']);
+        $this->actingAs($m)->get(route('manager.riders.show', $rider))->assertOk()->assertSee('Cleared');
+
+        // handed everything in but still has two orders on the go: not cleared
+        $this->order('Open one', ['source' => 'phone', 'status' => 'assigned', 'rider_id' => $rider->id]);
+        $this->order('Open two', ['source' => 'phone', 'status' => 'out_for_delivery', 'rider_id' => $rider->id]);
+        $c = $rider->fresh()->custody();
+        $this->assertTrue($c['cleared']);                                       // nothing owed in cash or items
+        $this->assertFalse($c['settled']);                                      // but not settled
+        $this->assertSame(2, $c['open_runs']);
+
+        $this->actingAs($m)->get(route('manager.riders.show', $rider))->assertSee('2 open orders to finish');
+        $page = $this->actingAs($m)->get(route('manager.remittances'))->assertOk()->assertSee('Has open orders')->getContent();
+        $this->assertStringNotContainsString('>Cleared<', substr($page, strpos($page, 'Busy Joe'), 700));
+    }
+
+    public function test_rider_page_shows_the_delivery_fee_on_each_order_and_the_totals(): void
+    {
+        $m = $this->manager();
+        $rider = User::factory()->create(['role' => 'rider', 'name' => 'Fee Rider']);
+        $this->order('Done one', ['status' => 'delivered', 'rider_id' => $rider->id, 'delivery_fee' => 40]);
+        $this->order('Done two', ['status' => 'delivered', 'rider_id' => $rider->id, 'delivery_fee' => 25]);
+        $this->order('On the road', ['status' => 'out_for_delivery', 'rider_id' => $rider->id, 'delivery_fee' => 30]);
+        $this->order('Cancelled', ['status' => 'cancelled', 'rider_id' => $rider->id, 'delivery_fee' => 99]);
+
+        $html = $this->actingAs($m)->get(route('manager.riders.show', $rider))->assertOk()
+            ->assertSee('Delivery fee')->assertSee('Fee received')->assertSee('Total delivery fees')->getContent();
+        $this->assertStringContainsString('30.00', $html);                       // the fee on the order still on the road is visible
+        $this->assertMatchesRegularExpression('/Total delivery fees.*?95\.00.*?65\.00/s', $html);   // charged 40+25+30, received 40+25
+    }
+
+    public function test_sales_figures_use_the_goods_only_and_show_the_delivery_fee_beside_them(): void
+    {
+        $m = $this->manager();
+        $o = $this->order('Kingsley', ['source' => 'phone', 'status' => 'delivered', 'total_amount' => 180, 'delivery_fee' => 40, 'amount_paid' => 220]);
+        $o->payments()->create(['amount' => 220, 'method' => 'cash', 'paid_at' => now()]);
+
+        $this->assertEquals(180.0, $o->goods_received);                       // 220 paid - 40 fee
+        $this->assertEquals(0.0, $o->goods_balance);
+
+        $html = $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertOk()->assertSee('Goods total')->assertSee('Delivery fee')->getContent();
+        $this->assertStringContainsString('GH₵ 180.00', $html);                // sales and money received are the goods, not 220
+        $this->assertStringNotContainsString('GH₵ 220.00', $html);
+        $this->assertStringContainsString('GH₵ 40.00', $html);                 // the fee is indicated on its own tile
+        $this->assertStringContainsString('>40.00</td>', $html);               // and on the row
+    }
+
+    public function test_reports_and_dashboard_count_the_goods_only_and_show_delivery_fees_separately(): void
+    {
+        $m = $this->manager();
+        $o = $this->order('Fee customer', ['source' => 'phone', 'status' => 'delivered', 'total_amount' => 300, 'delivery_fee' => 50, 'amount_paid' => 350]);
+        $o->payments()->create(['amount' => 350, 'method' => 'cash', 'paid_at' => now()]);
+        $unpaid = $this->order('Owes goods', ['source' => 'phone', 'status' => 'delivered', 'total_amount' => 100, 'delivery_fee' => 20, 'amount_paid' => 20]);   // paid only the fee
+        $this->assertEquals(0.0, $unpaid->goods_received);
+        $this->assertEquals(100.0, $unpaid->goods_balance);
+
+        $report = $this->actingAs($m)->get(route('manager.reports', ['period' => 'all']))->assertOk()->assertSee('Sales (goods)')->assertSee('Delivery fees GH₵ 70.00 go to riders')->getContent();
+        $this->assertStringContainsString('GH₵ 400.00', $report);              // sales: 300 + 100, not 470
+        $this->assertStringContainsString('GH₵ 300.00', $report);              // collected for the goods: 300 + 0
+        $this->assertStringContainsString('GH₵ 100.00', $report);              // still owed for the goods
+        $this->assertStringNotContainsString('GH₵ 470.00', $report);
+
+        $dash = $this->actingAs($m)->get(route('manager.dashboard', ['period' => 'all']))->assertOk()->assertSee('Total sales (goods)')->assertSee('delivery fees GH₵ 70.00 go to riders')->getContent();
+        $this->assertStringContainsString('GH₵ 400.00', $dash);
+        $this->assertStringNotContainsString('GH₵ 470.00', $dash);
+    }
+
+    public function test_orders_can_be_listed_oldest_first_or_newest_first(): void
+    {
+        $m = $this->manager();
+        $a = $this->order('First Ama', ['source' => 'phone', 'status' => 'pending', 'created_at' => now()->subDays(2)]);
+        $b = $this->order('Second Kofi', ['source' => 'phone', 'status' => 'pending', 'created_at' => now()->subDay()]);
+        $c = $this->order('Third Esi', ['source' => 'phone', 'status' => 'pending', 'created_at' => now()]);
+        $refs = fn ($html) => array_values(array_filter([strpos($html, $a->reference), strpos($html, $b->reference), strpos($html, $c->reference)], fn ($v) => $v !== false));
+
+        $desc = $this->actingAs($m)->get(route('manager.orders', ['status' => 'pending']))->assertOk()->getContent();
+        $this->assertTrue(strpos($desc, $c->reference) < strpos($desc, $b->reference) && strpos($desc, $b->reference) < strpos($desc, $a->reference));   // newest first by default
+
+        $asc = $this->actingAs($m)->get(route('manager.orders', ['status' => 'pending', 'dir' => 'asc']))->assertOk()->assertSee('Oldest first')->getContent();
+        $this->assertTrue(strpos($asc, $a->reference) < strpos($asc, $b->reference) && strpos($asc, $b->reference) < strpos($asc, $c->reference));       // oldest first
+
+        $this->actingAs($m)->get(route('manager.orders', ['status' => 'pending', 'dir' => 'nonsense']))->assertOk();                                  // anything else falls back to newest first
+        $this->assertStringContainsString('dir=desc', $this->actingAs($m)->get(route('manager.orders', ['status' => 'pending', 'dir' => 'asc']))->getContent());   // the header toggles back
+    }
+
+    public function test_deliveries_can_be_listed_oldest_first_or_newest_first(): void
+    {
+        $m = $this->manager();
+        $a = $this->order('Old Ama', ['source' => 'phone', 'status' => 'pending', 'delivery_date' => today()->subDays(2)]);
+        $b = $this->order('Mid Kofi', ['source' => 'phone', 'status' => 'pending', 'delivery_date' => today()->subDay()]);
+        $c = $this->order('New Esi', ['source' => 'phone', 'status' => 'pending', 'delivery_date' => today()]);
+
+        $desc = $this->actingAs($m)->get(route('manager.deliveries.index'))->assertOk()->getContent();
+        $this->assertTrue(strpos($desc, $c->reference) < strpos($desc, $b->reference) && strpos($desc, $b->reference) < strpos($desc, $a->reference));   // newest first by default
+
+        $asc = $this->actingAs($m)->get(route('manager.deliveries.index', ['dir' => 'asc']))->assertOk()->assertSee('Oldest first')->getContent();
+        $this->assertTrue(strpos($asc, $a->reference) < strpos($asc, $b->reference) && strpos($asc, $b->reference) < strpos($asc, $c->reference));       // oldest first
+        $this->assertStringContainsString('dir=desc', $asc);                                                                                            // the Date header toggles back
+        $this->actingAs($m)->get(route('manager.deliveries.index', ['dir' => 'x', 'status' => 'pending']))->assertOk();                                  // anything else = newest first
+    }
+
+    public function test_dashboard_summary_tiles_are_links(): void
+    {
+        $m = $this->manager();
+        $html = $this->actingAs($m)->get(route('manager.dashboard', ['period' => '7d']))->assertOk()->getContent();
+
+        foreach ([
+            route('manager.sales', ['period' => '7d']),                                  // Total sales and Money collected
+            route('manager.deliveries.index', ['status' => 'delivered']),                 // Delivered
+            route('manager.deliveries.index', ['status' => 'pending']),                   // Pending
+            route('manager.debtors'),                                                    // Outstanding
+        ] as $url) {
+            $this->assertStringContainsString('href="' . $url . '"', $html, $url);
+        }
+        $this->assertGreaterThanOrEqual(2, substr_count($html, 'href="' . route('manager.sales', ['period' => '7d']) . '"'));
     }
 }

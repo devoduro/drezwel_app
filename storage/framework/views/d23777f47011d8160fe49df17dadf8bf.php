@@ -72,7 +72,7 @@ unset($__errorArgs, $__bag); ?>
         <form method="POST" action="<?php echo e(route('manager.fees.update', $region)); ?>" class="rounded-xl bg-white overflow-hidden" id="feesForm"><?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
             <button name="do" value="save" tabindex="-1" class="hidden" aria-hidden="true"></button>
             <div class="<?php echo e($head); ?> flex flex-wrap items-center justify-between gap-2"><span><?php echo e($region->name); ?> · <?php echo e($zones->count()); ?> towns</span>
-                <span class="text-xs font-normal text-slate-500">A town with no fee is hidden from customers.</span></div>
+                <span class="text-xs font-normal text-slate-500">A town with no fee of its own is charged the region fee (set in the box below).</span></div>
 
             <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50 p-3 text-sm">
                 <label class="flex items-center gap-2"><input type="checkbox" id="pickAll" class="accent-[#1c3041]"> Select all</label>
@@ -89,7 +89,7 @@ unset($__errorArgs, $__bag); ?>
             <div class="flex flex-wrap items-center gap-3 border-b border-slate-100 p-3 text-sm">
                 <label class="flex items-center gap-2 font-medium">Other towns in <?php echo e($region->name); ?> (GH₵)
                     <input type="number" step="0.01" min="0" name="default_fee" value="<?php echo e(old('default_fee', $region->default_fee)); ?>" placeholder="shop default" class="<?php echo e($field); ?> w-32"></label>
-                <span class="text-xs text-slate-500">Charged when a customer picks "Other town" instead of one of the listed towns.</span>
+                <span class="text-xs text-slate-500">Charged for any town below with no fee of its own, and when a customer picks "Another town". Leave it empty to use the shop-wide fee from Settings.</span>
             </div>
 
             <div class="overflow-x-auto"><table class="w-full text-sm">
@@ -97,7 +97,7 @@ unset($__errorArgs, $__bag); ?>
                 <?php $__empty_1 = true; $__currentLoopData = $zones; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $z): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <tr class="border-t border-slate-100 <?php echo e($z->fee === null ? 'bg-amber-50/40' : ''); ?>">
                         <td class="p-3"><input type="checkbox" name="ids[]" value="<?php echo e($z->id); ?>" class="pick accent-[#1c3041]"></td>
-                        <td class="font-medium"><?php echo e($z->name); ?><?php if($z->fee === null): ?><span class="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">NOT PRICED</span><?php endif; ?></td>
+                        <td class="font-medium"><?php echo e($z->name); ?><?php if($z->fee === null): ?><span class="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">REGION FEE</span><?php endif; ?></td>
                         <td><input type="number" step="0.01" min="0" name="fees[<?php echo e($z->id); ?>]" value="<?php echo e($z->fee); ?>" placeholder="—" class="<?php echo e($field); ?> w-28"></td>
                         <td class="text-center"><input type="checkbox" name="active[<?php echo e($z->id); ?>]" value="1" <?php if($z->is_active): echo 'checked'; endif; ?> class="accent-[#1c3041]"></td>
                         <td class="p-3 text-right text-xs"><button form="del<?php echo e($z->id); ?>" class="text-red-600 hover:underline" onclick="return confirm('Delete <?php echo e(addslashes($z->name)); ?>?')">Delete</button></td>

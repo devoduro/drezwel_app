@@ -39,9 +39,9 @@
 {{-- ======================= FINANCES ======================= --}}
 <h2 class="text-lg font-bold mb-3"><i class="fas fa-sack-dollar text-[#1c3041]"></i> Finances</h2>
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
-    <x-stat-tile color="blue" icon="fa-receipt" title="Billed to customers" :value="$m($finance['revenue'])" :sub="'Goods ' . $m($finance['goods']) . ' + delivery ' . $m($finance['fees_charged'])" />
-    <x-stat-tile color="green" icon="fa-money-bill-wave" title="Collected" :value="$m($finance['collected'])" :sub="$finance['collection_rate'] . '% of revenue'" />
-    <x-stat-tile color="red" icon="fa-hand-holding-dollar" title="Outstanding" :value="$m($finance['outstanding'])" sub="Owed by customers" />
+    <x-stat-tile color="blue" icon="fa-receipt" title="Sales (goods)" :value="$m($finance['revenue'])" :sub="'Delivery fees ' . $m($finance['fees_charged']) . ' go to riders'" />
+    <x-stat-tile color="green" icon="fa-money-bill-wave" title="Collected" :value="$m($finance['collected'])" :sub="'For the goods · ' . $finance['collection_rate'] . '% of sales'" />
+    <x-stat-tile color="red" icon="fa-hand-holding-dollar" title="Outstanding" :value="$m($finance['outstanding'])" sub="Still owed for the goods" />
     <x-stat-tile :color="$finance['net'] >= 0 ? 'purple' : 'red'" icon="fa-chart-line" title="Net profit" :value="$m($finance['net'])" sub="Gross profit minus cash book expenses" />
 </div>
 

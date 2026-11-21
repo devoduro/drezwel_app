@@ -9,7 +9,7 @@
     $badge = ['online' => 'bg-purple-100 text-purple-700', 'phone' => 'bg-sky-100 text-sky-700', 'pos' => 'bg-emerald-100 text-emerald-700', 'manager' => 'bg-slate-100 text-slate-600'];
 @endphp
 @section('content')
-<x-dashboard-hero class="mb-6" :eyebrow="$range" title="Sales" subtitle="Only delivered orders that have brought in money appear here.">
+<x-dashboard-hero class="mb-6" :eyebrow="$range" title="Sales" subtitle="Only delivered orders that have brought in money appear here. Figures are for the goods sold; delivery fees go to the riders and are shown separately.">
     <x-slot:chips>
         <span><i class="fas fa-calendar-days"></i> {{ $periods[$period] ?? 'Last 30 days' }}</span>
         <span><i class="fas fa-receipt"></i> {{ $kpi['orders'] }} sales</span>
@@ -31,10 +31,11 @@
     </form>
 </x-dashboard-hero>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
-    <x-stat-tile color="blue" icon="fa-receipt" title="Total sales" :value="$m($kpi['billed'])" :sub="$kpi['orders'] . ' orders · avg ' . $m($kpi['average'])" />
-    <x-stat-tile color="green" icon="fa-money-bill-wave" title="Money received" :value="$m($kpi['collected'])" sub="Paid so far" />
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mb-6">
+    <x-stat-tile color="blue" icon="fa-receipt" title="Total sales (goods)" :value="$m($kpi['billed'])" :sub="$kpi['orders'] . ' orders · avg ' . $m($kpi['average'])" />
+    <x-stat-tile color="green" icon="fa-money-bill-wave" title="Money received" :value="$m($kpi['collected'])" sub="For the goods, delivery fees excluded" />
     <x-stat-tile color="red" icon="fa-hand-holding-dollar" title="Still owed" :value="$m($kpi['outstanding'])" sub="Unpaid balances" :href="route('manager.debtors')" />
+    <x-stat-tile color="orange" icon="fa-motorcycle" title="Delivery fees" :value="$m($kpi['fees'])" sub="Collected for riders, not company sales" />
     <x-stat-tile :color="$kpi['profit'] >= 0 ? 'purple' : 'red'" icon="fa-chart-line" title="Product profit" :value="$m($kpi['profit'])" sub="Sales of products minus their cost" />
 </div>
 
@@ -65,7 +66,7 @@
 <div class="bg-white rounded-xl overflow-hidden">
     <div class="{{ $head }}">Sales ({{ $sales->total() }})</div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
-        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Date</th><th>Invoice</th><th>Customer</th><th>Location</th><th>What was sold</th><th class="text-right">Total</th><th class="text-right">Paid</th><th>Paid by</th><th class="text-right">Balance</th><th class="p-3"></th></tr></thead>
+        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Date</th><th>Invoice</th><th>Customer</th><th>Location</th><th>What was sold</th><th class="text-right">Goods total</th><th class="text-right">Delivery fee</th><th class="text-right">Total received</th><th class="pl-5">Paid by</th><th class="text-right">Balance</th><th class="p-3"></th></tr></thead>
         @forelse($sales as $s)
             <tr class="border-t border-slate-100 hover:bg-sky-50/50 align-top">
                 <td class="p-3 whitespace-nowrap text-slate-600">{{ $s->delivery_date->format('d M Y') }}</td>
@@ -73,17 +74,18 @@
                 <td>{{ $s->customer->phone === \App\Services\SalesService::WALK_IN_PHONE ? 'Walk-in customer' : $s->customer->name }}</td>
                 <td class="max-w-[180px] truncate text-slate-600" title="{{ $s->location }}">{{ $s->location }}</td>
                 <td class="max-w-[240px] truncate text-slate-600" title="{{ $s->package_description }}">{{ $s->package_description }}</td>
-                <td class="text-right">{{ number_format($s->amount_due, 2) }}</td>
-                <td class="text-right text-slate-600">{{ number_format($s->amount_paid, 2) }}</td>
-                <td class="text-xs text-slate-500">{{ $s->payments->map(fn ($p) => \App\Models\Payment::METHODS[$p->method] ?? $p->method)->unique()->implode(', ') ?: '—' }}</td>
-                <td class="text-right p-3 {{ $s->balance > 0 ? 'text-red-600 font-medium' : 'text-green-600' }}">{{ number_format($s->balance, 2) }}</td>
+                <td class="text-right font-medium">{{ number_format($s->total_amount, 2) }}</td>
+                <td class="text-right text-xs text-slate-400" title="Handed to the rider: not part of the sale">{{ number_format($s->delivery_fee, 2) }}</td>
+                <td class="text-right font-medium text-slate-700" title="Everything the customer paid: goods plus delivery fee">{{ number_format($s->amount_paid, 2) }}</td>
+                <td class="pl-5 text-xs text-slate-500">{{ $s->payments->map(fn ($p) => \App\Models\Payment::METHODS[$p->method] ?? $p->method)->unique()->implode(', ') ?: '—' }}</td>
+                <td class="text-right p-3 {{ $s->goods_balance > 0 ? 'text-red-600 font-medium' : 'text-green-600' }}">{{ number_format($s->goods_balance, 2) }}</td>
                 <td class="p-3 whitespace-nowrap text-right text-xs">
                     @if($s->status === 'delivered' && $s->order_type !== 'exchange')<a class="text-amber-700 hover:underline" href="{{ route('manager.deliveries.create', ['exchange_of' => $s->id]) }}">Return</a> ·@endif
                     @if($s->status !== 'cancelled')<a class="text-[#1c3041] hover:underline" href="{{ route('manager.deliveries.edit', $s) }}">Edit</a> ·@endif
                     @include('manager._delete-delivery', ['d' => $s])
                 </td>
             </tr>
-        @empty <tr><td colspan="10" class="p-10 text-center text-slate-400"><i class="fas fa-receipt text-3xl mb-2 block"></i>No delivered and paid sales in this period.</td></tr> @endforelse
+        @empty <tr><td colspan="11" class="p-10 text-center text-slate-400"><i class="fas fa-receipt text-3xl mb-2 block"></i>No delivered and paid sales in this period.</td></tr> @endforelse
     </table></div>
 </div>
 <div class="mt-4">{{ $sales->links() }}</div>

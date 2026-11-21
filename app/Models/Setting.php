@@ -35,6 +35,7 @@ class Setting extends Model
         'address' => 'Loc. Beach Road, Lascala Bus Stop, HVP9 + 8VF Accra',
         'website' => 'https://drezwell.com',
         'default_delivery_fee' => '0',
+        'express_station_fee' => '30',
         'invoice_note' => 'Thank you for choosing Drezwel',
         'invoice_terms' => 'Goods sold are not returnable',
         'store_open' => '1',

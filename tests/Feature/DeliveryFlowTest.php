@@ -34,45 +34,36 @@ class DeliveryFlowTest extends TestCase
         ]);
     }
 
-    private function lastCode(): string
-    {
-        $sent = null;
-        Http::assertSent(function ($req) use (&$sent) {
-            if (preg_match('/code is (\d{4})/', $req['message'] ?? '', $m)) {
-                $sent = $m[1];
-            }
-
-            return true;
-        });
-
-        return $sent;
-    }
-
-    public function test_full_flow_with_code_and_clearance(): void
+    public function test_full_flow_without_a_code_then_clearance(): void
     {
         config(['services.speso_sms.api_key' => 'test-key']);
+        \App\Models\Setting::set('phone', '0200680701 / 0203264474');
         Http::fake(['*' => Http::response(['success' => true])]);
         $rider = $this->rider();
         $d = $this->delivery();
 
-        // rider picks it, starts it, customer gets a code
+        // rider picks it and sets off: no code is texted to the customer any more
         $this->actingAs($rider)->post(route('rider.claim', $d))->assertRedirect();
         $this->assertSame('assigned', $d->fresh()->status);
-        $this->actingAs($rider)->post(route('rider.start', $d));
+        $this->actingAs($rider)->post(route('rider.start', $d))->assertSessionHas('success');
         $this->assertSame('out_for_delivery', $d->fresh()->status);
-        $code = $this->lastCode();
-        $this->assertMatchesRegularExpression('/^\d{4}$/', $code);
+        $this->assertFalse(SmsLog::where('message', 'like', '%code%')->exists());
 
-        // wrong code first, then right code
-        $wrong = $code === '0000' ? '1111' : '0000';
-        $this->actingAs($rider)->post(route('rider.confirm', $d), ['code' => $wrong, 'cash' => 300])->assertSessionHasErrors('code');
-        $this->assertSame(1, $d->fresh()->code_attempts);
-        $this->actingAs($rider)->post(route('rider.confirm', $d), ['code' => $code, 'items_kept' => 1, 'cash' => 300])->assertSessionHasNoErrors();
+        // the rider simply taps Delivered: no code to type
+        $this->actingAs($rider)->get(route('rider.show', $d))->assertOk()->assertSee('Delivered')->assertDontSee('4-digit')->assertDontSee('Resend');
+        $this->actingAs($rider)->post(route('rider.deliver', $d), ['items_kept' => 1, 'cash' => 300])->assertSessionHasNoErrors();
 
         $d->refresh();
         $this->assertSame('delivered', $d->status);
         $this->assertEquals(300, $d->amount_paid);
         $this->assertSame(1, $d->items_kept);
+        $this->assertTrue($d->events()->where('type', 'delivered')->exists());
+
+        // the customer gets one short text, with the numbers to call if it did not arrive
+        $sms = SmsLog::where('delivery_id', $d->id)->where('purpose', 'delivered')->get();
+        $this->assertCount(1, $sms);
+        $this->assertSame("Drezwel: Your order {$d->reference} has been delivered. Not received? Call 0200680701 / 0203264474.", $sms->first()->message);
+        $this->assertLessThanOrEqual(160, mb_strlen($sms->first()->message));                        // a single SMS
 
         // rider now holds 300 cash and 1 item
         $c = $rider->custody();
@@ -81,25 +72,36 @@ class DeliveryFlowTest extends TestCase
 
         $this->actingAs($this->manager())->post(route('manager.remittances.clear', $rider))->assertSessionHas('success');
         $this->assertTrue($rider->custody()['cleared']);
-
-        // the code is never stored in the SMS log
-        $this->assertFalse(SmsLog::where('message', 'like', "%{$code}%")->exists());
     }
 
-    public function test_code_locks_after_five_wrong_attempts(): void
+    public function test_a_rider_can_only_deliver_their_own_open_deliveries_and_only_once(): void
     {
         Http::fake();
         $rider = $this->rider();
+        $other = $this->rider('Other');
         $d = $this->delivery(['rider_id' => $rider->id, 'status' => 'assigned']);
-        $this->actingAs($rider)->post(route('rider.start', $d));
-        // brute force: 5 wrong tries, then even the right code (unknown here) is refused
-        $d->refresh();
-        for ($i = 0; $i < 5; $i++) {
-            $this->actingAs($rider)->post(route('rider.confirm', $d), ['code' => '12' . $i . '4']);
-        }
-        $this->assertSame(5, $d->fresh()->code_attempts);
-        $this->actingAs($rider)->post(route('rider.confirm', $d), ['code' => '9999'])->assertSessionHasErrors('code');
-        $this->assertSame('out_for_delivery', $d->fresh()->status);
+
+        $this->actingAs($other)->post(route('rider.deliver', $d))->assertForbidden();                 // not their delivery
+        $this->assertSame('assigned', $d->fresh()->status);
+
+        $this->actingAs($rider)->post(route('rider.deliver', $d), ['cash' => 300])->assertSessionHasNoErrors();   // straight from assigned is fine
+        $this->assertSame('delivered', $d->fresh()->status);
+
+        $this->actingAs($rider)->post(route('rider.deliver', $d), ['cash' => 300])->assertSessionHasErrors('status');   // already delivered
+        $this->assertSame(1, SmsLog::where('delivery_id', $d->id)->where('purpose', 'delivered')->count());   // and the customer is texted once
+        $this->assertEquals(300, $d->fresh()->amount_paid);
+    }
+
+    public function test_manager_can_mark_a_delivery_delivered_without_a_reason(): void
+    {
+        Http::fake();
+        $rider = $this->rider();
+        $d = $this->delivery(['rider_id' => $rider->id, 'status' => 'out_for_delivery']);
+
+        $page = $this->actingAs($this->manager())->get(route('manager.deliveries.show', $d))->assertOk()->assertSee('Mark as delivered')->assertDontSee('Delivery code')->assertDontSee('Send a new code');
+        $this->actingAs($this->manager())->post(route('manager.deliveries.confirm', $d), [])->assertSessionHasNoErrors();
+        $this->assertSame('delivered', $d->fresh()->status);
+        $this->assertTrue($d->fresh()->confirmed_by_manager);
     }
 
     public function test_two_riders_cannot_claim_the_same_delivery(): void

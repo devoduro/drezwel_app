@@ -22,11 +22,14 @@ class OrderController extends Controller
             ->when($request->filled('from'), fn ($q) => $q->whereDate('delivery_date', '>=', $request->input('from')))
             ->when($request->filled('to'), fn ($q) => $q->whereDate('delivery_date', '<=', $request->input('to')));
 
+        // newest first by default; ?dir=asc shows the oldest first
+        $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
+
         $counts = $base()->selectRaw('status, COUNT(*) n')->groupBy('status')->pluck('n', 'status');
 
         $orders = $base()->with(['customer', 'rider', 'items.product'])
             ->when($status !== 'all', fn ($q) => $q->where('status', $status))
-            ->latest('created_at')->latest('id')->paginate(25)->withQueryString();
+            ->orderBy('created_at', $dir)->orderBy('id', $dir)->paginate(25)->withQueryString();
 
         // Website and phone orders that nobody has picked up yet: the ones that need action first.
         $waiting = Delivery::whereIn('source', ['online', 'phone'])->where('status', 'pending')->whereNull('rider_id')->paymentSettled()->count();
@@ -35,6 +38,7 @@ class OrderController extends Controller
             'orders' => $orders,
             'counts' => $counts,
             'status' => $status,
+            'dir' => $dir,
             'sources' => self::SOURCES,
             'waiting' => $waiting,
             'today' => [

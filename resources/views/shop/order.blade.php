@@ -37,7 +37,7 @@
         <div class="rounded-xl bg-white p-6 text-center">
             <div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-red-100 text-2xl text-red-600"><i class="fas fa-triangle-exclamation"></i></div>
             <h1 class="mt-3 text-2xl font-bold">Payment not completed</h1>
-            <p class="mt-1 text-slate-500">No money was taken for order <strong class="text-slate-800">{{ $delivery->reference }}</strong>. Your items are held for a short while. Try again or pay the rider on delivery.</p>
+            <p class="mt-1 text-slate-500">No money was taken for order <strong class="text-slate-800">{{ $delivery->reference }}</strong>. Your items are held for a short while. {{ $delivery->pay_now_only ? 'Please try the payment again.' : 'Try again or pay the rider on delivery.' }}</p>
             @if(session('pay_error'))<p class="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{{ session('pay_error') }}</p>@endif
             @error('momo_number')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
             @if(\App\Services\SpesoClient::configured())
@@ -48,9 +48,11 @@
                     <button class="h-12 rounded-lg bg-jm-primary text-[15px] font-bold uppercase tracking-wide text-white hover:bg-[#14212d] sm:col-span-2">Pay {{ $m($delivery->balance) }} now</button>
                 </form>
             @endif
+            @unless($delivery->pay_now_only)
             <form method="POST" action="{{ URL::temporarySignedRoute('shop.order.cod', now()->addHours(2), $ref) }}" class="mt-3">@csrf
                 <button class="text-sm font-bold uppercase text-jm-primary hover:underline">Pay on delivery instead</button>
             </form>
+            @endunless
         </div>
     @elseif($pay === 'abandoned' || $delivery->status === 'cancelled')
         <div class="rounded-xl bg-white p-6 text-center">

@@ -59,14 +59,14 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'blue','icon' => 'fa-receipt','title' => 'Billed to customers','value' => $m($finance['revenue']),'sub' => 'Goods ' . $m($finance['goods']) . ' + delivery ' . $m($finance['fees_charged'])]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'blue','icon' => 'fa-receipt','title' => 'Sales (goods)','value' => $m($finance['revenue']),'sub' => 'Delivery fees ' . $m($finance['fees_charged']) . ' go to riders']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'blue','icon' => 'fa-receipt','title' => 'Billed to customers','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['revenue'])),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute('Goods ' . $m($finance['goods']) . ' + delivery ' . $m($finance['fees_charged']))]); ?>
+<?php $component->withAttributes(['color' => 'blue','icon' => 'fa-receipt','title' => 'Sales (goods)','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['revenue'])),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute('Delivery fees ' . $m($finance['fees_charged']) . ' go to riders')]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -79,14 +79,14 @@
 <?php endif; ?>
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Collected','value' => $m($finance['collected']),'sub' => $finance['collection_rate'] . '% of revenue']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Collected','value' => $m($finance['collected']),'sub' => 'For the goods · ' . $finance['collection_rate'] . '% of sales']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Collected','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['collected'])),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($finance['collection_rate'] . '% of revenue')]); ?>
+<?php $component->withAttributes(['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Collected','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['collected'])),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute('For the goods · ' . $finance['collection_rate'] . '% of sales')]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -99,14 +99,14 @@
 <?php endif; ?>
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'red','icon' => 'fa-hand-holding-dollar','title' => 'Outstanding','value' => $m($finance['outstanding']),'sub' => 'Owed by customers']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'red','icon' => 'fa-hand-holding-dollar','title' => 'Outstanding','value' => $m($finance['outstanding']),'sub' => 'Still owed for the goods']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'red','icon' => 'fa-hand-holding-dollar','title' => 'Outstanding','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['outstanding'])),'sub' => 'Owed by customers']); ?>
+<?php $component->withAttributes(['color' => 'red','icon' => 'fa-hand-holding-dollar','title' => 'Outstanding','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($finance['outstanding'])),'sub' => 'Still owed for the goods']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>

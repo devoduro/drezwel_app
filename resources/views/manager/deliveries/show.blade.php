@@ -31,7 +31,7 @@
             @if($delivery->exchanges->count())<div class="sm:col-span-2 rounded-lg bg-amber-50 px-3 py-2 text-amber-900"><i class="fas fa-rotate-left"></i> Returns / exchanges against this sale: @foreach($delivery->exchanges as $x)<a class="font-semibold underline" href="{{ route('manager.deliveries.show', $x) }}">{{ $x->reference }}</a>@unless($loop->last), @endunless @endforeach</div>@endif
             <div><div class="text-xs text-slate-500">Package</div>{{ $delivery->package_description }} ({{ $delivery->items_sent }} item{{ $delivery->items_sent > 1 ? 's' : '' }})</div>
             <div><div class="text-xs text-slate-500">Date / window</div>{{ $delivery->delivery_date->format('D d M Y') }} {{ $delivery->time_window }}</div>
-            <div><div class="text-xs text-slate-500">Mode · Type</div>{{ \App\Models\Delivery::MODES[$delivery->delivery_mode] }} · {{ \App\Models\Delivery::TYPES[$delivery->order_type] }}</div>
+            <div><div class="text-xs text-slate-500">Mode · Type</div>{{ \App\Models\Delivery::MODES[$delivery->delivery_mode] }} · {{ \App\Models\Delivery::TYPES[$delivery->order_type] }}@if($delivery->service) · <strong class="{{ $delivery->service === 'express' ? 'text-amber-700' : '' }}">{{ \App\Models\Delivery::SERVICES[$delivery->service] }}</strong>@endif</div>
             <div>
                 <div class="text-xs text-slate-500">Rider</div>
                 @if($delivery->rider)
@@ -132,6 +132,10 @@
                     <input type="number" step="0.01" name="amount" value="{{ $delivery->balance }}" max="{{ $delivery->balance }}" class="{{ $input }} w-28">
                     <select name="method" class="{{ $input }} bg-white">@foreach(\App\Models\Payment::METHODS as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select>
                     <input name="notes" placeholder="Note" class="{{ $input }} flex-1 min-w-24">
+                    @if($delivery->is_open)
+                        <input type="hidden" name="complete" value="0">
+                        <label class="flex w-full items-center gap-2 text-xs text-slate-600"><input type="checkbox" name="complete" value="1" checked class="accent-green-600"> When this clears the balance, complete the delivery and move it to Sales (no rider needed)</label>
+                    @endif
                     <button class="{{ $btn }} bg-green-600 text-white">Record payment</button>
                 </form>
             @endif
@@ -159,22 +163,14 @@
             </section>
         @endif
 
-        @if($delivery->status === 'out_for_delivery')
-            <section class="bg-white rounded-xl p-5 space-y-3">
-                <h2 class="text-slate-800 font-semibold">Delivery code</h2>
-                <p class="text-sm text-slate-500">Sent {{ $delivery->code_sent_at?->diffForHumans() ?? 'never' }} · wrong attempts: {{ $delivery->code_attempts }}/{{ \App\Models\Delivery::MAX_CODE_ATTEMPTS }}</p>
-                <form method="POST" action="{{ route('manager.deliveries.resend', $delivery) }}">@csrf<button class="{{ $btn }} bg-brand text-white w-full">Send a new code to customer</button></form>
-            </section>
-        @endif
-
         @if(in_array($delivery->status, ['assigned', 'out_for_delivery', 'undelivered']))
             <section class="bg-white rounded-xl p-5">
-                <h2 class="text-slate-800 font-semibold mb-1">Confirm without code</h2>
-                <p class="text-xs text-slate-500 mb-2">Only if the customer confirmed another way. This is recorded.</p>
+                <h2 class="text-slate-800 font-semibold mb-1">Mark as delivered</h2>
+                <p class="text-xs text-slate-500 mb-2">For when the rider could not tap it. The customer is texted that it was delivered, and this is recorded.</p>
                 <form method="POST" action="{{ route('manager.deliveries.confirm', $delivery) }}" class="space-y-2">@csrf
-                    <input name="reason" required placeholder="Reason" class="{{ $input }} w-full">
+                    <input name="reason" placeholder="Note (optional)" class="{{ $input }} w-full">
                     <div class="flex gap-2"><input type="number" name="items_kept" min="0" max="{{ $delivery->items_sent }}" placeholder="Items kept" class="{{ $input }} w-1/2"><input type="number" step="0.01" name="cash" placeholder="Cash collected" class="{{ $input }} w-1/2"></div>
-                    <button class="{{ $btn }} bg-amber-600 text-white w-full" onclick="return confirm('Confirm this delivery without the customer code?')">Confirm delivery</button>
+                    <button class="{{ $btn }} bg-amber-600 text-white w-full" onclick="return confirm('Mark this delivery as delivered and text the customer?')">Mark as delivered</button>
                 </form>
             </section>
         @endif

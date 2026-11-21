@@ -15,7 +15,7 @@
      <?php $__env->slot('chips', null, []); ?> 
         <span><i class="fas fa-box"></i> <?php echo e($stats['total']); ?> deliveries</span>
         <span><i class="fas fa-bullseye"></i> <?php echo e($stats['rate']); ?>% delivered</span>
-        <span class="<?php echo e($custody['cleared'] ? '' : '!bg-amber-400/30'); ?>"><i class="fas fa-wallet"></i> <?php echo e($custody['cleared'] ? 'Cleared' : 'Holding ' . $m($custody['cash_held'])); ?></span>
+        <span class="<?php echo e($custody['settled'] ? '' : '!bg-amber-400/30'); ?>"><i class="fas fa-wallet"></i> <?php echo e($custody['settled'] ? 'Cleared' : ($custody['cleared'] ? $custody['open_runs'] . ' open ' . ($custody['open_runs'] === 1 ? 'order' : 'orders') . ' to finish' : 'Holding ' . $m($custody['cash_held']))); ?></span>
      <?php $__env->endSlot(); ?>
     <a href="<?php echo e(route('manager.riders.index')); ?>"><i class="fas fa-arrow-left"></i> Riders</a>
  <?php echo $__env->renderComponent(); ?>
@@ -92,14 +92,14 @@
 <?php endif; ?>
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'orange','icon' => 'fa-motorcycle','title' => 'Delivery fees','value' => $m($stats['fees']),'sub' => 'On delivered orders']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'orange','icon' => 'fa-motorcycle','title' => 'Delivery fees received','value' => $m($stats['fees']),'sub' => 'Paid back ' . $m($custody['fees_paid']) . ' · still owed ' . $m($custody['fees_owed'])]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'orange','icon' => 'fa-motorcycle','title' => 'Delivery fees','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($stats['fees'])),'sub' => 'On delivered orders']); ?>
+<?php $component->withAttributes(['color' => 'orange','icon' => 'fa-motorcycle','title' => 'Delivery fees received','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($stats['fees'])),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute('Paid back ' . $m($custody['fees_paid']) . ' · still owed ' . $m($custody['fees_owed']))]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -123,7 +123,7 @@
 <div class="bg-white rounded-xl overflow-hidden">
     <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm">Delivery history</div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
-        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Reference</th><th>Date</th><th>Customer</th><th>Location</th><th class="text-right">Customer pays</th><th class="text-right">Of which fee</th><th>Delivered at</th><th class="p-3">Status</th></tr></thead>
+        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Reference</th><th>Date</th><th>Customer</th><th>Location</th><th class="text-right">Customer pays</th><th class="text-right">Delivery fee</th><th class="text-right">Fee received</th><th>Delivered at</th><th class="p-3">Status</th></tr></thead>
         <?php $__empty_1 = true; $__currentLoopData = $deliveries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <tr class="border-t border-slate-100 hover:bg-sky-50/50">
                 <td class="p-3"><a class="text-[#1c3041] font-semibold hover:underline" href="<?php echo e(route('manager.deliveries.show', $d)); ?>"><?php echo e($d->reference); ?></a></td>
@@ -131,7 +131,17 @@
                 <td><div class="font-medium"><?php echo e($d->customer->name); ?></div><div class="text-xs text-slate-400"><?php echo e($d->customer->phone); ?></div></td>
                 <td class="text-slate-600"><?php echo e($d->location); ?></td>
                 <td class="text-right"><?php echo e(number_format($d->amount_due, 2)); ?></td>
-                <td class="text-right text-slate-500"><?php echo e(number_format($d->delivery_fee, 2)); ?></td>
+                <td class="text-right <?php echo e($d->status === 'cancelled' ? 'text-slate-300 line-through' : ''); ?>"><?php echo e(number_format($d->delivery_fee, 2)); ?></td>
+                <td class="text-right">
+                    <?php if($d->status === 'delivered' && $d->delivery_fee > 0): ?>
+                        <span class="font-semibold text-[#1c3041]"><?php echo e(number_format($d->delivery_fee, 2)); ?></span>
+                        <div class="text-[11px] <?php echo e($d->rider_fee_status === 'paid' ? 'text-green-600' : 'text-amber-600'); ?>"><?php echo e($d->rider_fee_status === 'paid' ? 'paid back to rider' : 'not yet paid back'); ?></div>
+                    <?php elseif($d->delivery_fee > 0): ?>
+                        <span class="text-slate-300" title="Fee of <?php echo e(number_format($d->delivery_fee, 2)); ?> is received once the order is delivered">—</span>
+                    <?php else: ?>
+                        <span class="text-slate-300">—</span>
+                    <?php endif; ?>
+                </td>
                 <td class="whitespace-nowrap text-slate-500"><?php echo e($d->delivered_at?->format('d M, g:ia') ?? '—'); ?></td>
                 <td class="p-3"><?php if (isset($component)) { $__componentOriginal2ddbc40e602c342e508ac696e52f8719 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal2ddbc40e602c342e508ac696e52f8719 = $attributes; } ?>
@@ -154,7 +164,11 @@
 <?php unset($__componentOriginal2ddbc40e602c342e508ac696e52f8719); ?>
 <?php endif; ?><?php if($d->undelivered_reason): ?><div class="text-xs text-red-600 mt-1"><?php echo e($d->undelivered_reason); ?></div><?php endif; ?></td>
             </tr>
-        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="8" class="p-10 text-center text-slate-400"><i class="fas fa-clock-rotate-left text-3xl mb-2 block"></i>No deliveries for this rider yet.</td></tr> <?php endif; ?>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?> <tr><td colspan="9" class="p-10 text-center text-slate-400"><i class="fas fa-clock-rotate-left text-3xl mb-2 block"></i>No deliveries for this rider yet.</td></tr> <?php endif; ?>
+        <?php if($deliveries->count()): ?>
+            <tr class="border-t bg-slate-50 font-semibold"><td colspan="5" class="p-3 text-right">Total delivery fees<?php echo e(request()->hasAny(['status', 'from', 'to']) ? ' (this filter)' : ''); ?></td><td class="text-right"><?php echo e(number_format($listCharged, 2)); ?></td><td class="text-right text-[#1c3041]" title="Fees on delivered orders: the ones the rider has received"><?php echo e(number_format($listFees, 2)); ?></td><td colspan="2"></td></tr>
+            <tr class="bg-slate-50 text-xs text-slate-500"><td colspan="5" class="px-3 pb-3 text-right">Delivery fee = charged on each order. Fee received = on delivered orders only.</td><td></td><td></td><td colspan="2"></td></tr>
+        <?php endif; ?>
     </table></div>
 </div>
 <div class="mt-4"><?php echo e($deliveries->links()); ?></div>

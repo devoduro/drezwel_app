@@ -156,17 +156,9 @@ class StockTest extends TestCase
         $this->assertEquals(330, $d->amount_due);
         $this->assertEquals(330, $d->balance);
 
-        // rider starts, customer code goes out, rider collects the full 330
+        // rider starts and later taps Delivered, collecting the full 330
         $this->actingAs($rider)->post(route('rider.start', $d));
-        $code = null;
-        Http::assertSent(function ($req) use (&$code) {
-            if (preg_match('/code is (\d{4})/', $req['message'] ?? '', $mm)) {
-                $code = $mm[1];
-            }
-
-            return true;
-        });
-        $this->actingAs($rider)->post(route('rider.confirm', $d), ['code' => $code, 'cash' => 999])->assertSessionHasNoErrors(); // capped at what is owed
+        $this->actingAs($rider)->post(route('rider.deliver', $d), ['cash' => 999])->assertSessionHasNoErrors(); // capped at what is owed
         $d->refresh();
         $this->assertEquals(330, $d->amount_paid);
         $this->assertEquals(0, $d->balance);

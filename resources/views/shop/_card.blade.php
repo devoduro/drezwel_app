@@ -31,7 +31,8 @@
         @endif
     </a>
 
-    {{-- Orange button slides in on hover (always visible on touch screens) --}}
+    {{-- Add-to-cart / Sold out button slides in on hover. Products with sizes or colours have no button: tapping the card opens the product --}}
+    @if($soldOut || ($quick && $open))
     <div class="px-2.5 pb-2.5 pt-1 lg:absolute lg:inset-x-0 lg:bottom-0 lg:translate-y-2 lg:bg-white lg:opacity-0 lg:shadow-[0_6px_16px_rgba(0,0,0,.14)] lg:rounded-b-xl lg:transition lg:group-hover:translate-y-0 lg:group-hover:opacity-100 lg:z-10">
         @if($soldOut)
             <a href="{{ route('shop.product', $p->slug) }}" class="block rounded-lg bg-slate-200 py-2 text-center text-[13px] font-bold uppercase text-slate-500">Sold out</a>
@@ -40,9 +41,8 @@
                 <input type="hidden" name="variant_id" value="{{ $quick->id }}"><input type="hidden" name="stay" value="1">
                 <button class="flex w-full items-center justify-center gap-2 rounded-lg bg-jm-primary py-2 text-[13px] font-bold uppercase tracking-wide text-white transition hover:bg-[#14212d] active:scale-[.98]"><i class="fas fa-cart-shopping"></i> Add to cart</button>
             </form>
-        @else
-            <a href="{{ route('shop.product', $p->slug) }}" class="flex items-center justify-center gap-2 rounded-lg bg-jm-primary py-2 text-[13px] font-bold uppercase tracking-wide text-white transition hover:bg-[#14212d]"><i class="fas fa-sliders"></i> {{ $quick ? 'View' : 'Select options' }}</a>
         @endif
     </div>
+    @endif
     @if($off)<span class="absolute right-0 top-3 rounded-l bg-jm-primary px-1.5 py-0.5 text-[12px] font-bold text-white shadow">-{{ $off }}%</span>@endif
 </article>

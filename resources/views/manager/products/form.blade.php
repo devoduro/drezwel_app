@@ -51,7 +51,7 @@
 
         @if($product->exists && $product->variants->count())
             <div class="overflow-x-auto mb-4"><table class="w-full text-sm">
-                <thead class="text-left text-xs text-slate-500"><tr><th class="pb-1">Size</th><th>Colour</th><th>SKU</th><th>Own price (GH₵)</th><th>In stock</th><th>Active</th></tr></thead>
+                <thead class="text-left text-xs text-slate-500"><tr><th class="pb-1">Size</th><th>Colour</th><th>SKU</th><th>Own price (GH₵)</th><th>In stock</th><th title="Units to ADD to the stock you already have">Add stock (+)</th><th>Active</th></tr></thead>
                 @foreach($product->variants as $var)
                     <tr class="align-middle">
                         <td class="pr-2 py-1"><input name="existing[{{ $var->id }}][size]" value="{{ $var->size }}" class="{{ $cell }}" placeholder="—"></td>
@@ -59,11 +59,16 @@
                         <td class="pr-2"><input name="existing[{{ $var->id }}][sku]" value="{{ $var->sku }}" class="{{ $cell }}"></td>
                         <td class="pr-2"><input type="number" step="0.01" min="0" name="existing[{{ $var->id }}][price]" value="{{ $var->price }}" class="{{ $cell }}" placeholder="same as product"></td>
                         <td class="pr-2 font-semibold {{ $var->stock_qty <= 0 ? 'text-red-600' : '' }}">{{ $var->stock_qty }}</td>
+                        <td class="pr-2"><input type="number" min="0" max="100000" name="existing[{{ $var->id }}][add]" value="{{ old('existing.' . $var->id . '.add') }}" placeholder="+ 0" class="{{ $cell }} !w-24 border-[#8cc152] bg-green-50/50" title="Type how many new units arrived. They are added to the {{ $var->stock_qty }} already in stock."></td>
                         <td><input type="checkbox" name="existing[{{ $var->id }}][is_active]" value="1" @checked($var->is_active)></td>
                     </tr>
                 @endforeach
             </table></div>
-            <p class="text-xs text-slate-500 mb-3">Change how many are in stock with "Update stock" on the product page.</p>
+            <div class="mb-3 grid gap-2 rounded-lg bg-green-50 p-3 text-sm sm:grid-cols-2">
+                <div class="sm:col-span-2 text-xs text-slate-600"><i class="fas fa-circle-plus text-[#74a83b]"></i> Type a number under <strong>Add stock (+)</strong> for each size/colour that has arrived. It is <strong>added</strong> to what you already have and recorded in the stock history. To take stock out or correct a count, use "Update stock" on the product page.</div>
+                <label class="text-xs font-medium">Cost per unit of this new stock (GH₵, optional)<input type="number" step="0.01" min="0" name="restock_cost" value="{{ old('restock_cost') }}" class="{{ $cell }} mt-1" placeholder="updates the cost price"></label>
+                <label class="text-xs font-medium">Note (supplier, invoice…)<input name="restock_note" value="{{ old('restock_note') }}" maxlength="200" class="{{ $cell }} mt-1" placeholder="e.g. Kantamanto order"></label>
+            </div>
         @endif
 
         <div class="rounded-lg bg-slate-50 p-3 mb-3">

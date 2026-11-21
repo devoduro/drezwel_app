@@ -9,7 +9,7 @@
         ['How do I order?', 'Add items to your cart on this website and check out, or call us' . ($phones ? ' on ' . $phones[0][0] : '') . ' and we will place the order for you. We always confirm by phone before dispatch.'],
         ['How do I pay?', 'You pay on delivery, in cash or MoMo, to the rider when your order arrives. Please check your items first.'],
         ['How long does delivery take?', 'In Accra a rider brings your order to your door. For other regions we send by station bus or parcel office, and you can also pick up from us. We will tell you the timing when we call to confirm.'],
-        ['How do I track my order?', 'Open Track your order and enter your order number and phone number, or sign in with your phone number to see all your orders. When the rider sets off you also get a 4-digit code by SMS.'],
+        ['How do I track my order?', 'Open Track your order and enter your order number and phone number, or sign in with your phone number to see all your orders. We also text you when your order is delivered.'],
         ['Can I return an item?', 'Please read our return policy. Check your order in front of the rider and tell us the same day if something is wrong.'],
     ];
 ?>

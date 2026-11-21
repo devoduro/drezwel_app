@@ -25,6 +25,7 @@ class SettingController extends Controller
             'address' => 'nullable|string|max:200',
             'website' => 'nullable|url|max:120',
             'default_delivery_fee' => 'required|numeric|min:0|max:100000',
+            'express_station_fee' => 'nullable|numeric|min:0|max:100000',
             'invoice_note' => 'nullable|string|max:200',
             'invoice_terms' => 'nullable|string|max:200',
             'helpline' => 'nullable|string|max:40',

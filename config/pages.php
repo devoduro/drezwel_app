@@ -34,10 +34,18 @@ MD,
 ## How an order reaches you
 
 1. **Place your order** on this website, or call us on {phone}.
-2. **Choose your region and town** at checkout. The delivery fee for your location is shown before you confirm.
+2. **Choose how you want it** (regular delivery, express delivery or pick up), then your region and town. The delivery fee is shown in your order summary before you confirm.
 3. **We confirm your order** by phone or SMS and prepare it.
-4. **Delivery.** A rider brings it to your door. When the rider sets off you get a **4-digit code by SMS**. Give the code to the rider **only after you have received your order**. This is how we confirm that you got it.
-5. **Pay.** Pay the rider on delivery, or pay online beforehand.
+4. **Delivery.** A rider brings it to your door and marks it delivered. We then send you a short **SMS to confirm**. If you did not receive your order, call {phone} straight away.
+5. **Pay.** Regular delivery in Accra can be paid on delivery. Everything else is paid now with Mobile Money (see below).
+
+## Delivery options
+
+You choose one of three at checkout, whichever region you are in:
+
+- **Regular delivery.** Delivered **48 to 72 hours from the time you place your order**. In Accra a rider brings it to your door. Other regions are sent by station bus or parcel office.
+- **Express delivery.** Delivered the **same day in Accra** and **within 24 hours outside Accra**. Outside Accra, express orders go to the station, so **GH₵ 30** is added to the delivery fee to transport your goods there.
+- **Pick up.** Collect your order from our shop. There is no delivery fee. Call {phone} first to confirm it is ready.
 
 ## Delivery areas and fees
 
@@ -45,14 +53,14 @@ We deliver across Ghana. Fees depend on your region and town and are shown at ch
 
 - **Accra and nearby towns:** delivered to your door by our riders.
 - **Other regions:** sent by station bus or parcel office. We tell you where to collect it, and the delivery fee covers the transport.
-- **Pick up:** you can collect your order from us. Call {phone} first to confirm it is ready.
+- **Pick up:** collect from us at no delivery cost.
 
-Orders are usually delivered the **same day or within 1 to 3 working days** in Accra, and **2 to 5 working days** to other regions, depending on your location and the item. We will call you if anything changes.
+**Regular delivery** takes **48 to 72 hours from the time you place your order**. **Express delivery** is the same day in Accra and 24 hours outside Accra. We will call you if anything changes.
 
 ## Ways to pay
 
-- **Pay on delivery.** Pay the rider in **cash or Mobile Money** when your order arrives. Please check your items first.
-- **Pay now with Mobile Money.** Choose "Pay now with Mobile Money" at checkout (MTN, Telecel or AirtelTigo). You get an approval prompt on your phone: enter your MoMo PIN to pay. If the prompt does not appear, dial *170# (MTN) or *110# (Telecel and AirtelTigo), choose My Wallet, then My Approvals.
+- **Pay on delivery.** Available for **regular delivery within Accra** only. Pay the rider in **cash or Mobile Money** when your order arrives. Please check your items first.
+- **Pay now with Mobile Money.** Required for **express delivery, pick up, and any order outside Accra**. Choose "Pay now with Mobile Money" at checkout (MTN, Telecel or AirtelTigo). You get an approval prompt on your phone: enter your MoMo PIN to pay. If the prompt does not appear, dial *170# (MTN) or *110# (Telecel and AirtelTigo), choose My Wallet, then My Approvals.
 
 We never ask for your card details or MoMo PIN by phone, SMS or WhatsApp.
 
@@ -125,9 +133,9 @@ You can pay on delivery in cash or Mobile Money, or pay online with Mobile Money
 
 We deliver to the address you give us. Delivery times are estimates, not guarantees. Please give a correct address and a phone number we can reach, because the rider will call you. If we cannot reach you or deliver after reasonable attempts, we may cancel the order.
 
-## 5. Delivery code
+## 5. Delivery confirmation
 
-For your protection, we send a 4-digit code by SMS when your order is on its way. Share it with the rider only after you have received your order. Giving the code confirms that you received it.
+When your rider delivers your order they mark it as delivered and we send you an SMS. If you did not receive the order, call us on {phone} straight away.
 
 ## 6. Returns and exchanges
 
@@ -166,7 +174,7 @@ MD,
 
 ## How we use it
 
-- to process, deliver and confirm your orders, including calling you and sending SMS updates and your delivery code,
+- to process, deliver and confirm your orders, including calling you and sending SMS updates,
 - to answer your questions and handle exchanges or returns,
 - to keep our business records, and
 - to send you news or offers, only if you agreed to receive them. You can ask us to stop at any time.
@@ -197,10 +205,10 @@ MD,
 Browse the shop, choose your size and colour, add the items to your cart and go to checkout. Choose your region and town, enter your details and confirm. You can also order by phone on {phone}.
 
 ### What payment methods do you accept?
-You can **pay on delivery** in cash or Mobile Money, or **pay now with Mobile Money** (MTN, Telecel or AirtelTigo) when you check out.
+You can **pay on delivery** (cash or Mobile Money) for regular delivery within Accra. Express delivery, pick up and orders outside Accra are **paid now with Mobile Money** (MTN, Telecel or AirtelTigo) when you check out.
 
 ### How long does delivery take?
-Orders in Accra are usually delivered the same day or within 1 to 3 working days. Other regions usually take 2 to 5 working days, sent by station bus or parcel office. We will call you if anything changes.
+Regular delivery takes 48 to 72 hours from the time you place your order. Express delivery is the same day in Accra and 24 hours outside Accra. Other regions are sent by station bus or parcel office. We will call you if anything changes.
 
 ### How much is delivery?
 The fee depends on your region and town and is shown at checkout before you confirm your order.
@@ -211,8 +219,8 @@ All regions in Ghana. Accra and nearby towns get a rider to their door. Other re
 ### Can I track my order?
 Yes. [Track your order]({track}) with your order reference and phone number, or sign in with your phone number to see all your orders.
 
-### What is the 4-digit delivery code?
-When your rider sets off we send you a 4-digit code by SMS. Give it to the rider only after you have received your order. It confirms that you got your items.
+### How will I know my order was delivered?
+When your rider hands over your order they mark it delivered, and we send you an SMS. If you did not receive it, call {phone} straight away.
 
 ### Can I return or exchange an item?
 Yes, you can exchange an unworn item with its tags within 3 days. Read our full returns and exchanges policy for details.

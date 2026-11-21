@@ -547,4 +547,33 @@ class StoreTest extends TestCase
         $this->get('/shop')->assertSee('GH₵ 250.00')->assertDontSee('GH₵ 220.00+');                       // cards show the main price too
         $this->assertSame(11, $p->fresh('variants')->discount_percent);                                      // 280 -> 250
     }
+
+    public function test_new_stock_can_be_added_to_existing_variants_from_the_product_edit_page(): void
+    {
+        $m = $this->manager();
+        $p = $this->jeans();                                         // 4 variants x 5 = 20, cost 100
+        [$a, $b] = [$p->variants[0], $p->variants[1]];
+
+        $this->actingAs($m)->get(route('manager.products.edit', $p))->assertOk()->assertSee('Add stock (+)')->assertSee('name="restock_cost"', false);
+
+        $payload = ['name' => $p->name, 'cost_price' => 100, 'selling_price' => 250, 'reorder_level' => 2, 'show_in_store' => 1, 'restock_cost' => 120, 'restock_note' => 'Kantamanto order',
+            'existing' => $p->variants->mapWithKeys(fn ($v) => [$v->id => ['size' => $v->size, 'color' => $v->color, 'sku' => $v->sku, 'price' => '', 'is_active' => 1]])->all()];
+        $payload['existing'][$a->id]['add'] = 7;                     // 5 + 7
+        $payload['existing'][$b->id]['add'] = 0;                     // nothing arrived for this one
+
+        $this->actingAs($m)->put(route('manager.products.update', $p), $payload)->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame(12, $a->fresh()->stock_qty);               // added to what was there, not replaced
+        $this->assertSame(5, $b->fresh()->stock_qty);
+        $this->assertSame(27, $p->fresh()->stock_qty);               // the product total follows
+        $this->assertEquals(120.0, (float) $p->fresh()->cost_price); // the new cost price is remembered
+        $move = \App\Models\StockMovement::where('variant_id', $a->id)->where('type', 'purchase')->firstOrFail();
+        $this->assertSame(7, (int) $move->qty);
+        $this->assertSame('Kantamanto order', $move->note);
+
+        // bad numbers are refused and nothing changes
+        $payload['existing'][$a->id]['add'] = -3;
+        $this->actingAs($m)->put(route('manager.products.update', $p), $payload)->assertSessionHasErrors();
+        $this->assertSame(12, $a->fresh()->stock_qty);
+    }
 }

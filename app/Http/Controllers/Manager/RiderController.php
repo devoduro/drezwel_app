@@ -47,6 +47,10 @@ class RiderController extends Controller
             'rider' => $rider,
             'stats' => $stats,
             'custody' => $rider->custody(),
+            // delivery fees received on the deliveries in the current filter (delivered ones only)
+            'listFees' => (float) $base()->where('status', 'delivered')->sum('delivery_fee'),
+            // delivery fees set on every listed order (cancelled ones excluded)
+            'listCharged' => (float) $base()->where('status', '!=', 'cancelled')->sum('delivery_fee'),
             'deliveries' => $base()->with('customer')->latest('delivery_date')->latest('id')->paginate(25)->withQueryString(),
         ]);
     }

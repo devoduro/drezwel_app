@@ -37,6 +37,13 @@ class RecordCrudTest extends TestCase
     }
 
     /** A real order through the same service the POS uses, so stock and ledger are genuine. */
+    private function variant2(): ProductVariant
+    {
+        $p = Product::create(['name' => 'Shirt', 'slug' => 'shirt', 'cost_price' => 30, 'selling_price' => 100, 'reorder_level' => 1, 'stock_qty' => 10]);
+
+        return $p->variants()->create(['stock_qty' => 10]);
+    }
+
     private function sale(ProductVariant $v, int $qty, array $o = []): Delivery
     {
         return app(SalesService::class)->placeOrder(['name' => 'Kofi', 'phone' => '0241234567', 'location' => 'Osu'], [['variant_id' => $v->id, 'qty' => $qty]],
@@ -107,9 +114,13 @@ class RecordCrudTest extends TestCase
         $d = $this->sale($this->variant(), 1);
         $url = route('manager.deliveries.destroy', $d);
 
-        foreach ([route('manager.deliveries.index'), route('manager.orders'), route('manager.sales', ['period' => 'all']), route('manager.deliveries.show', $d)] as $page) {
+        foreach ([route('manager.orders'), route('manager.sales', ['period' => 'all']), route('manager.deliveries.show', $d)] as $page) {
             $this->actingAs($m)->get($page)->assertOk()->assertSee($url, false);
         }
+
+        // a counter sale is not a delivery, so the Deliveries page lists only real deliveries (here a phone order) and its delete button
+        $phone = $this->sale($this->variant2(), 1, ['source' => 'phone', 'status' => 'pending', 'payment' => null]);
+        $this->actingAs($m)->get(route('manager.deliveries.index'))->assertOk()->assertSee(route('manager.deliveries.destroy', $phone), false)->assertDontSee($url, false);
         $this->actingAs($m)->get(route('manager.sales', ['period' => 'all']))->assertSee('New sale')->assertSee(route('manager.deliveries.edit', $d), false);
     }
 

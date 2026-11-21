@@ -55,16 +55,17 @@
 <?php endif; ?>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">
+    <?php $salesLink = route('manager.sales', ['period' => $period] + request()->only('from', 'to')); ?>
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'blue','icon' => 'fa-sack-dollar','title' => 'Total billed','value' => $m($kpi['revenue']),'sub' => $kpi['orders'].' orders · goods + delivery']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'blue','icon' => 'fa-sack-dollar','title' => 'Total sales (goods)','value' => $m($kpi['revenue']),'sub' => $kpi['orders'].' orders · delivery fees ' . $m($kpi['fees']) . ' go to riders','href' => $salesLink]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'blue','icon' => 'fa-sack-dollar','title' => 'Total billed','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['revenue'])),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($kpi['orders'].' orders · goods + delivery')]); ?>
+<?php $component->withAttributes(['color' => 'blue','icon' => 'fa-sack-dollar','title' => 'Total sales (goods)','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['revenue'])),'sub' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($kpi['orders'].' orders · delivery fees ' . $m($kpi['fees']) . ' go to riders'),'href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($salesLink)]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -77,14 +78,14 @@
 <?php endif; ?>
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Cash collected','value' => $m($kpi['collected']),'sub' => 'Paid so far']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Money collected','value' => $m($kpi['collected']),'sub' => 'For the goods, fees excluded','href' => $salesLink]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Cash collected','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['collected'])),'sub' => 'Paid so far']); ?>
+<?php $component->withAttributes(['color' => 'green','icon' => 'fa-money-bill-wave','title' => 'Money collected','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['collected'])),'sub' => 'For the goods, fees excluded','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($salesLink)]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -97,14 +98,14 @@
 <?php endif; ?>
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'red','icon' => 'fa-hand-holding-dollar','title' => 'Outstanding','value' => $m($kpi['outstanding']),'sub' => 'Owed by customers','href' => route('manager.debtors')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'red','icon' => 'fa-hand-holding-dollar','title' => 'Outstanding','value' => $m($kpi['outstanding']),'sub' => 'Still owed for the goods','href' => route('manager.debtors')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'red','icon' => 'fa-hand-holding-dollar','title' => 'Outstanding','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['outstanding'])),'sub' => 'Owed by customers','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('manager.debtors'))]); ?>
+<?php $component->withAttributes(['color' => 'red','icon' => 'fa-hand-holding-dollar','title' => 'Outstanding','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($m($kpi['outstanding'])),'sub' => 'Still owed for the goods','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('manager.debtors'))]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -117,14 +118,14 @@
 <?php endif; ?>
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'purple','icon' => 'fa-circle-check','title' => 'Delivered','value' => $kpi['delivered'],'sub' => 'Completed drop-offs']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'purple','icon' => 'fa-circle-check','title' => 'Delivered','value' => $kpi['delivered'],'sub' => 'Completed drop-offs','href' => route('manager.deliveries.index', ['status' => 'delivered'])]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'purple','icon' => 'fa-circle-check','title' => 'Delivered','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($kpi['delivered']),'sub' => 'Completed drop-offs']); ?>
+<?php $component->withAttributes(['color' => 'purple','icon' => 'fa-circle-check','title' => 'Delivered','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($kpi['delivered']),'sub' => 'Completed drop-offs','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('manager.deliveries.index', ['status' => 'delivered']))]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -157,14 +158,14 @@
 <?php endif; ?>
     <?php if (isset($component)) { $__componentOriginalec2208e5b554b62f9a0aeb9b4b09865b = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'slate','icon' => 'fa-bullseye','title' => 'Fulfilment rate','value' => $kpi['rate'].'%','sub' => 'Target 85%','badge' => $kpi['rate'] >= 85 ? 'On target' : 'Below target']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.stat-tile','data' => ['color' => 'slate','icon' => 'fa-bullseye','title' => 'Fulfilment rate','value' => $kpi['rate'].'%','sub' => 'Target 85%','badge' => $kpi['rate'] >= 85 ? 'On target' : 'Below target','href' => route('manager.deliveries.index')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('stat-tile'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['color' => 'slate','icon' => 'fa-bullseye','title' => 'Fulfilment rate','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($kpi['rate'].'%'),'sub' => 'Target 85%','badge' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($kpi['rate'] >= 85 ? 'On target' : 'Below target')]); ?>
+<?php $component->withAttributes(['color' => 'slate','icon' => 'fa-bullseye','title' => 'Fulfilment rate','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($kpi['rate'].'%'),'sub' => 'Target 85%','badge' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($kpi['rate'] >= 85 ? 'On target' : 'Below target'),'href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(route('manager.deliveries.index'))]); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginalec2208e5b554b62f9a0aeb9b4b09865b)): ?>
@@ -239,7 +240,7 @@
             <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Rider</th><th class="text-right">Cash held</th><th class="text-right">Items to return</th><th class="p-3">Status</th></tr></thead>
             <?php $__currentLoopData = $riders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <tr class="border-t"><td class="p-3"><?php echo e($r->rider->name); ?></td><td class="text-right"><?php echo e($m($r->custody['cash_held'])); ?></td><td class="text-right"><?php echo e($r->custody['items_pending']); ?></td>
-                    <td class="p-3"><?php echo $r->custody['cleared'] ? '<span class="text-green-600">Cleared</span>' : '<span class="text-amber-600">Outstanding</span>'; ?></td></tr>
+                    <td class="p-3"><?php echo $r->custody['settled'] ? '<span class="text-green-600">Cleared</span>' : ($r->custody['cleared'] ? '<span class="text-amber-600">Has open orders</span>' : '<span class="text-amber-600">Outstanding</span>'); ?></td></tr>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </table></div>
     </section>

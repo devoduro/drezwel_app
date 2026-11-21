@@ -33,9 +33,8 @@
                     @endforeach
                 </ol>
             @endif
-
             @if($delivery->status === 'out_for_delivery')
-                <div class="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm"><i class="fas fa-shield-halved text-jm-primary"></i> We texted you a <strong>4-digit code</strong>. Give it to the rider <strong>only when you have received your order</strong>.</div>
+                <div class="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm"><i class="fas fa-truck-fast text-jm-primary"></i> Your order is on its way. We will text you when it is delivered.</div>
             @endif
         </div>
     </section>
@@ -71,7 +70,7 @@
         <section class="overflow-hidden rounded-xl bg-white">
             <div class="border-b border-slate-200 px-4 py-3 text-[15px] font-bold uppercase tracking-wide">Delivery information</div>
             <div class="space-y-1.5 p-4 text-sm">
-                <div class="font-medium">{{ \App\Models\Delivery::MODES[$delivery->delivery_mode] ?? 'Door delivery' }}</div>
+                <div class="font-medium">{{ \App\Models\Delivery::MODES[$delivery->delivery_mode] ?? 'Regular delivery' }}</div>
                 <div class="text-jm-grey"><i class="fas fa-location-dot w-5"></i>{{ $delivery->location }}</div>
                 @if($delivery->rider && in_array($delivery->status, ['assigned', 'out_for_delivery']))
                     <div class="mt-2 rounded-lg bg-jm-bg p-3"><div class="text-xs font-bold uppercase text-jm-grey">Your rider</div><div class="font-medium">{{ $delivery->rider->name }}</div>

@@ -67,6 +67,7 @@ class SalesService
                 'delivery_mode' => $opts['mode'] ?? ($source === 'pos' ? 'pick_up' : 'rider'),
                 'order_type' => 'standard',
                 'source' => $source,
+                'service' => $opts['service'] ?? null,
                 'notes' => $opts['notes'] ?? null,
                 'delivery_date' => today(),
                 'total_amount' => $goods,
@@ -102,8 +103,8 @@ class SalesService
         $paid = $d->payment_status === 'paid';
         $this->sms->send($d->customer->phone,
             "Drezwel: thank you {$d->customer->name}! "
-            . ($paid ? "Payment of GH₵ " . number_format($d->amount_paid, 2) . " received for order {$d->reference}. We will call to arrange delivery."
-                : "Order {$d->reference} for GH₵ " . number_format($d->amount_due, 2) . ' received. We will call to confirm delivery.')
+            . ($paid ? "Payment of GH₵ " . number_format($d->amount_paid, 2) . " received for order {$d->reference}. " . ($d->service === 'pickup' ? 'We will call you when it is ready for pick up.' : 'We will call to arrange delivery.')
+                : "Order {$d->reference} for GH₵ " . number_format($d->amount_due, 2) . ' received. ' . ($d->service === 'pickup' ? 'We will call you when it is ready for pick up.' : 'We will call to confirm delivery.'))
             . ' Track it: ' . route('track', ['ref' => $d->reference, 'phone' => $d->customer->phone]), $d->id, 'order_received');
 
         User::where('role', 'manager')->where('is_active', true)->whereNotNull('phone')->get()->each(fn ($m) => $this->sms->send(

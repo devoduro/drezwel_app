@@ -1,3 +1,4 @@
+
 <?php $__env->startSection('title', 'Order received · ' . \App\Models\Setting::get('business_name')); ?>
 <?php
     use Illuminate\Support\Facades\URL;
@@ -36,7 +37,7 @@
         <div class="rounded-xl bg-white p-6 text-center">
             <div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-red-100 text-2xl text-red-600"><i class="fas fa-triangle-exclamation"></i></div>
             <h1 class="mt-3 text-2xl font-bold">Payment not completed</h1>
-            <p class="mt-1 text-slate-500">No money was taken for order <strong class="text-slate-800"><?php echo e($delivery->reference); ?></strong>. Your items are held for a short while. Try again or pay the rider on delivery.</p>
+            <p class="mt-1 text-slate-500">No money was taken for order <strong class="text-slate-800"><?php echo e($delivery->reference); ?></strong>. Your items are held for a short while. <?php echo e($delivery->pay_now_only ? 'Please try the payment again.' : 'Try again or pay the rider on delivery.'); ?></p>
             <?php if(session('pay_error')): ?><p class="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"><?php echo e(session('pay_error')); ?></p><?php endif; ?>
             <?php $__errorArgs = ['momo_number'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -54,9 +55,11 @@ unset($__errorArgs, $__bag); ?>
                     <button class="h-12 rounded-lg bg-jm-primary text-[15px] font-bold uppercase tracking-wide text-white hover:bg-[#14212d] sm:col-span-2">Pay <?php echo e($m($delivery->balance)); ?> now</button>
                 </form>
             <?php endif; ?>
+            <?php if (! ($delivery->pay_now_only)): ?>
             <form method="POST" action="<?php echo e(URL::temporarySignedRoute('shop.order.cod', now()->addHours(2), $ref)); ?>" class="mt-3"><?php echo csrf_field(); ?>
                 <button class="text-sm font-bold uppercase text-jm-primary hover:underline">Pay on delivery instead</button>
             </form>
+            <?php endif; ?>
         </div>
     <?php elseif($pay === 'abandoned' || $delivery->status === 'cancelled'): ?>
         <div class="rounded-xl bg-white p-6 text-center">

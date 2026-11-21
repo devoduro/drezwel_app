@@ -30,8 +30,13 @@ class SalesController extends Controller
             ->when($method, fn ($q) => $q->whereHas('payments', fn ($p) => $p->where('method', $method)))
             ->search($request->input('q'));
 
-        $billed = (float) $scope()->sum(DB::raw('total_amount + delivery_fee'));
-        $collected = (float) $scope()->sum('amount_paid');
+        // The business sells goods. The delivery fee is collected with them but handed straight to the rider, so it is left out of
+        // sales, money received and what is owed, and reported on its own.
+        $received = 'CASE WHEN amount_paid > 0 THEN GREATEST(amount_paid - delivery_fee, 0) ELSE amount_paid END';
+        $billed = (float) $scope()->sum('total_amount');
+        $collected = (float) $scope()->sum(DB::raw($received));
+        $owed = (float) $scope()->sum(DB::raw("GREATEST(total_amount - ({$received}), 0)"));
+        $fees = (float) $scope()->sum('delivery_fee');
         $orders = $scope()->count();
 
         // profit from product lines in the same slice
@@ -40,7 +45,7 @@ class SalesController extends Controller
         $lineRevenue = (float) (clone $lines)->sum(DB::raw('qty * unit_price'));
         $cost = (float) (clone $lines)->sum(DB::raw('qty * unit_cost'));
 
-        $bySource = $scope()->selectRaw('source, COUNT(*) n, SUM(total_amount + delivery_fee) value, SUM(amount_paid) paid')->groupBy('source')->get()->keyBy('source');
+        $bySource = $scope()->selectRaw('source, COUNT(*) n, SUM(total_amount) value, SUM(CASE WHEN amount_paid > 0 THEN GREATEST(amount_paid - delivery_fee, 0) ELSE amount_paid END) paid')->groupBy('source')->get()->keyBy('source');
 
         $topProducts = DashboardController::topProducts($lineIds);
 
@@ -49,7 +54,7 @@ class SalesController extends Controller
         return view('manager.sales', [
             'sales' => $sales,
             'kpi' => [
-                'billed' => $billed, 'collected' => $collected, 'outstanding' => max($billed - $collected, 0), 'orders' => $orders,
+                'billed' => $billed, 'collected' => $collected, 'outstanding' => $owed, 'fees' => $fees, 'orders' => $orders,
                 'average' => $orders ? $billed / $orders : 0, 'profit' => $lineRevenue - $cost,
             ],
             'bySource' => $bySource,

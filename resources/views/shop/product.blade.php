@@ -21,24 +21,43 @@
 
     <div class="grid gap-3 lg:grid-cols-[1fr_270px]">
         {{-- Main card: photos + details --}}
-        <section class="grid gap-6 rounded-xl bg-white p-4 sm:p-5 md:grid-cols-[minmax(0,420px)_1fr]">
-            <div>
-                <div class="relative aspect-[4/5] overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
-                    @if($product->images->count())
-                        <img id="mainPhoto" src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="h-full w-full cursor-zoom-in object-contain" title="Click to view full size">
-                        <button type="button" id="zoomBtn" class="absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-jm-dark shadow" aria-label="View full size"><i class="fas fa-expand"></i></button>
-                    @else
-                        <div class="grid h-full place-items-center text-7xl text-slate-300"><i class="fas fa-shirt"></i></div>
+        <section class="grid gap-6 rounded-xl bg-white p-4 sm:p-5 md:grid-cols-[minmax(0,500px)_1fr]">
+            <div class="min-w-0">
+                @php $imgs = $product->images; @endphp
+                <div class="flex flex-col gap-3 md:flex-row md:items-stretch">
+                    {{-- thumbnails: a column on the left on larger screens, a row under the photo on phones --}}
+                    @if($imgs->count() > 1)
+                        <div class="order-2 shrink-0 md:relative md:order-1 md:w-[66px]">
+                        <div id="thumbs" class="no-scrollbar flex gap-2 overflow-x-auto md:absolute md:inset-0 md:flex-col md:overflow-y-auto md:overflow-x-hidden">
+                            @foreach($imgs as $i => $img)
+                                <button type="button" data-i="{{ $i }}" aria-label="Photo {{ $i + 1 }}" class="thumb h-[78px] w-[62px] shrink-0 overflow-hidden rounded-lg border-2 transition {{ $loop->first ? 'border-jm-primary' : 'border-slate-200 opacity-80 hover:opacity-100' }}"><img src="{{ $img->url }}" alt="" loading="lazy" class="h-full w-full object-cover"></button>
+                            @endforeach
+                        </div>
+                        </div>
                     @endif
-                    @if($off)<span class="absolute right-0 top-3 rounded-l bg-jm-primary px-2 py-1 text-sm font-bold text-white shadow">-{{ $off }}%</span>@endif
-                </div>
-                @if($product->images->count() > 1)
-                    <div class="no-scrollbar mt-2 flex gap-2 overflow-x-auto">
-                        @foreach($product->images as $img)
-                            <button type="button" class="thumb h-[78px] w-[62px] shrink-0 overflow-hidden rounded-lg border-2 {{ $loop->first ? 'border-jm-primary' : 'border-slate-200' }}" data-src="{{ $img->url }}"><img src="{{ $img->url }}" alt="" class="h-full w-full object-cover"></button>
-                        @endforeach
+
+                    <div class="order-1 min-w-0 flex-1 md:order-2">
+                        <div class="relative aspect-[4/5] overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
+                            @if($imgs->count())
+                                {{-- every photo is a slide: swipe, drag, use the arrows or tap a thumbnail --}}
+                                <div id="track" class="no-scrollbar flex h-full snap-x snap-mandatory overflow-x-auto scroll-smooth">
+                                    @foreach($imgs as $i => $img)
+                                        <div class="h-full w-full shrink-0 snap-center"><img src="{{ $img->url }}" alt="{{ $product->name }}" @if($i > 0) loading="lazy" @endif draggable="false" class="slide h-full w-full cursor-zoom-in select-none object-contain"></div>
+                                    @endforeach
+                                </div>
+                                @if($imgs->count() > 1)
+                                    <button type="button" id="gPrev" aria-label="Previous photo" class="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-jm-dark shadow ring-1 ring-black/5 hover:bg-white"><i class="fas fa-chevron-left"></i></button>
+                                    <button type="button" id="gNext" aria-label="Next photo" class="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-jm-dark shadow ring-1 ring-black/5 hover:bg-white"><i class="fas fa-chevron-right"></i></button>
+                                    <span id="gCount" class="absolute bottom-2 left-2 rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold text-white">1 / {{ $imgs->count() }}</span>
+                                @endif
+                                <button type="button" id="zoomBtn" class="absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-jm-dark shadow" aria-label="View full size"><i class="fas fa-expand"></i></button>
+                            @else
+                                <div class="grid h-full place-items-center text-7xl text-slate-300"><i class="fas fa-shirt"></i></div>
+                            @endif
+                            @if($off)<span class="pointer-events-none absolute right-0 top-3 rounded-l bg-jm-primary px-2 py-1 text-sm font-bold text-white shadow">-{{ $off }}%</span>@endif
+                        </div>
                     </div>
-                @endif
+                </div>
             </div>
 
             <div class="min-w-0">
@@ -97,7 +116,7 @@
             <div class="overflow-hidden rounded-xl bg-white">
                 <div class="border-b border-slate-200 px-4 py-3 text-[13px] font-bold uppercase tracking-wide text-jm-dark">Delivery &amp; returns</div>
                 <ul class="space-y-4 p-4">
-                    <li class="flex gap-3"><i class="fas fa-truck-fast mt-0.5 w-5 text-jm-primary"></i><div><div class="font-medium">Door delivery</div><div class="text-jm-grey">Accra by rider. Other regions by station bus or parcel office.</div></div></li>
+                    <li class="flex gap-3"><i class="fas fa-truck-fast mt-0.5 w-5 text-jm-primary"></i><div><div class="font-medium">Regular delivery</div><div class="text-jm-grey">48 to 72 hours from the time of order placement. Accra by rider, other regions by station bus or parcel office.</div></div></li>
                     <li class="flex gap-3"><i class="fas fa-store mt-0.5 w-5 text-jm-primary"></i><div><div class="font-medium">Pick-up</div><div class="text-jm-grey">Collect from us{{ \App\Models\Setting::get('address') ? ': ' . \App\Models\Setting::get('address') : '' }}.</div></div></li>
                     <li class="flex gap-3"><i class="fas fa-hand-holding-dollar mt-0.5 w-5 text-jm-primary"></i><div><div class="font-medium">Pay on delivery</div><div class="text-jm-grey">Cash or MoMo when it arrives.</div></div></li>
                     <li class="flex gap-3"><i class="fas fa-rotate-left mt-0.5 w-5 text-jm-primary"></i><div><div class="font-medium">Returns</div><a class="text-jm-primary hover:underline" href="{{ route('site.page', 'return-policy') }}">Read our return policy</a></div></li>
@@ -153,27 +172,65 @@
     const el = id => document.getElementById(id), qty = el('qty');
     const fmt = n => 'GH₵ ' + Number(n).toFixed(2);
 
-    // photo gallery
-    document.querySelectorAll('.thumb').forEach(b => b.addEventListener('click', () => {
-        el('mainPhoto').src = b.dataset.src;
-        document.querySelectorAll('.thumb').forEach(x => { x.classList.remove('border-jm-primary'); x.classList.add('border-slate-200'); });
-        b.classList.remove('border-slate-200'); b.classList.add('border-jm-primary');
-    }));
+    // photo gallery: slide / swipe / drag the main photo, or pick a thumbnail; the viewer opens on the photo you are looking at
+    const photos = @json($product->images->pluck('url')->values());
+    const track = el('track'), thumbs = [...document.querySelectorAll('.thumb')];
+    let gi = 0, dragMoved = false;
+    const slideW = () => track ? track.clientWidth : 0;
+    const mark = i => {
+        gi = i;
+        thumbs.forEach((t, k) => {
+            const on = k === i;
+            t.classList.toggle('border-jm-primary', on); t.classList.toggle('border-slate-200', !on); t.classList.toggle('opacity-80', !on);
+            if (on) t.scrollIntoView({block: 'nearest', inline: 'nearest', behavior: 'smooth'});
+        });
+        if (el('gCount')) el('gCount').textContent = (i + 1) + ' / ' + photos.length;
+    };
+    const goTo = (i, smooth = true) => {
+        i = (i + photos.length) % photos.length;
+        track.style.scrollBehavior = smooth ? '' : 'auto';
+        track.scrollTo({left: i * slideW()});
+        mark(i);
+        if (!smooth) requestAnimationFrame(() => track.style.scrollBehavior = '');
+    };
+    if (track) {
+        let tick = null;
+        track.addEventListener('scroll', () => { clearTimeout(tick); tick = setTimeout(() => { const i = Math.round(track.scrollLeft / (slideW() || 1)); if (i !== gi) mark(i); }, 60); }, {passive: true});
+        thumbs.forEach(t => t.addEventListener('click', () => goTo(+t.dataset.i)));
+        if (el('gPrev')) { el('gPrev').addEventListener('click', () => goTo(gi - 1)); el('gNext').addEventListener('click', () => goTo(gi + 1)); }
+        window.addEventListener('resize', () => goTo(gi, false));
+
+        // click-and-drag with a mouse (touch already swipes natively)
+        let down = false, x0 = 0, left0 = 0;
+        track.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; down = true; dragMoved = false; x0 = e.clientX; left0 = track.scrollLeft; });
+        window.addEventListener('pointermove', e => {
+            if (!down) return;
+            const dx = e.clientX - x0;
+            if (Math.abs(dx) > 5 && !dragMoved) { dragMoved = true; track.style.scrollBehavior = 'auto'; track.classList.remove('snap-x', 'snap-mandatory'); track.style.cursor = 'grabbing'; }
+            if (dragMoved) track.scrollLeft = left0 - dx;
+        });
+        window.addEventListener('pointerup', () => {
+            if (!down) return; down = false;
+            if (dragMoved) { track.style.cursor = ''; track.classList.add('snap-x', 'snap-mandatory'); goTo(Math.round(track.scrollLeft / (slideW() || 1))); }
+        });
+    }
 
     // full-size viewer: click the photo to enlarge, arrows / swipe / Esc to browse and close
-    const photos = @json($product->images->pluck('url')->values());
     if (photos.length) {
         let cur = 0;
         const box = el('lightbox'), img = el('lbImg');
         const show = i => { cur = (i + photos.length) % photos.length; img.src = photos[cur]; el('lbCount').textContent = photos.length > 1 ? (cur + 1) + ' / ' + photos.length : ''; };
-        const openBox = () => { const i = photos.indexOf(el('mainPhoto').getAttribute('src')); show(i < 0 ? 0 : i); box.classList.remove('hidden'); box.classList.add('flex'); document.body.style.overflow = 'hidden'; };
-        const closeBox = () => { box.classList.add('hidden'); box.classList.remove('flex'); document.body.style.overflow = ''; };
-        el('mainPhoto').addEventListener('click', openBox); el('zoomBtn').addEventListener('click', openBox);
+        const openBox = () => { show(gi); box.classList.remove('hidden'); box.classList.add('flex'); document.body.style.overflow = 'hidden'; };
+        const closeBox = () => { box.classList.add('hidden'); box.classList.remove('flex'); document.body.style.overflow = ''; goTo(cur, false); };
+        track.querySelectorAll('.slide').forEach(im => im.addEventListener('click', () => { if (dragMoved) { dragMoved = false; return; } openBox(); }));
+        el('zoomBtn').addEventListener('click', openBox);
         el('lbClose').addEventListener('click', closeBox);
         box.addEventListener('click', e => { if (e.target === box) closeBox(); });
         el('lbPrev').addEventListener('click', () => show(cur - 1)); el('lbNext').addEventListener('click', () => show(cur + 1));
         if (photos.length < 2) { el('lbPrev').classList.add('hidden'); el('lbNext').classList.add('hidden'); }
-        document.addEventListener('keydown', e => { if (box.classList.contains('hidden')) return; if (e.key === 'Escape') closeBox(); if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
+        document.addEventListener('keydown', e => {
+            if (!box.classList.contains('hidden')) { if (e.key === 'Escape') closeBox(); if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); }
+        });
         let x0 = null;
         box.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, {passive: true});
         box.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) show(cur + (dx < 0 ? 1 : -1)); x0 = null; });

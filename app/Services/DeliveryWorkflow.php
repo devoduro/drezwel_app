@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Delivery;
 use App\Models\Payment;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -79,7 +80,7 @@ class DeliveryWorkflow
         $d->logEvent('released', "{$rider->name} released the delivery", $rider->id);
     }
 
-    /** Rider sets off: the customer receives a 4-digit code by SMS. */
+    /** Rider sets off with the order. */
     public function start(Delivery $d, User $rider): array
     {
         $this->ensure($d->rider_id === $rider->id && $d->status === 'assigned', 'status', 'This delivery cannot be started.');
@@ -87,67 +88,33 @@ class DeliveryWorkflow
         $d->update(['status' => 'out_for_delivery', 'started_at' => now()]);
         $d->logEvent('started', "{$rider->name} is on the way", $rider->id);
 
-        return $this->sendCode($d, $rider);
+        return ['success' => true, 'message' => 'On the way'];
     }
 
-    /** Generates a fresh code and texts it to the customer. Used on start and for "resend". */
-    public function sendCode(Delivery $d, User $by): array
+    /**
+     * Rider taps "Delivered". No customer code is needed: the delivery is completed and the customer is texted
+     * to say it was delivered, with the numbers to call if it was not.
+     */
+    public function deliver(Delivery $d, User $rider, ?int $itemsKept, ?float $cash): Delivery
     {
-        $this->ensure($d->status === 'out_for_delivery', 'status', 'A code can only be sent while the delivery is out.');
-
-        $code = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
-        $d->update(['code_hash' => $this->hashCode($d, $code), 'code_attempts' => 0, 'code_sent_at' => now()]);
-
-        $d->loadMissing(['customer', 'rider']);
-        $rider = $d->rider;
-        $msg = "Drezwel Go: Your order {$d->reference} is on the way with rider {$rider->name}"
-            . ($rider->phone ? " ({$rider->phone})" : '') . ". "
-            . "Your delivery code is {$code}. Give it to the rider ONLY after you have received your order.";
-
-        $result = $this->sms->send($d->customer->phone, $msg, $d->id, 'delivery_code');
-        $d->logEvent($result['success'] ? 'code_sent' : 'code_failed', $result['success'] ? 'Delivery code sent to customer' : 'Delivery code SMS failed', $by->id);
-
-        return $result;
-    }
-
-    /** Rider types the customer's code to confirm receipt. */
-    public function confirm(Delivery $d, User $rider, string $code, ?int $itemsKept, ?float $cash): Delivery
-    {
-        $left = null;
-        $result = DB::transaction(function () use ($d, $rider, $code, $itemsKept, $cash, &$left) {
+        return DB::transaction(function () use ($d, $rider, $itemsKept, $cash) {
             $d = Delivery::lockForUpdate()->findOrFail($d->id);
-            $this->ensure($d->rider_id === $rider->id && $d->status === 'out_for_delivery', 'code', 'This delivery is not out for delivery.');
-            $this->ensure($d->code_hash !== null, 'code', 'No code has been sent yet. Tap "Resend code" first.');
-            $this->ensure($d->code_attempts < Delivery::MAX_CODE_ATTEMPTS, 'code', 'Too many wrong codes. Ask the manager to resend a new code.');
-
-            if (! hash_equals($d->code_hash, $this->hashCode($d, $code))) {
-                $d->increment('code_attempts');
-                $d->logEvent('code_wrong', 'Wrong code entered', $rider->id);
-                $left = Delivery::MAX_CODE_ATTEMPTS - $d->code_attempts;
-
-                return null; // commit the attempt counter, then report the error below
-            }
-
-            $this->complete($d, $rider, $itemsKept, $cash, 'Customer confirmed with delivery code');
+            $this->ensure($d->rider_id === $rider->id && in_array($d->status, ['assigned', 'out_for_delivery'], true), 'status', 'This delivery cannot be marked as delivered.');
+            $this->complete($d, $rider, $itemsKept, $cash, 'Marked delivered by the rider');
 
             return $d;
         });
-
-        if ($result === null) {
-            throw ValidationException::withMessages(['code' => $left > 0 ? "Wrong code. {$left} attempt(s) left." : 'Wrong code. No attempts left - ask the manager to resend a code.']);
-        }
-
-        return $result;
     }
 
-    /** Manager confirms without a code (customer could not get the SMS, etc.). Always logged. */
-    public function overrideConfirm(Delivery $d, User $manager, string $reason, ?int $itemsKept, ?float $cash): Delivery
+    /** Manager marks a delivery as delivered (for example when the rider could not). Always logged. */
+    public function overrideConfirm(Delivery $d, User $manager, ?string $reason, ?int $itemsKept, ?float $cash): Delivery
     {
         return DB::transaction(function () use ($d, $manager, $reason, $itemsKept, $cash) {
             $d = Delivery::lockForUpdate()->findOrFail($d->id);
             $this->ensure(in_array($d->status, ['assigned', 'out_for_delivery', 'undelivered'], true), 'status', 'This delivery cannot be confirmed.');
             $d->confirmed_by_manager = true;
-            $this->complete($d, $manager, $itemsKept, $cash, "Confirmed by manager without code: {$reason}", $d->rider_id);
+            $reason = trim((string) $reason);
+            $this->complete($d, $manager, $itemsKept, $cash, "Marked delivered by manager" . ($reason !== '' ? ": {$reason}" : ''), $d->rider_id);
 
             return $d;
         });
@@ -190,7 +157,11 @@ class DeliveryWorkflow
     }
 
     /** Manager records money a customer paid (e.g. paying off a balance by MoMo). */
-    public function recordPayment(Delivery $d, User $by, float $amount, string $method, ?string $notes = null): Payment
+    /**
+     * Record money received by the manager. With $complete, a payment that clears the whole balance also finishes the delivery
+     * (delivered, so it moves to Sales) even if no rider was ever assigned: the sale is done once the customer has paid.
+     */
+    public function recordPayment(Delivery $d, User $by, float $amount, string $method, ?string $notes = null, bool $complete = false): Payment
     {
         $this->ensure($amount > 0, 'amount', 'Amount must be more than zero.');
         $this->ensure($amount <= $d->balance + 0.001, 'amount', 'That is more than the balance of GH₵ ' . number_format($d->balance, 2) . '.');
@@ -198,6 +169,12 @@ class DeliveryWorkflow
         $p = $d->payments()->create(['amount' => $amount, 'method' => $method, 'notes' => $notes, 'recorded_by' => $by->id, 'paid_at' => now()]);
         $d->recalcPaid();
         $d->logEvent('payment', 'Payment of GH₵ ' . number_format($amount, 2) . " ({$method})", $by->id);
+
+        if ($complete && $d->refresh()->is_open && $d->balance <= 0.001) {
+            $d->update(['status' => 'delivered', 'delivered_at' => now(), 'code_hash' => null, 'items_kept' => $d->items_sent]);
+            $d->logEvent('delivered', 'Completed: paid in full and recorded by ' . $by->name . ($d->rider_id ? '' : ' (no rider needed)'), $by->id);
+            $this->sms->send($d->customer->phone, "Drezwel Go: Payment received for order {$d->reference}. Thank you!", $d->id, 'delivered');
+        }
 
         return $p;
     }
@@ -223,8 +200,15 @@ class DeliveryWorkflow
         $d->logEvent('delivered', $note . ($cash > 0 ? ' - cash collected GH₵ ' . number_format($cash, 2) : ''), $actor->id);
 
         $d->loadMissing('customer');
-        $this->sms->send($d->customer->phone, "Drezwel Go: Thank you! Your order {$d->reference} has been delivered."
-            . ($d->balance > 0 ? ' Balance due: GH₵ ' . number_format($d->balance, 2) . '.' : ''), $d->id, 'delivered');
+        $this->sms->send($d->customer->phone, $this->deliveredMessage($d), $d->id, 'delivered');
+    }
+
+    /** Short and to the point: it was delivered, and who to call if it was not. */
+    private function deliveredMessage(Delivery $d): string
+    {
+        $phones = collect(Setting::phones())->map(fn ($p) => $p[0])->implode(' / ') ?: '0200680701 / 0203264474';
+
+        return "Drezwel: Your order {$d->reference} has been delivered. Not received? Call {$phones}.";
     }
 
     private function notifyAssigned(Delivery $d): void
@@ -235,10 +219,6 @@ class DeliveryWorkflow
             $d->id, 'assigned');
     }
 
-    private function hashCode(Delivery $d, string $code): string
-    {
-        return hash_hmac('sha256', $d->id . '|' . $code, (string) config('app.key'));
-    }
 
     private function ensure(bool $ok, string $field, string $message): void
     {

@@ -50,7 +50,7 @@
                         ['fa-gem', 'Quality first', 'Clothing chosen for how it looks and how it lasts.'],
                         ['fa-truck-fast', 'Delivered to you', 'By rider to your door in Accra, and by station bus or parcel office to other regions.'],
                         ['fa-hand-holding-dollar', 'Pay on delivery', 'See your order first, then pay the rider in cash or MoMo.'],
-                        ['fa-location-crosshairs', 'Track every step', 'SMS updates and a delivery code, and you can follow your order online.'],
+                        ['fa-location-crosshairs', 'Track every step', 'SMS updates, and you can follow your order online.'],
                     ]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as [$ic, $t, $d]): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="flex gap-3"><span class="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e4eaf0] text-xl text-jm-primary"><i class="fas <?php echo e($ic); ?>"></i></span><div><div class="font-bold"><?php echo e($t); ?></div><div class="text-sm text-jm-grey"><?php echo e($d); ?></div></div></div>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>

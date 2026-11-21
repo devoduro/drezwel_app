@@ -134,20 +134,21 @@
     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </div>
 
-<form method="GET" class="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-white p-3 text-sm md:grid-cols-6">
+<form method="GET" class="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-white p-3 text-sm md:grid-cols-7">
     <input type="hidden" name="status" value="<?php echo e($status); ?>">
     <div class="relative col-span-2"><i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input name="q" value="<?php echo e(request('q')); ?>" placeholder="Search name, phone, reference…" class="<?php echo e($field); ?> w-full pl-9"></div>
     <select name="source" class="<?php echo e($field); ?>"><option value="">All channels</option><?php $__currentLoopData = $sources; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $l): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option value="<?php echo e($k); ?>" <?php if(request('source') === $k): echo 'selected'; endif; ?>><?php echo e($l); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></select>
     <input type="date" name="from" value="<?php echo e(request('from')); ?>" class="<?php echo e($field); ?>" title="From">
     <input type="date" name="to" value="<?php echo e(request('to')); ?>" class="<?php echo e($field); ?>" title="To">
+    <select name="dir" onchange="this.form.submit()" class="<?php echo e($field); ?>" title="Order of the list"><option value="desc" <?php if($dir === 'desc'): echo 'selected'; endif; ?>>Newest first</option><option value="asc" <?php if($dir === 'asc'): echo 'selected'; endif; ?>>Oldest first</option></select>
     <button class="rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white px-4 py-2 font-semibold transition"><i class="fas fa-filter"></i> Filter</button>
 </form>
 
 <div class="bg-white rounded-xl overflow-hidden">
     <div class="px-4 py-3 border-b border-gray-200 border-l-4 border-l-[#1c3041] font-semibold text-sm"><?php echo e($tabs[$status] ?? 'Orders'); ?> · <?php echo e($orders->total()); ?></div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
-        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Order</th><th>Placed</th><th>Customer</th><th>Items</th><th>Channel</th><th>Rider</th><th class="text-right">Total</th><th class="text-right">Balance</th><th class="p-3">Status</th><th></th></tr></thead>
+        <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Order</th><th><a href="<?php echo e(route('manager.orders', array_merge(request()->except('page'), ['dir' => $dir === 'asc' ? 'desc' : 'asc']))); ?>" class="inline-flex items-center gap-1 hover:text-[#1c3041]" title="Click to sort <?php echo e($dir === 'asc' ? 'newest' : 'oldest'); ?> first">Placed <i class="fas <?php echo e($dir === 'asc' ? 'fa-arrow-up-short-wide' : 'fa-arrow-down-wide-short'); ?>"></i></a></th><th>Customer</th><th>Items</th><th>Channel</th><th>Rider</th><th class="text-right">Total</th><th class="text-right">Balance</th><th class="p-3">Status</th><th></th></tr></thead>
         <?php $__empty_1 = true; $__currentLoopData = $orders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $o): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
             <tr class="border-t border-slate-100 hover:bg-sky-50/50 align-top">
                 <td class="p-3"><a class="font-semibold text-[#1c3041] hover:underline" href="<?php echo e(route('manager.deliveries.show', $o)); ?>"><?php echo e($o->reference); ?></a></td>

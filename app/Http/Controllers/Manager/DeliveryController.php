@@ -21,16 +21,20 @@ class DeliveryController extends Controller
 
     public function index(Request $request)
     {
+        // newest first by default; ?dir=asc lists the oldest first
+        $dir = $request->input('dir') === 'asc' ? 'asc' : 'desc';
         $deliveries = Delivery::with(['customer', 'rider'])
+            ->forDelivery()   // counter sales are sales, not deliveries
             ->search($request->input('q'))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
             ->when($request->filled('rider'), fn ($q) => $q->where('rider_id', $request->input('rider')))
             ->when($request->filled('date'), fn ($q) => $q->whereDate('delivery_date', $request->input('date')))
-            ->latest('delivery_date')->latest('id')->paginate(25)->withQueryString();
+            ->orderBy('delivery_date', $dir)->orderBy('id', $dir)->paginate(25)->withQueryString();
 
         return view('manager.deliveries.index', [
             'deliveries' => $deliveries,
-            'counts' => Delivery::selectRaw('status, COUNT(*) as n')->groupBy('status')->pluck('n', 'status'),
+            'dir' => $dir,
+            'counts' => Delivery::forDelivery()->selectRaw('status, COUNT(*) as n')->groupBy('status')->pluck('n', 'status'),
             'money' => $this->expectedMoney(),
             'riders' => User::where('role', 'rider')->orderBy('name')->get(),
         ]);
@@ -42,10 +46,11 @@ class DeliveryController extends Controller
      */
     private function expectedMoney(): array
     {
-        $open = Delivery::whereIn('status', ['pending', 'assigned', 'out_for_delivery']);
-        $billed = (float) (clone $open)->sum(\Illuminate\Support\Facades\DB::raw('total_amount + delivery_fee'));
-        $deposits = (float) (clone $open)->sum('amount_paid');
-        $actual = (float) Delivery::where('status', 'delivered')->where('amount_paid', '>', 0)->sum('amount_paid');
+        $open = Delivery::forDelivery()->whereIn('status', ['pending', 'assigned', 'out_for_delivery']);
+        // Goods only: the delivery fee goes to the rider, so it is not expected revenue.
+        $billed = (float) (clone $open)->sum('total_amount');
+        $deposits = (float) (clone $open)->sum(\Illuminate\Support\Facades\DB::raw(Delivery::GOODS_RECEIVED_SQL));
+        $actual = (float) Delivery::where('status', 'delivered')->where('amount_paid', '>', 0)->sum(\Illuminate\Support\Facades\DB::raw(Delivery::GOODS_RECEIVED_SQL));
 
         return ['open' => (clone $open)->count(), 'expected' => max($billed - $deposits, 0), 'billed' => $billed, 'deposits' => $deposits, 'actual' => $actual];
     }
@@ -142,19 +147,12 @@ class DeliveryController extends Controller
         return back()->with('success', 'Rider assigned and the customer has been notified.');
     }
 
-    public function resendCode(Request $request, Delivery $delivery)
-    {
-        $result = $this->flow->sendCode($delivery, $request->user());
-
-        return back()->with($result['success'] ? 'success' : 'error', $result['success'] ? 'A new code was sent to the customer.' : 'SMS failed: ' . $result['message']);
-    }
-
     public function confirm(Request $request, Delivery $delivery)
     {
-        $data = $request->validate(['reason' => 'required|string|max:200', 'items_kept' => 'nullable|integer|min:0', 'cash' => 'nullable|numeric|min:0']);
-        $this->flow->overrideConfirm($delivery, $request->user(), $data['reason'], $data['items_kept'] ?? null, isset($data['cash']) ? (float) $data['cash'] : null);
+        $data = $request->validate(['reason' => 'nullable|string|max:200', 'items_kept' => 'nullable|integer|min:0', 'cash' => 'nullable|numeric|min:0']);
+        $this->flow->overrideConfirm($delivery, $request->user(), $data['reason'] ?? null, $data['items_kept'] ?? null, isset($data['cash']) ? (float) $data['cash'] : null);
 
-        return back()->with('success', 'Delivery confirmed.');
+        return back()->with('success', 'Delivery marked as delivered. The customer has been texted.');
     }
 
     public function undeliver(Request $request, Delivery $delivery)
@@ -183,9 +181,9 @@ class DeliveryController extends Controller
     public function payment(Request $request, Delivery $delivery)
     {
         $data = $request->validate(['amount' => 'required|numeric|min:0.01', 'method' => ['required', Rule::in(array_keys(Payment::METHODS))], 'notes' => 'nullable|string|max:200']);
-        $this->flow->recordPayment($delivery, $request->user(), (float) $data['amount'], $data['method'], $data['notes'] ?? null);
+        $this->flow->recordPayment($delivery, $request->user(), (float) $data['amount'], $data['method'], $data['notes'] ?? null, $request->boolean('complete'));
 
-        return back()->with('success', 'Payment recorded.');
+        return back()->with('success', $delivery->fresh()->status === 'delivered' && $request->boolean('complete') ? 'Payment recorded. The order is complete and now shows in Sales.' : 'Payment recorded.');
     }
 
     /** Record money handed back to the customer for an exchange or return. Stored as a negative payment. */

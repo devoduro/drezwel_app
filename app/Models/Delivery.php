@@ -20,11 +20,17 @@ class Delivery extends Model
 
     public const MODES = ['rider' => 'Rider', 'station_bus' => 'Station Bus', 'parcel_office' => 'Parcel Office', 'pick_up' => 'Pick Up'];
 
+    /** How a website customer chose to receive the order. */
+    public const SERVICES = ['door' => 'Regular delivery', 'express' => 'Express delivery', 'pickup' => 'Pick up'];
+
     public const TYPES = ['standard' => 'Standard Delivery', 'selection_trial' => 'Selection Trial', 'exchange' => 'Exchange'];
 
     public const WINDOWS = ['7am', '8am', '9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm'];
 
     public const MAX_CODE_ATTEMPTS = 5;
+
+    /** SQL for money received for the goods: what was paid less the delivery fee, which passes through to the rider. */
+    public const GOODS_RECEIVED_SQL = "CASE WHEN amount_paid > 0 THEN GREATEST(amount_paid - delivery_fee, 0) ELSE amount_paid END";
 
     protected $guarded = ['id'];
 
@@ -105,6 +111,29 @@ class Delivery extends Model
         return round((float) $this->total_amount + (float) $this->delivery_fee, 2);
     }
 
+    /** Money received for the goods: what was paid, less the delivery fee that passes through to the rider. */
+    public function getGoodsReceivedAttribute(): float
+    {
+        $paid = (float) $this->amount_paid;
+
+        return $paid > 0 ? round(max($paid - (float) $this->delivery_fee, 0), 2) : $paid;
+    }
+
+    /** What is still owed for the goods themselves. */
+    public function getGoodsBalanceAttribute(): float
+    {
+        return max(round((float) $this->total_amount - $this->goods_received, 2), 0);
+    }
+
+    /**
+     * Orders that must be paid online before they go out: express, pick up, and door delivery outside Accra
+     * (those leave by station bus or parcel office, so there is nobody to pay on arrival).
+     */
+    public function getPayNowOnlyAttribute(): bool
+    {
+        return in_array($this->service, ['express', 'pickup'], true) || ($this->service === 'door' && $this->delivery_mode !== 'rider');
+    }
+
     public function getBalanceAttribute(): float
     {
         return max(round($this->amount_due - (float) $this->amount_paid, 2), 0);
@@ -123,6 +152,12 @@ class Delivery extends Model
     public function scopeActive(Builder $q): Builder
     {
         return $q->where('status', '!=', 'cancelled');
+    }
+
+    /** Anything that is actually delivered or handed over to a rider: counter sales (point of sale) never are. */
+    public function scopeForDelivery(Builder $q): Builder
+    {
+        return $q->where('source', '!=', 'pos');
     }
 
     /** Orders that are not still waiting on (or failed at) an online payment, so a rider can be sent. */

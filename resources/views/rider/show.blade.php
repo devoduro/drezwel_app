@@ -25,16 +25,15 @@
 @if($mine && $delivery->status === 'assigned')
     <form method="POST" action="{{ route('rider.start', $delivery) }}" class="mt-4">@csrf
         <button class="w-full rounded-lg bg-[#1c3041] hover:bg-[#14212d] text-white py-3 font-semibold transition shadow">Start delivery</button>
-        <p class="text-xs text-slate-500 mt-2 text-center">The customer will get a 4-digit code by SMS.</p>
+        <p class="text-xs text-slate-500 mt-2 text-center">Tap this when you leave with the order.</p>
     </form>
     <form method="POST" action="{{ route('rider.release', $delivery) }}" class="mt-3">@csrf<button class="w-full text-sm text-slate-500 py-2" onclick="return confirm('Hand this delivery back?')">Release this delivery</button></form>
 @endif
 
 @if($mine && $delivery->status === 'out_for_delivery')
-    <form method="POST" action="{{ route('rider.confirm', $delivery) }}" class="mt-4 bg-white rounded-xl p-4 space-y-3">@csrf
-        <h2 class="font-semibold">Confirm receipt</h2>
-        <p class="text-sm text-slate-500">When the customer has received the order, ask for the 4-digit code they were texted.</p>
-        <input name="code" inputmode="numeric" pattern="\d{4}" maxlength="4" required autocomplete="off" placeholder="• • • •" class="{{ $input }} text-center text-3xl tracking-[0.5em] font-bold">
+    <form method="POST" action="{{ route('rider.deliver', $delivery) }}" class="mt-4 bg-white rounded-xl p-4 space-y-3">@csrf
+        <h2 class="font-semibold">Delivered?</h2>
+        <p class="text-sm text-slate-500">Tap <strong>Delivered</strong> once the customer has received the order. They get a text message to say so.</p>
         @if($delivery->items_sent > 1 || $delivery->order_type !== 'standard')
             <label class="block text-sm font-medium">Items the customer kept (of {{ $delivery->items_sent }})
                 <input type="number" name="items_kept" min="0" max="{{ $delivery->items_sent }}" value="{{ $delivery->items_sent }}" class="{{ $input }} mt-1"></label>
@@ -43,9 +42,8 @@
             <label class="block text-sm font-medium">Cash collected (GH₵) - owed {{ number_format($delivery->balance, 2) }}
                 <input type="number" step="0.01" min="0" max="{{ $delivery->balance }}" name="cash" value="{{ $delivery->balance }}" class="{{ $input }} mt-1"></label>
         @endif
-        <button class="w-full rounded-lg bg-[#8cc152] hover:bg-[#74a83b] text-white py-3 font-semibold transition shadow">Confirm delivery</button>
+        <button class="w-full rounded-lg bg-[#8cc152] hover:bg-[#74a83b] text-white py-3 text-lg font-semibold transition shadow" onclick="return confirm('Has the customer received the order? They will be sent a text message.')"><i class="fas fa-circle-check"></i> Delivered</button>
     </form>
-    <form method="POST" action="{{ route('rider.resend', $delivery) }}" class="mt-3">@csrf<button class="w-full text-sm text-brand-accent py-2">Customer didn't get the code? Resend</button></form>
     <form method="POST" action="{{ route('rider.undeliver', $delivery) }}" class="mt-2 bg-white rounded-xl p-4 space-y-2">@csrf
         <h2 class="font-semibold text-sm">Could not deliver?</h2>
         <input name="reason" required placeholder="Reason (e.g. customer unreachable)" class="{{ $input }}">

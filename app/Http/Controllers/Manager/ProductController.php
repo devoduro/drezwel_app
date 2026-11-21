@@ -114,8 +114,13 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $data = $this->validated($request, $product);
+        $restock = $request->validate([
+            'existing.*.add' => 'nullable|integer|min:0|max:100000',
+            'restock_cost' => 'nullable|numeric|min:0',
+            'restock_note' => 'nullable|string|max:200',
+        ]);
 
-        DB::transaction(function () use ($request, $product, $data) {
+        DB::transaction(function () use ($request, $product, $data, $restock) {
             $product->update($data);
 
             // Existing variants: size, colour, price and active flag (stock changes go through "Update stock").
@@ -129,6 +134,13 @@ class ProductController extends Controller
                     'sku' => $this->clean($row['sku'] ?? null), 'price' => ($row['price'] ?? '') === '' ? null : (float) $row['price'],
                     'is_active' => ! empty($row['is_active']),
                 ]);
+
+                // New units that arrived: added to the stock already on hand, with a line in the stock history.
+                $add = (int) ($row['add'] ?? 0);
+                if ($add > 0) {
+                    $this->stock->move($product, 'purchase', $add, $request->user(), ($restock['restock_note'] ?? null) ?: 'Stock added', null,
+                        ! empty($restock['restock_cost']) ? (float) $restock['restock_cost'] : null, $variant);
+                }
             }
             $this->assertNoDuplicateVariants($product->fresh('variants')->variants->map(fn ($v) => [$v->size, $v->color])->all());
 

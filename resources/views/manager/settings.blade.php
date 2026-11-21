@@ -18,6 +18,7 @@
     <label class="text-sm font-medium">Main website<input name="website" value="{{ $v('website') }}" class="{{ $input }}" placeholder="https://drezwell.com"></label>
     <label class="text-sm font-medium md:col-span-2">Address (shown on invoices)<input name="address" value="{{ $v('address') }}" class="{{ $input }}"></label>
     <label class="text-sm font-medium">Delivery fee on website orders (GH₵)<input type="number" step="0.01" min="0" name="default_delivery_fee" required value="{{ $v('default_delivery_fee') }}" class="{{ $input }}"><span class="text-xs font-normal text-slate-500">Added to every online order. Leave 0 to confirm the fee by phone.</span></label>
+    <label class="text-sm font-medium">Express delivery outside Accra: extra transport to the station (GH₵)<input type="number" step="0.01" min="0" name="express_station_fee" value="{{ $v('express_station_fee') }}" class="{{ $input }}"><span class="text-xs font-normal text-slate-500">Added to the delivery fee when a customer outside Greater Accra chooses Express delivery.</span></label>
     <label class="text-sm font-medium">Invoice thank-you line<input name="invoice_note" value="{{ $v('invoice_note') }}" class="{{ $input }}"></label>
     <label class="text-sm font-medium md:col-span-2">Invoice terms (small print, e.g. returns policy)<input name="invoice_terms" value="{{ $v('invoice_terms') }}" class="{{ $input }}"></label>
     <div class="md:col-span-2 border-t pt-4 font-semibold"><i class="fas fa-image text-[#1c3041]"></i> Home page picture</div>

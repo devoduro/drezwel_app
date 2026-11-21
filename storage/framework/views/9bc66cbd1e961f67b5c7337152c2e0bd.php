@@ -32,6 +32,7 @@
     </a>
 
     
+    <?php if($soldOut || ($quick && $open)): ?>
     <div class="px-2.5 pb-2.5 pt-1 lg:absolute lg:inset-x-0 lg:bottom-0 lg:translate-y-2 lg:bg-white lg:opacity-0 lg:shadow-[0_6px_16px_rgba(0,0,0,.14)] lg:rounded-b-xl lg:transition lg:group-hover:translate-y-0 lg:group-hover:opacity-100 lg:z-10">
         <?php if($soldOut): ?>
             <a href="<?php echo e(route('shop.product', $p->slug)); ?>" class="block rounded-lg bg-slate-200 py-2 text-center text-[13px] font-bold uppercase text-slate-500">Sold out</a>
@@ -40,10 +41,9 @@
                 <input type="hidden" name="variant_id" value="<?php echo e($quick->id); ?>"><input type="hidden" name="stay" value="1">
                 <button class="flex w-full items-center justify-center gap-2 rounded-lg bg-jm-primary py-2 text-[13px] font-bold uppercase tracking-wide text-white transition hover:bg-[#14212d] active:scale-[.98]"><i class="fas fa-cart-shopping"></i> Add to cart</button>
             </form>
-        <?php else: ?>
-            <a href="<?php echo e(route('shop.product', $p->slug)); ?>" class="flex items-center justify-center gap-2 rounded-lg bg-jm-primary py-2 text-[13px] font-bold uppercase tracking-wide text-white transition hover:bg-[#14212d]"><i class="fas fa-sliders"></i> <?php echo e($quick ? 'View' : 'Select options'); ?></a>
         <?php endif; ?>
     </div>
+    <?php endif; ?>
     <?php if($off): ?><span class="absolute right-0 top-3 rounded-l bg-jm-primary px-1.5 py-0.5 text-[12px] font-bold text-white shadow">-<?php echo e($off); ?>%</span><?php endif; ?>
 </article>
 <?php /**PATH C:\xampp\htdocs\drezwel_app\resources\views/shop/_card.blade.php ENDPATH**/ ?>

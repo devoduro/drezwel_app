@@ -49,7 +49,7 @@
             <?php if($delivery->exchanges->count()): ?><div class="sm:col-span-2 rounded-lg bg-amber-50 px-3 py-2 text-amber-900"><i class="fas fa-rotate-left"></i> Returns / exchanges against this sale: <?php $__currentLoopData = $delivery->exchanges; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $x): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><a class="font-semibold underline" href="<?php echo e(route('manager.deliveries.show', $x)); ?>"><?php echo e($x->reference); ?></a><?php if (! ($loop->last)): ?>, <?php endif; ?> <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></div><?php endif; ?>
             <div><div class="text-xs text-slate-500">Package</div><?php echo e($delivery->package_description); ?> (<?php echo e($delivery->items_sent); ?> item<?php echo e($delivery->items_sent > 1 ? 's' : ''); ?>)</div>
             <div><div class="text-xs text-slate-500">Date / window</div><?php echo e($delivery->delivery_date->format('D d M Y')); ?> <?php echo e($delivery->time_window); ?></div>
-            <div><div class="text-xs text-slate-500">Mode · Type</div><?php echo e(\App\Models\Delivery::MODES[$delivery->delivery_mode]); ?> · <?php echo e(\App\Models\Delivery::TYPES[$delivery->order_type]); ?></div>
+            <div><div class="text-xs text-slate-500">Mode · Type</div><?php echo e(\App\Models\Delivery::MODES[$delivery->delivery_mode]); ?> · <?php echo e(\App\Models\Delivery::TYPES[$delivery->order_type]); ?><?php if($delivery->service): ?> · <strong class="<?php echo e($delivery->service === 'express' ? 'text-amber-700' : ''); ?>"><?php echo e(\App\Models\Delivery::SERVICES[$delivery->service]); ?></strong><?php endif; ?></div>
             <div>
                 <div class="text-xs text-slate-500">Rider</div>
                 <?php if($delivery->rider): ?>
@@ -151,6 +151,10 @@
                     <input type="number" step="0.01" name="amount" value="<?php echo e($delivery->balance); ?>" max="<?php echo e($delivery->balance); ?>" class="<?php echo e($input); ?> w-28">
                     <select name="method" class="<?php echo e($input); ?> bg-white"><?php $__currentLoopData = \App\Models\Payment::METHODS; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $l): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><option value="<?php echo e($k); ?>"><?php echo e($l); ?></option><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></select>
                     <input name="notes" placeholder="Note" class="<?php echo e($input); ?> flex-1 min-w-24">
+                    <?php if($delivery->is_open): ?>
+                        <input type="hidden" name="complete" value="0">
+                        <label class="flex w-full items-center gap-2 text-xs text-slate-600"><input type="checkbox" name="complete" value="1" checked class="accent-green-600"> When this clears the balance, complete the delivery and move it to Sales (no rider needed)</label>
+                    <?php endif; ?>
                     <button class="<?php echo e($btn); ?> bg-green-600 text-white">Record payment</button>
                 </form>
             <?php endif; ?>
@@ -178,22 +182,14 @@
             </section>
         <?php endif; ?>
 
-        <?php if($delivery->status === 'out_for_delivery'): ?>
-            <section class="bg-white rounded-xl p-5 space-y-3">
-                <h2 class="text-slate-800 font-semibold">Delivery code</h2>
-                <p class="text-sm text-slate-500">Sent <?php echo e($delivery->code_sent_at?->diffForHumans() ?? 'never'); ?> · wrong attempts: <?php echo e($delivery->code_attempts); ?>/<?php echo e(\App\Models\Delivery::MAX_CODE_ATTEMPTS); ?></p>
-                <form method="POST" action="<?php echo e(route('manager.deliveries.resend', $delivery)); ?>"><?php echo csrf_field(); ?><button class="<?php echo e($btn); ?> bg-brand text-white w-full">Send a new code to customer</button></form>
-            </section>
-        <?php endif; ?>
-
         <?php if(in_array($delivery->status, ['assigned', 'out_for_delivery', 'undelivered'])): ?>
             <section class="bg-white rounded-xl p-5">
-                <h2 class="text-slate-800 font-semibold mb-1">Confirm without code</h2>
-                <p class="text-xs text-slate-500 mb-2">Only if the customer confirmed another way. This is recorded.</p>
+                <h2 class="text-slate-800 font-semibold mb-1">Mark as delivered</h2>
+                <p class="text-xs text-slate-500 mb-2">For when the rider could not tap it. The customer is texted that it was delivered, and this is recorded.</p>
                 <form method="POST" action="<?php echo e(route('manager.deliveries.confirm', $delivery)); ?>" class="space-y-2"><?php echo csrf_field(); ?>
-                    <input name="reason" required placeholder="Reason" class="<?php echo e($input); ?> w-full">
+                    <input name="reason" placeholder="Note (optional)" class="<?php echo e($input); ?> w-full">
                     <div class="flex gap-2"><input type="number" name="items_kept" min="0" max="<?php echo e($delivery->items_sent); ?>" placeholder="Items kept" class="<?php echo e($input); ?> w-1/2"><input type="number" step="0.01" name="cash" placeholder="Cash collected" class="<?php echo e($input); ?> w-1/2"></div>
-                    <button class="<?php echo e($btn); ?> bg-amber-600 text-white w-full" onclick="return confirm('Confirm this delivery without the customer code?')">Confirm delivery</button>
+                    <button class="<?php echo e($btn); ?> bg-amber-600 text-white w-full" onclick="return confirm('Mark this delivery as delivered and text the customer?')">Mark as delivered</button>
                 </form>
             </section>
         <?php endif; ?>

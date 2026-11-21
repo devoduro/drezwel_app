@@ -148,7 +148,7 @@ class ShopController extends Controller
             return redirect()->route('shop.cart');
         }
 
-        return view('shop.checkout', $data + ['regions' => DeliveryFees::catalogue()]);
+        return view('shop.checkout', $data + ['regions' => DeliveryFees::catalogue(), 'expressStation' => DeliveryFees::expressStationFee()]);
     }
 
     public function placeOrder(Request $request)
@@ -162,34 +162,53 @@ class ShopController extends Controller
         if ($request->input('zone_id') === 'other') {
             $request->merge(['zone_id' => null]);
         }
-        $byRegion = $request->filled('region_id');
+        // Door delivery, Express delivery or Pick up. Pick up needs no address.
+        $service = in_array($request->input('service'), ['door', 'express', 'pickup'], true) ? $request->input('service') : 'door';
+        $pickup = $service === 'pickup';
+        $byRegion = ! $pickup && $request->filled('region_id');
         $data = $request->validate([
             'name' => 'required|string|max:120',
             'phone' => ['required', 'regex:/^0\d{9}$/'],
             'region_id' => 'nullable|exists:regions,id',
             'zone_id' => 'nullable|integer',
             'address' => $byRegion ? 'required|string|max:200' : 'nullable|string|max:200',
-            'location' => $byRegion ? 'nullable|string|max:200' : 'required|string|max:200',
+            'location' => ($byRegion || $pickup) ? 'nullable|string|max:200' : 'required|string|max:200',
             'notes' => 'nullable|string|max:500',
             'pay_method' => ['nullable', 'in:cod,speso'],
         ] + $this->momoRules($request, $request->input('pay_method') === 'speso'),
             ['phone.regex' => 'Enter a 10-digit Ghana phone number, e.g. 0241234567.', 'location.required' => 'Tell us where to deliver.', 'address.required' => 'Tell us the street, landmark or house number.', 'momo_number.regex' => 'Enter the 10-digit mobile money number, e.g. 0241234567.']);
         $online = ($data['pay_method'] ?? 'cod') === 'speso';
-        if ($online && ! SpesoClient::configured()) {
-            return back()->withInput()->withErrors(['pay_method' => 'Online payment is not available right now. Please choose pay on delivery.']);
-        }
 
-        // Where to, and what it costs: the fee comes from the region / town the customer picked, never from the browser.
+        // Where to, how, and what it costs: all worked out here from the choices made, never from the browser.
+        $region = $zone = null;
         $location = $data['location'] ?? '';
         $fee = (float) Setting::get('default_delivery_fee', '0');
-        if ($byRegion) {
+        $mode = 'rider';
+        if ($pickup) {
+            $location = 'Pick up: ' . (Setting::get('address') ?: 'our shop');
+            $fee = 0.0;
+            $mode = 'pick_up';
+        } elseif ($byRegion) {
             $region = Region::findOrFail($data['region_id']);
             $zone = ! empty($data['zone_id']) ? DeliveryZone::orderable()->where('region_id', $region->id)->find($data['zone_id']) : null;
             if (! empty($data['zone_id']) && ! $zone) {
                 return back()->withInput()->withErrors(['zone_id' => 'Please choose a town from the list.']);
             }
-            $fee = DeliveryFees::feeFor($region, $zone);
+            $fee = DeliveryFees::quote($service, $region, $zone)['fee'];
             $location = trim($data['address']) . ', ' . ($zone ? $zone->name . ', ' : '') . $region->name;
+            $mode = DeliveryFees::isAccra($region) ? 'rider' : 'station_bus';      // outside Accra it goes by station bus
+        }
+
+        // Pay on delivery is only for door delivery within Accra. Express, pick up and anything outside Accra is paid now.
+        $mustPayNow = $service !== 'door' || ($region && ! DeliveryFees::isAccra($region));
+        if ($mustPayNow && ! SpesoClient::configured()) {
+            return back()->withInput()->withErrors(['pay_method' => 'This option has to be paid now with Mobile Money, and online payment is not available right now. Please call us to place this order.']);
+        }
+        if ($mustPayNow && ! $online) {
+            return back()->withInput()->withErrors(['pay_method' => 'Express delivery, pick up and orders outside Accra are paid now with Mobile Money.']);
+        }
+        if ($online && ! SpesoClient::configured()) {
+            return back()->withInput()->withErrors(['pay_method' => 'Online payment is not available right now. Please choose pay on delivery.']);
         }
 
         $cart = $request->session()->get('cart', []);
@@ -199,7 +218,7 @@ class ShopController extends Controller
             $delivery = $this->sales->placeOrder(
                 ['name' => $data['name'], 'phone' => $data['phone'], 'location' => mb_substr($location, 0, 200)],
                 $lines,
-                ['source' => 'online', 'delivery_fee' => $fee, 'notes' => $data['notes'] ?? null, 'update_customer' => false],
+                ['source' => 'online', 'service' => $service, 'mode' => $mode, 'delivery_fee' => $fee, 'notes' => $data['notes'] ?? null, 'update_customer' => false],
             );
         } catch (ValidationException $e) {
             // Stock ran out while they were checking out: send them back to the cart with the reason.
@@ -253,6 +272,9 @@ class ShopController extends Controller
     public function payOnDelivery(string $reference)
     {
         $delivery = $this->onlineOrder($reference);
+        if ($delivery->pay_now_only) {
+            return redirect($this->orderUrl($delivery))->with('pay_error', 'This order has to be paid now with Mobile Money.');
+        }
         // Make sure a payment is not already on its way before switching to cash.
         if ($this->payments->verify($delivery) !== 'paid') {
             $this->payments->switchToCashOnDelivery($delivery);

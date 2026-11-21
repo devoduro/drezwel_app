@@ -37,12 +37,13 @@
 @endif
 
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">
-    <x-stat-tile color="blue" icon="fa-sack-dollar" title="Total billed" :value="$m($kpi['revenue'])" :sub="$kpi['orders'].' orders · goods + delivery'" />
-    <x-stat-tile color="green" icon="fa-money-bill-wave" title="Cash collected" :value="$m($kpi['collected'])" sub="Paid so far" />
-    <x-stat-tile color="red" icon="fa-hand-holding-dollar" title="Outstanding" :value="$m($kpi['outstanding'])" sub="Owed by customers" :href="route('manager.debtors')" />
-    <x-stat-tile color="purple" icon="fa-circle-check" title="Delivered" :value="$kpi['delivered']" sub="Completed drop-offs" />
+    @php $salesLink = route('manager.sales', ['period' => $period] + request()->only('from', 'to')); @endphp
+    <x-stat-tile color="blue" icon="fa-sack-dollar" title="Total sales (goods)" :value="$m($kpi['revenue'])" :sub="$kpi['orders'].' orders · delivery fees ' . $m($kpi['fees']) . ' go to riders'" :href="$salesLink" />
+    <x-stat-tile color="green" icon="fa-money-bill-wave" title="Money collected" :value="$m($kpi['collected'])" sub="For the goods, fees excluded" :href="$salesLink" />
+    <x-stat-tile color="red" icon="fa-hand-holding-dollar" title="Outstanding" :value="$m($kpi['outstanding'])" sub="Still owed for the goods" :href="route('manager.debtors')" />
+    <x-stat-tile color="purple" icon="fa-circle-check" title="Delivered" :value="$kpi['delivered']" sub="Completed drop-offs" :href="route('manager.deliveries.index', ['status' => 'delivered'])" />
     <x-stat-tile color="orange" icon="fa-hourglass-half" title="Pending" :value="$kpi['pending']" :sub="$kpi['unassigned'].' unassigned · '.$kpi['on_the_road'].' on the road'" :href="route('manager.deliveries.index', ['status' => 'pending'])" />
-    <x-stat-tile color="slate" icon="fa-bullseye" title="Fulfilment rate" :value="$kpi['rate'].'%'" sub="Target 85%" :badge="$kpi['rate'] >= 85 ? 'On target' : 'Below target'" />
+    <x-stat-tile color="slate" icon="fa-bullseye" title="Fulfilment rate" :value="$kpi['rate'].'%'" sub="Target 85%" :badge="$kpi['rate'] >= 85 ? 'On target' : 'Below target'" :href="route('manager.deliveries.index')" />
 </div>
 
 <div class="grid xl:grid-cols-2 gap-5">
@@ -88,7 +89,7 @@
             <thead class="text-left text-slate-500 text-xs"><tr><th class="p-3">Rider</th><th class="text-right">Cash held</th><th class="text-right">Items to return</th><th class="p-3">Status</th></tr></thead>
             @foreach($riders as $r)
                 <tr class="border-t"><td class="p-3">{{ $r->rider->name }}</td><td class="text-right">{{ $m($r->custody['cash_held']) }}</td><td class="text-right">{{ $r->custody['items_pending'] }}</td>
-                    <td class="p-3">{!! $r->custody['cleared'] ? '<span class="text-green-600">Cleared</span>' : '<span class="text-amber-600">Outstanding</span>' !!}</td></tr>
+                    <td class="p-3">{!! $r->custody['settled'] ? '<span class="text-green-600">Cleared</span>' : ($r->custody['cleared'] ? '<span class="text-amber-600">Has open orders</span>' : '<span class="text-amber-600">Outstanding</span>') !!}</td></tr>
             @endforeach
         </table></div>
     </section>
