@@ -23,7 +23,7 @@
         {{-- Main card: photos + details --}}
         <section class="grid gap-6 rounded-xl bg-white p-4 sm:p-5 md:grid-cols-[minmax(0,420px)_1fr]">
             <div>
-                <div class="relative aspect-square overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
+                <div class="relative aspect-[4/5] overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
                     @if($product->images->count())
                         <img id="mainPhoto" src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="h-full w-full cursor-zoom-in object-contain" title="Click to view full size">
                         <button type="button" id="zoomBtn" class="absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-jm-dark shadow" aria-label="View full size"><i class="fas fa-expand"></i></button>
@@ -35,7 +35,7 @@
                 @if($product->images->count() > 1)
                     <div class="no-scrollbar mt-2 flex gap-2 overflow-x-auto">
                         @foreach($product->images as $img)
-                            <button type="button" class="thumb h-[68px] w-[68px] shrink-0 overflow-hidden rounded-lg border-2 {{ $loop->first ? 'border-jm-primary' : 'border-slate-200' }}" data-src="{{ $img->url }}"><img src="{{ $img->url }}" alt="" class="h-full w-full object-cover"></button>
+                            <button type="button" class="thumb h-[78px] w-[62px] shrink-0 overflow-hidden rounded-lg border-2 {{ $loop->first ? 'border-jm-primary' : 'border-slate-200' }}" data-src="{{ $img->url }}"><img src="{{ $img->url }}" alt="" class="h-full w-full object-cover"></button>
                         @endforeach
                     </div>
                 @endif
